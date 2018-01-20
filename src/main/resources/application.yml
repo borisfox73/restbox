@@ -1,0 +1,22 @@
+app.config:
+  teststr: value
+  testint: 123
+  routers:
+    testcsr1:
+      name: CSR-WAN
+      host: 10.1.2.3
+      username: rest
+      password: restpwd
+      type: csrv
+    testcsr2:
+      name: CSR-WAN2
+      host: 10.1.2.4
+      username: rest2
+      password: restpwd2
+      type: asr
+#
+security:
+  user:
+    name: user1
+    password: user123
+    role: USER

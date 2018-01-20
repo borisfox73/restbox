@@ -32,6 +32,7 @@ data.sqlite
 .log.gradle
 /build/
 /out/
+/log/
 !gradle/wrapper/gradle-wrapper.jar
 
 ### STS ###
