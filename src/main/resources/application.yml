@@ -1,6 +1,20 @@
 app.config:
-  teststr: value
-  testint: 123
+#  teststr: value
+#  testint: 123
+  jwt:
+    secret: qweasdzxc123
+    time-to-live: PT5M
+    audience: restbox_java
+  users:
+    - username: user1
+      password: user123
+      roles: USER
+    - username: admin
+      password: password
+      roles: ADMIN
+    - username: user2
+      password: test2
+      roles: OTHER
   routers:
     testcsr1:
       name: CSR-WAN
@@ -14,9 +28,3 @@ app.config:
       username: rest2
       password: restpwd2
       type: asr
-#
-security:
-  user:
-    name: user1
-    password: user123
-    role: USER

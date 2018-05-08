@@ -12,6 +12,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 import ru.khv.fox.software.web.cisco.restbox.app_java.configuration.AppProperties;
 
+import static org.hamcrest.Matchers.greaterThan;
+import static org.hamcrest.Matchers.hasProperty;
 import static org.hamcrest.collection.IsMapContaining.hasKey;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsEqual.equalTo;
@@ -50,15 +52,23 @@ public class AppInitializationTests {
 		 */
 		final String testRouterKey = "testcsr1";
 		System.out.println("loaded properties = " + properties);
-		assertThat(properties, notNullValue());
-		assertThat(properties.getTeststr(), is(equalTo("value")));
-		assertThat(properties.getTestint(), is(equalTo(123)));
-		assertThat(properties.getRouters(), hasKey(testRouterKey));
+		assertThat(properties, notNullValue(AppProperties.class));
+		assertThat(properties, hasProperty("teststr", is(equalTo("value"))));
+		assertThat(properties, hasProperty("testint", is(equalTo(123))));
+		assertThat(properties, hasProperty("routers", hasKey(testRouterKey)));
 		assertThat(properties.getRouters().get(testRouterKey), instanceOf(AppProperties.RouterProperties.class));
 		assertThat(properties.getRouters().get(testRouterKey).getName(), is(equalTo("CSR-WAN")));
 		assertThat(properties.getRouters().get(testRouterKey).getHost(), is(equalTo("10.1.2.3")));
 		assertThat(properties.getRouters().get(testRouterKey).getUsername(), is(equalTo("rest")));
 		assertThat(properties.getRouters().get(testRouterKey).getPassword(), is(equalTo("restpwd")));
 		assertThat(properties.getRouters().get(testRouterKey).getType(), is(equalTo(AppProperties.RouterProperties.RouterTypes.CSRV)));
+
+		assertThat(properties, hasProperty("users", notNullValue(AppProperties.UserProperties.class)));
+		assertThat(properties.getUsers().isEmpty(), is(false));
+		assertThat(properties.getUsers().get(0).getUsername(), is(equalTo("user1")));
+		assertThat(properties.getUsers().get(0).getPassword(), is(equalTo("user123")));
+		assertThat(properties.getUsers().get(0).getRoles(), instanceOf(String[].class));
+		assertThat(properties.getUsers().get(0).getRoles().length, is(greaterThan(0)));
+		assertThat(properties.getUsers().get(0).getRoles()[0], is(equalTo("USER")));
 	}
 }

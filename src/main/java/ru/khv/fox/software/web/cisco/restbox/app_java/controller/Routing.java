@@ -9,9 +9,8 @@ package ru.khv.fox.software.web.cisco.restbox.app_java.controller;
  * Web controller routing component.
  * WebFlux.fn style.
  */
-/*
-@Configuration
-public class Routing {
+/*@Configuration
+class Routing {
 	// Routing function
 	@Bean
 	public static RouterFunction<ServerResponse> routingFunction() {
