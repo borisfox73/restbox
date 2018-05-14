@@ -9,13 +9,13 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.lang.NonNull;
-import org.springframework.lang.Nullable;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.server.ResponseStatusException;
 import reactor.core.publisher.Mono;
 import ru.khv.fox.software.web.cisco.restbox.app_java.model.ErrorResponse;
 
@@ -30,6 +30,11 @@ class ErrorHandler {
 
 	// TODO определить ещё для Unauthorized / Access Denied ? - для перехвата из Authentication Entry Point не получится, т.к. она отрабатывает раньше, чем запрос доходит до диспетчера.
 	// TODO прочитать, какие статусы HTTP нужно возвращать при ошибках.
+
+	// обработка исключений:
+	// https://stackoverflow.com/questions/24292373/spring-boot-rest-controller-how-to-return-different-http-status-codes
+	// https://spring.io/guides/tutorials/bookmarks/
+	// http://engineering.pivotal.io/post/must-know-spring-boot-annotations-controllers/
 
 /*
 	@NonNull
@@ -65,7 +70,7 @@ class ErrorHandler {
 	// --- Authentication and authorization ----------------------------------------------------------------------------
 
 	// Don't work, not get invoked from authentication entry point
-	@Nullable
+	@NonNull
 	@ExceptionHandler({AuthenticationException.class})
 	@ResponseStatus(HttpStatus.UNAUTHORIZED)
 	@ResponseBody
@@ -75,12 +80,20 @@ class ErrorHandler {
 	}
 
 	// Works!
-	@Nullable
+	@NonNull
 	@ExceptionHandler({AccessDeniedException.class})
 	@ResponseStatus(HttpStatus.FORBIDDEN)
 	@ResponseBody
 	public Mono<ErrorResponse> handleAccessDeniedException(@NonNull final AccessDeniedException ex) {
 		return Mono.just(ErrorResponse.create(403, "Access is denied: " + ex.getLocalizedMessage()));
+	}
+
+	@NonNull
+	@ExceptionHandler({ResponseStatusException.class})
+	@ResponseBody
+	public Mono<ErrorResponse> handleResponseStatusException(@NonNull final ResponseStatusException ex) {
+		log.debug("response status exception caught");
+		return Mono.just(ErrorResponse.create(ex.getStatus().value(), ex.getReason()));
 	}
 
 /*

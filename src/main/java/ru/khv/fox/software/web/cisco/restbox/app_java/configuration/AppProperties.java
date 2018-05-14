@@ -30,14 +30,6 @@ import java.util.*;
 @Configuration
 @ConfigurationProperties(prefix = "app.config")
 public class AppProperties {
-	// Fields corresponds to properties file keys
-	// Test scalar value
-/*
-	@NotNull
-	private String teststr;
-	@NotNull
-	private Integer testint;
-*/
 	/**
 	 * JSON Web Ticket parameters
 	 */

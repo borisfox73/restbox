@@ -20,7 +20,7 @@ public class ResponseStatusExceptionWrapper extends ResponseStatusException {
 		super(status, reason, cause);
 	}
 
-	private static ResponseStatusExceptionWrapper wrap(final Throwable exception, final HttpStatus status) {
+	public static ResponseStatusExceptionWrapper wrap(final Throwable exception, final HttpStatus status) {
 		final String reason = Optional.ofNullable(exception.getCause()).map((e) -> e.getLocalizedMessage() + ": ").orElse("") +
 		                      exception.getLocalizedMessage();
 		return new ResponseStatusExceptionWrapper(status, reason, exception);
