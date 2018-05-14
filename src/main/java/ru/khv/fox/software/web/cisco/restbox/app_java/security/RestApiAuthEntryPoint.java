@@ -3,7 +3,7 @@
  * All rights reserved.
  */
 
-package ru.khv.fox.software.web.cisco.restbox.app_java.configuration;
+package ru.khv.fox.software.web.cisco.restbox.app_java.security;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -11,6 +11,7 @@ import org.springframework.boot.web.reactive.error.ErrorWebExceptionHandler;
 import org.springframework.lang.NonNull;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.server.ServerAuthenticationEntryPoint;
+import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 import ru.khv.fox.software.web.cisco.restbox.app_java.controller.ResponseStatusExceptionWrapper;
@@ -21,7 +22,8 @@ import java.util.Optional;
 // TODO cleanup
 @Slf4j
 @RequiredArgsConstructor
-public class CustomAuthEntryPoint implements ServerAuthenticationEntryPoint {
+@Component
+public class RestApiAuthEntryPoint implements ServerAuthenticationEntryPoint {
 	@NonNull private final ErrorWebExceptionHandler exceptionHandler;
 
 	@Nonnull

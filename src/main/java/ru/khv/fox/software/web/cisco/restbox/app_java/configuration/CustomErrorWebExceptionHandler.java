@@ -13,6 +13,7 @@ import org.springframework.boot.autoconfigure.web.reactive.error.DefaultErrorWeb
 import org.springframework.boot.web.reactive.error.ErrorAttributes;
 import org.springframework.context.ApplicationContext;
 import org.springframework.http.MediaType;
+import org.springframework.lang.NonNull;
 import org.springframework.util.StringUtils;
 import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.server.*;
@@ -85,7 +86,7 @@ class CustomErrorWebExceptionHandler extends DefaultErrorWebExceptionHandler {
 	 * @return a {@code Publisher} of the HTTP response
 	 */
 	@Nonnull
-	private Mono<ServerResponse> renderJsonErrorResponse(final ServerRequest request) {
+	private Mono<ServerResponse> renderJsonErrorResponse(@NonNull final ServerRequest request) {
 		// from superclass
 		val includeStackTrace = isIncludeStackTrace(request, MediaType.ALL);
 		val error = getErrorAttributes(request, includeStackTrace);
