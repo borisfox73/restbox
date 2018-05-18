@@ -15,7 +15,6 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.reactive.server.WebTestClient;
 
-//@ContextConfiguration(classes = AppJavaApplication.class)
 @RunWith(SpringRunner.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class SecurityTest {
@@ -33,11 +32,13 @@ public class SecurityTest {
 	}
 
 	@Test
-	public void whenNoCredentials_thenRedirectToLogin() {
+	public void whenNoCredentials_thenUnauthorized() {
 		this.rest.get()
 		         .uri("/")
 		         .exchange()
-		         .expectStatus().is3xxRedirection();
+		         .expectStatus()
+		         .isUnauthorized();
+//		            .is3xxRedirection();
 	}
 
 	@Test

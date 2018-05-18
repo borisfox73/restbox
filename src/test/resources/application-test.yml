@@ -1,17 +1,17 @@
 app.config:
   jwt:
     audience: restbox_java
-    secret: qweasdzxc123
+    secret: testsecret
     time-to-live: PT5M
   users:
-    - username: user1
-      password: user123
+    - username: testuser
+      password: testpass
       roles: USER
-    - username: admin
-      password: password
+    - username: testadmin
+      password: admpass
       roles: ADMIN
-    - username: user2
-      password: test2
+    - username: test2
+      password: pass2
       roles: OTHER,ADMIN
   routers:
     testcsr1:

@@ -10,11 +10,11 @@ import org.apache.logging.log4j.util.Strings;
 import org.hibernate.validator.constraints.time.DurationMin;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.lang.NonNull;
+import org.springframework.lang.Nullable;
 import org.springframework.util.StringUtils;
 import org.springframework.validation.annotation.Validated;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
@@ -110,10 +110,10 @@ public class AppProperties {
 		@NotBlank
 		private String secret;
 		@NotNull
-		@DurationMin(minutes = 5)
+		@DurationMin(minutes = 1)
 		private Duration timeToLive = Duration.of(1L, ChronoUnit.HOURS);
 
-		@Nonnull
+		@NonNull
 		public Optional<String> getAudience() {
 			return Optional.ofNullable(audience).filter(StringUtils::hasText);
 		}

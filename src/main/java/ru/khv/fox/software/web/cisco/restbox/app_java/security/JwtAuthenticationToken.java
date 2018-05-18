@@ -11,12 +11,9 @@ import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
 import org.springframework.security.authentication.AbstractAuthenticationToken;
 import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.util.Assert;
 
-import java.util.Arrays;
 import java.util.Collection;
-import java.util.stream.Collectors;
 
 @Getter
 @EqualsAndHashCode(callSuper = false)
@@ -28,19 +25,15 @@ public class JwtAuthenticationToken extends AbstractAuthenticationToken {
 
 	/**
 	 * Constructor used by request header converter.
-	 * Creates object to be verified by authentication manager.
+	 * Extracts token from web request to be parsed and verified by authentication manager.
 	 *
-	 * @param claims Object holding values of parsed JWT claims
+	 * @param jwtEncoded String representation of the encoded JWT
 	 */
-	JwtAuthenticationToken(@Nullable final JwtClaims claims) {
-		super(extractAuthorities(claims));
+	JwtAuthenticationToken(@NonNull final String jwtEncoded) {
+		super(null);
 
-		if (claims != null) {
-			this.id = claims.getId();
-			this.principal = claims.getSubject();
-			setDetails(claims);
-		} else
-			this.id = this.principal = null;
+		this.id = null;
+		this.principal = jwtEncoded;
 	}
 
 	/**
@@ -77,15 +70,5 @@ public class JwtAuthenticationToken extends AbstractAuthenticationToken {
 	@Override
 	public Object getCredentials() {
 		return "";
-	}
-
-	boolean hasIdentity() {
-		return getDetails() != null && ((JwtClaims) getDetails()).hasIdentity();
-	}
-
-	private static Collection<SimpleGrantedAuthority> extractAuthorities(@Nullable final JwtClaims jwtClaims) {
-		if (jwtClaims == null || jwtClaims.getAuthorities() == null || jwtClaims.getAuthorities().length == 0)
-			return null;
-		return Arrays.stream(jwtClaims.getAuthorities()).map(SimpleGrantedAuthority::new).collect(Collectors.toList());
 	}
 }

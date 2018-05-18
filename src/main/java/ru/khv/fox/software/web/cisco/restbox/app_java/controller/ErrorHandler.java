@@ -15,7 +15,6 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
-import org.springframework.web.server.ResponseStatusException;
 import reactor.core.publisher.Mono;
 import ru.khv.fox.software.web.cisco.restbox.app_java.model.ErrorResponse;
 
@@ -75,8 +74,8 @@ class ErrorHandler {
 	@ResponseStatus(HttpStatus.UNAUTHORIZED)
 	@ResponseBody
 	public Mono<ErrorResponse> handleAuthenticationException(@NonNull final AuthenticationException ex) {
-//		return composeResponseBody(ResponseResultCode.UNAUTHORIZED, ex);
-		return Mono.just(ErrorResponse.create(401, "Access is unauthorized: " + ex.getLocalizedMessage()));
+		log.debug("authentication exception caught");
+		return Mono.just(ErrorResponse.create(401, "Unauthenticated access: " + ex.getLocalizedMessage()));
 	}
 
 	// Works!
@@ -85,9 +84,11 @@ class ErrorHandler {
 	@ResponseStatus(HttpStatus.FORBIDDEN)
 	@ResponseBody
 	public Mono<ErrorResponse> handleAccessDeniedException(@NonNull final AccessDeniedException ex) {
+		log.debug("access denied exception caught");
 		return Mono.just(ErrorResponse.create(403, "Access is denied: " + ex.getLocalizedMessage()));
 	}
 
+/* not needed
 	@NonNull
 	@ExceptionHandler({ResponseStatusException.class})
 	@ResponseBody
@@ -95,6 +96,7 @@ class ErrorHandler {
 		log.debug("response status exception caught");
 		return Mono.just(ErrorResponse.create(ex.getStatus().value(), ex.getReason()));
 	}
+*/
 
 /*
 	// --- Validation and data-binding ---------------------------------------------------------------------------------

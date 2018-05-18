@@ -2,7 +2,7 @@ app.config:
   jwt:
     audience: restbox_java
     secret: qweasdzxc123
-    time-to-live: PT5M
+    time-to-live: PT1H
   users:
     - username: user1
       password: user123

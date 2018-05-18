@@ -65,4 +65,7 @@ dependencies {
 	testCompile('org.springframework.security:spring-security-test')
 	testCompile('io.projectreactor:reactor-test')
 	testCompile('io.rest-assured:rest-assured:3.+')
+	testCompile group: 'org.hamcrest', name: 'hamcrest-all', version: '1.+'
+	testCompile group: 'com.spotify', name: 'hamcrest-pojo', version: '1.+'
+	testCompile group: 'com.spotify', name: 'hamcrest-optional', version: '1.+'
 }
