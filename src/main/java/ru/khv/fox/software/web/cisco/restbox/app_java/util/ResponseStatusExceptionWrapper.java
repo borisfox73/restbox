@@ -3,14 +3,14 @@
  * All rights reserved.
  */
 
-package ru.khv.fox.software.web.cisco.restbox.app_java.controller;
+package ru.khv.fox.software.web.cisco.restbox.app_java.util;
 
+import lombok.val;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.util.Optional;
-
+// TODO is this class really used somewhere other than entrypoint?
 /**
  * Wrapper for exceptions to provide specified HTTP Status for web exception handler.
  */
@@ -20,13 +20,16 @@ public class ResponseStatusExceptionWrapper extends ResponseStatusException {
 		super(status, reason, cause);
 	}
 
-	public static ResponseStatusExceptionWrapper wrap(final Throwable exception, final HttpStatus status) {
-		final String reason = Optional.ofNullable(exception.getCause()).map((e) -> e.getLocalizedMessage() + ": ").orElse("") +
-		                      exception.getLocalizedMessage();
+	private static ResponseStatusExceptionWrapper wrap(final Throwable exception, final HttpStatus status) {
+		val exceptionMessage = exception.getLocalizedMessage();
+		val causeMessage = exception.getCause() != null ? exception.getCause().getLocalizedMessage() : null;
+		val reason = exceptionMessage != null && causeMessage != null && !causeMessage.equals(exceptionMessage) ?
+		             causeMessage + ": " + exceptionMessage :
+		             exceptionMessage;
 		return new ResponseStatusExceptionWrapper(status, reason, exception);
 	}
 
-	public static ResponseStatusExceptionWrapper wrap(final Throwable exception) {
+	static ResponseStatusExceptionWrapper wrap(final Throwable exception) {
 		return wrap(exception, determineHttpStatus(exception));
 	}
 

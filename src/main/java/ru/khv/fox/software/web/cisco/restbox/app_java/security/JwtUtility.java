@@ -5,13 +5,17 @@
 
 package ru.khv.fox.software.web.cisco.restbox.app_java.security;
 
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.springframework.lang.NonNull;
+import org.springframework.security.authentication.AuthenticationServiceException;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.web.authentication.www.NonceExpiredException;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 import ru.khv.fox.software.web.cisco.restbox.app_java.configuration.AppProperties;
@@ -61,29 +65,39 @@ public class JwtUtility {
 	private static Optional<String> determineIssuer(@NonNull final ServerWebExchange exchange) {
 		val requestUri = exchange.getRequest().getURI();
 		val sb = new StringBuilder();
-		if (requestUri.getScheme() != null)
+		if (requestUri.getScheme() != null) {
 			sb.append(requestUri.getScheme()).append(":");
-		if (requestUri.getHost() != null)
-			sb.append("//").append(requestUri.getHost());
-		if (requestUri.getPort() != -1)
-			sb.append(":").append(requestUri.getPort());
+			if (requestUri.getHost() != null) {
+				sb.append("//").append(requestUri.getHost());
+				if (requestUri.getPort() != -1)
+					sb.append(":").append(requestUri.getPort());
+				sb.append("/");
+			}
+		}
 		return sb.length() > 0 ? Optional.of(sb.toString()) : Optional.empty();
 	}
 
 	@NonNull
 	JwtClaims parseJwt(@NonNull final String jwtToken) {
 		log.trace("parse JWT {}", jwtToken);
-		// parse the token.
-		// can throw ExpiredJwtException, UnsupportedJwtException, MalformedJwtException, SignatureException, IllegalArgumentException
-		val jwtParser = Jwts.parser()
-		                    .setSigningKey(jwtProperties.getSecret().getBytes())
-		                    .setAllowedClockSkewSeconds(ALLOWED_CLOCK_SKEW_SECONDS);
-		jwtProperties.getAudience().ifPresent(jwtParser::requireAudience);
-		val jwtBody = jwtParser.parseClaimsJws(jwtToken).getBody();
-		// can throw RequiredTypeException, IllegalArgumentException
-		return new JwtClaims(jwtBody.getId(),
-		                     jwtBody.getSubject(),
-		                     jwtBody.getIssuer(),
-		                     jwtBody.get(AUTHORITIES_CLAIM, Collection.class));
+		try {
+			// parse the token.
+			// can throw ExpiredJwtException, UnsupportedJwtException, MalformedJwtException, SignatureException, IllegalArgumentException
+			val jwtParser = Jwts.parser()
+			                    .setSigningKey(jwtProperties.getSecret().getBytes())
+			                    .setAllowedClockSkewSeconds(ALLOWED_CLOCK_SKEW_SECONDS);
+			jwtProperties.getAudience().ifPresent(jwtParser::requireAudience);
+			val jwtBody = jwtParser.parseClaimsJws(jwtToken).getBody();
+			// can throw RequiredTypeException, IllegalArgumentException
+			return new JwtClaims(jwtBody.getId(),
+			                     jwtBody.getSubject(),
+			                     jwtBody.getIssuer(),
+			                     jwtBody.get(AUTHORITIES_CLAIM, Collection.class));
+			// IllegalArgumentException is not wrapped and cause 500 Internal Server Error response
+		} catch (ExpiredJwtException e) {
+			throw new NonceExpiredException(e.getLocalizedMessage(), e);
+		} catch (JwtException e) {
+			throw new AuthenticationServiceException(e.getLocalizedMessage(), e);
+		}
 	}
 }

@@ -5,9 +5,7 @@
 
 package ru.khv.fox.software.web.cisco.restbox.app_java.service;
 
-import org.springframework.stereotype.Service;
-import reactor.core.publisher.Mono;
-
+/*
 @Service
 public class GreetService {
 
@@ -15,3 +13,4 @@ public class GreetService {
 		return Mono.just("Hello from service!");
 	}
 }
+*/

@@ -3,7 +3,7 @@
  * All rights reserved.
  */
 
-package ru.khv.fox.software.web.cisco.restbox.app_java.configuration;
+package ru.khv.fox.software.web.cisco.restbox.app_java.util;
 
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
@@ -14,14 +14,13 @@ import org.springframework.boot.web.reactive.error.ErrorAttributes;
 import org.springframework.context.ApplicationContext;
 import org.springframework.http.MediaType;
 import org.springframework.lang.NonNull;
+import org.springframework.lang.Nullable;
 import org.springframework.util.StringUtils;
 import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.server.*;
 import reactor.core.publisher.Mono;
 import ru.khv.fox.software.web.cisco.restbox.app_java.model.ErrorResponse;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import java.util.List;
 import java.util.Map;
 
@@ -30,7 +29,7 @@ import java.util.Map;
  * Intercepts JSON media type compatible requests, with fallback to {@link DefaultErrorWebExceptionHandler} for HTML and all other.
  */
 @Slf4j
-class CustomErrorWebExceptionHandler extends DefaultErrorWebExceptionHandler {
+public class RestApiErrorWebExceptionHandler extends DefaultErrorWebExceptionHandler {
 	/**
 	 * Create a new {@code DefaultErrorWebExceptionHandler} instance.
 	 *
@@ -39,8 +38,8 @@ class CustomErrorWebExceptionHandler extends DefaultErrorWebExceptionHandler {
 	 * @param errorProperties    the error configuration properties
 	 * @param applicationContext the current application context
 	 */
-	CustomErrorWebExceptionHandler(final ErrorAttributes errorAttributes, final ResourceProperties resourceProperties,
-	                               final ErrorProperties errorProperties, final ApplicationContext applicationContext) {
+	public RestApiErrorWebExceptionHandler(final ErrorAttributes errorAttributes, final ResourceProperties resourceProperties,
+	                                       final ErrorProperties errorProperties, final ApplicationContext applicationContext) {
 		super(errorAttributes, resourceProperties, errorProperties, applicationContext);
 	}
 
@@ -85,7 +84,7 @@ class CustomErrorWebExceptionHandler extends DefaultErrorWebExceptionHandler {
 	 *
 	 * @return a {@code Publisher} of the HTTP response
 	 */
-	@Nonnull
+	@NonNull
 	private Mono<ServerResponse> renderJsonErrorResponse(@NonNull final ServerRequest request) {
 		// from superclass
 		val includeStackTrace = isIncludeStackTrace(request, MediaType.ALL);
@@ -110,7 +109,7 @@ class CustomErrorWebExceptionHandler extends DefaultErrorWebExceptionHandler {
 	 * @return Error message to be used in response object
 	 */
 	@Nullable
-	private String determineErrorMessage(@Nonnull final Map<String, Object> errorAttributes) {
+	private String determineErrorMessage(@NonNull final Map<String, Object> errorAttributes) {
 		val error = (String) errorAttributes.get("error");
 		val errorMessage = (String) errorAttributes.get("message");
 		return StringUtils.hasText(errorMessage) ? errorMessage : error;
@@ -126,7 +125,7 @@ class CustomErrorWebExceptionHandler extends DefaultErrorWebExceptionHandler {
 	 *
 	 * @return the request predicate
 	 */
-	@Nonnull
+	@NonNull
 	private RequestPredicate acceptsJson() {
 		return (serverRequest) -> {
 			List<MediaType> acceptedMediaTypes = serverRequest.headers().accept();

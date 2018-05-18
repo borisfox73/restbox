@@ -5,37 +5,53 @@
 
 package ru.khv.fox.software.web.cisco.restbox.app_java.security;
 
+import lombok.RequiredArgsConstructor;
 import lombok.val;
 import org.springframework.lang.NonNull;
-import org.springframework.security.authentication.ProviderNotFoundException;
+import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
 import org.springframework.security.authentication.ReactiveAuthenticationManager;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.User;
+import org.springframework.util.Assert;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
+import java.util.stream.Collectors;
+
+@RequiredArgsConstructor
 public class JwtReactiveAuthenticationManager implements ReactiveAuthenticationManager {
+
+	@NonNull private final JwtUtility jwtUtility;
+
 
 	@NonNull
 	@Override
 	public Mono<Authentication> authenticate(@NonNull final Authentication authentication) {
-		// TODO сделать ReactiveUserDetailsService для JWT, в котором декодировать его и создавать объект Users.
-		// выдавать исключения нужно в этой службе или здесь, и только подклассы AuthenticationException,
-		// иначе не будет вызван authenticationFailureHandler.
-		// а можно и не службу, а прямо здесь всё сделать.
-		final String username = authentication.getName();
 		return Mono.just(authentication)
 		           .publishOn(Schedulers.parallel())
-		           .filter(JwtAuthenticationToken.class::isInstance)
-		           .switchIfEmpty(Mono.defer(() -> Mono.error(new ProviderNotFoundException("Authentication token is not a JWT"))))
-		           .cast(JwtAuthenticationToken.class)
-		           .filter(JwtAuthenticationToken::hasIdentity)
-		           .switchIfEmpty(Mono.defer(() -> Mono.error(new ProviderNotFoundException("JWT has empty id or subject"))))
-		           .map(c -> {
-			           val principal = new User(c.getName(), "", c.getAuthorities());
-			           principal.eraseCredentials();
-			           return new JwtAuthenticationToken(c.getId(), principal, c.getAuthorities());
-		           });
+		           .map(this::decodeJwt)
+		           .filter(JwtClaims::hasIdentity)
+		           .switchIfEmpty(Mono.defer(() -> Mono.error(new AuthenticationCredentialsNotFoundException("JWT has empty id or subject"))))
+		           .map(JwtReactiveAuthenticationManager::createAuthToken);
+	}
+
+	@NonNull
+	private JwtClaims decodeJwt(@NonNull final Authentication authentication) {
+		// jwt-related exceptions thrown will be wrapped by authentication ones
+		return jwtUtility.parseJwt(authentication.getName());
+	}
+
+	@NonNull
+	private static JwtAuthenticationToken createAuthToken(@NonNull final JwtClaims jwtClaims) {
+		// create user object to be used as a principal
+		val id = jwtClaims.getId();
+		val username = jwtClaims.getSubject();
+		Assert.notNull(username, "JWT subject is null");
+		val authorities = jwtClaims.getAuthorityNames().stream().map(SimpleGrantedAuthority::new).collect(Collectors.toList());
+		val principal = new User(username, "", authorities);
+		principal.eraseCredentials();
+		// token will be created already in authenticated state
+		return new JwtAuthenticationToken(id, principal, principal.getAuthorities());
 	}
 }
-
