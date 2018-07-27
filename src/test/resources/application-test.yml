@@ -1,5 +1,6 @@
 app.config:
   jwt:
+    issuer: http://localhost
     audience: restbox_java
     secret: testsecret
     time-to-live: PT5M

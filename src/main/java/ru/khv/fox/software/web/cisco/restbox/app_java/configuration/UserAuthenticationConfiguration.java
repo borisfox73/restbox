@@ -5,6 +5,7 @@
 
 package ru.khv.fox.software.web.cisco.restbox.app_java.configuration;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.lang.NonNull;
@@ -12,47 +13,50 @@ import org.springframework.security.authentication.UserDetailsRepositoryReactive
 import org.springframework.security.core.userdetails.MapReactiveUserDetailsService;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.crypto.factory.PasswordEncoderFactories;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
-import java.util.Collection;
-
+/**
+ * Configuration for authentication-related beans for user-based authentication.
+ * Instantiates Password Encoder and Authentication Manager bound to user repository
+ * of user base from the application properties.
+ */
+@RequiredArgsConstructor
 @Configuration
 public class UserAuthenticationConfiguration {
-/*
-	@Bean
-	PasswordEncoder passwordEncoder() {
-		// TODO may be revert to more specific
-		return PasswordEncoderFactories.createDelegatingPasswordEncoder();
-	}
-*/
+
+	@NonNull private final AppProperties appProperties;
+
+
+	// TODO may be replace by something more specific
+	@NonNull private static final PasswordEncoder passwordEncoder = PasswordEncoderFactories.createDelegatingPasswordEncoder();
+
 
 	/**
-	 * User Details Service bean.
+	 * User Details Service.
+	 * Not exposed as a bean.
 	 *
 	 * @return ReactiveUserDetailsService instance
 	 */
-	private static MapReactiveUserDetailsService userDetailsService(@NonNull final Collection<AppProperties.UserProperties> users) {
-		// TODO cleanup test settings
-		//noinspection deprecation
-		return new MapReactiveUserDetailsService(users.stream()
-		                                              .map(u -> User.withDefaultPasswordEncoder()
-		                                                            .username(u.getUsername())
-		                                                            .password(u.getPassword())
-		                                                            .roles(u.getRoles())
-//		                                                                    .disabled(true)
-//		                                                                    .accountLocked(true)
-//		                                                                    .accountExpired(true)
-//		                                                                    .credentialsExpired(true)
-                                                                    .build())
-		                                              .toArray(UserDetails[]::new));
-/*
+	private MapReactiveUserDetailsService userDetailsService() {
 		return new MapReactiveUserDetailsService(appProperties.getUsers().stream()
 		                                                      .map(u -> User.withUsername(u.getUsername())
 		                                                                    .password(u.getPassword())
 		                                                                    .roles(u.getRoles())
-		                                                                    .passwordEncoder(passwordEncoder()::encode)
+		                                                                    .passwordEncoder(passwordEncoder::encode)
 		                                                                    .build())
 		                                                      .toArray(UserDetails[]::new));
-*/
+	}
+
+	/**
+	 * Password encoder bean to be used with user information.
+	 * Ovverrides autoconfigured default password encoder ({@link PasswordEncoderFactories#createDelegatingPasswordEncoder}).
+	 *
+	 * @return Password encoder instance
+	 */
+	@Bean
+	static PasswordEncoder passwordEncoder() {
+		return passwordEncoder;
 	}
 
 	/**
@@ -62,8 +66,7 @@ public class UserAuthenticationConfiguration {
 	 * @return Authentication manager instance
 	 */
 	@Bean
-	static UserDetailsRepositoryReactiveAuthenticationManager userDetailsauthenticationManager(@NonNull final AppProperties appProperties) {
-		// default password encoder is PasswordEncoderFactories#createDelegatingPasswordEncoder
-		return new UserDetailsRepositoryReactiveAuthenticationManager(userDetailsService(appProperties.getUsers()));
+	UserDetailsRepositoryReactiveAuthenticationManager userDetailsauthenticationManager() {
+		return new UserDetailsRepositoryReactiveAuthenticationManager(userDetailsService());
 	}
 }

@@ -14,15 +14,10 @@ import org.springframework.boot.web.reactive.error.ErrorAttributes;
 import org.springframework.context.ApplicationContext;
 import org.springframework.http.MediaType;
 import org.springframework.lang.NonNull;
-import org.springframework.lang.Nullable;
-import org.springframework.util.StringUtils;
 import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.server.*;
 import reactor.core.publisher.Mono;
 import ru.khv.fox.software.web.cisco.restbox.app_java.model.ErrorResponse;
-
-import java.util.List;
-import java.util.Map;
 
 /**
  * Custom Error Web Exception Handler for formatting error response in JSON with custom object.
@@ -91,28 +86,14 @@ public class RestApiErrorWebExceptionHandler extends DefaultErrorWebExceptionHan
 		val error = getErrorAttributes(request, includeStackTrace);
 		val errorStatus = getHttpStatus(error);
 		// compose custom error response object
-		log.trace("Errpr attributes: {}", error);
-		val errorResponse = ErrorResponse.create(errorStatus.value(), determineErrorMessage(error));
-		log.trace("Errpr response: {}", errorResponse);
+		log.trace("Error attributes: {}", error);
+		val errorResponse = ErrorResponse.from(error);
+		log.trace("Error response: {}", errorResponse);
 		// from superclass
 		return ServerResponse.status(errorStatus)
 		                     .contentType(MediaType.APPLICATION_JSON_UTF8)
 		                     .body(BodyInserters.fromObject(errorResponse))
 		                     .doOnNext((resp) -> logError(request, errorStatus));
-	}
-
-	/**
-	 * Get reason phrase from exception with fallback to HTTP status reason.
-	 *
-	 * @param errorAttributes Error attributes map
-	 *
-	 * @return Error message to be used in response object
-	 */
-	@Nullable
-	private String determineErrorMessage(@NonNull final Map<String, Object> errorAttributes) {
-		val error = (String) errorAttributes.get("error");
-		val errorMessage = (String) errorAttributes.get("message");
-		return StringUtils.hasText(errorMessage) ? errorMessage : error;
 	}
 
 	// from superclass
@@ -128,8 +109,10 @@ public class RestApiErrorWebExceptionHandler extends DefaultErrorWebExceptionHan
 	@NonNull
 	private RequestPredicate acceptsJson() {
 		return (serverRequest) -> {
-			List<MediaType> acceptedMediaTypes = serverRequest.headers().accept();
-			acceptedMediaTypes.remove(MediaType.ALL);
+			val acceptedMediaTypes = serverRequest.headers().accept();
+			// acceptedMediaTypes.remove(MediaType.ALL);
+			// Should ignore parameters, such as charset and quality
+			acceptedMediaTypes.removeIf(v -> v.isWildcardType() && v.isWildcardSubtype());
 			MediaType.sortBySpecificityAndQuality(acceptedMediaTypes);
 			return acceptedMediaTypes.stream().anyMatch(MediaType.APPLICATION_JSON::isCompatibleWith);
 		};

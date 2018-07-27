@@ -1,18 +1,16 @@
 app.config:
   jwt:
+    issuer: http://localhost
     audience: restbox_java
     secret: qweasdzxc123
-    time-to-live: PT1H
+    time-to-live: PT8H
   users:
     - username: user1
       password: user123
       roles: USER
     - username: admin
       password: password
-      roles: ADMIN
-    - username: user2
-      password: test2
-      roles: OTHER,ADMIN
+      roles: ADMIN,OTHER
   routers:
     testcsr1:
       name: CSR-WAN

@@ -14,6 +14,10 @@ import reactor.core.publisher.Mono;
 
 import java.util.function.Function;
 
+/**
+ * Extract encoded JWT string from the Authorization header with Bearer scheme.
+ * Encapsulate it in the raw JWT authentication container.
+ */
 public class ServerHttpJwtAuthenticationConverter implements Function<ServerWebExchange, Mono<Authentication>> {
 	private static final String TOKEN_PREFIX = "Bearer ";
 
@@ -21,7 +25,6 @@ public class ServerHttpJwtAuthenticationConverter implements Function<ServerWebE
 	@NonNull
 	@Override
 	public Mono<Authentication> apply(@NonNull final ServerWebExchange exchange) {
-		// extract encoded JWT from authorization header
 		return Mono.justOrEmpty(exchange.getRequest().getHeaders().getFirst(HttpHeaders.AUTHORIZATION))
 		           .filter(s -> s.startsWith(TOKEN_PREFIX))
 		           .map(s -> s.substring(TOKEN_PREFIX.length()))
