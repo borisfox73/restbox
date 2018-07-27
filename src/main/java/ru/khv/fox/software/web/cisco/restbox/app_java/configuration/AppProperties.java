@@ -59,6 +59,7 @@ public class AppProperties {
 		private String username;
 		@NotEmpty
 		private String password;
+		@SuppressWarnings("NullableProblems")
 		@NotNull
 		private RouterTypes type;
 
@@ -106,12 +107,19 @@ public class AppProperties {
 	@Data
 	public static class JwtProperties {
 		@Nullable
+		private String issuer;
+		@Nullable
 		private String audience;
 		@NotBlank
 		private String secret;
 		@NotNull
 		@DurationMin(minutes = 1)
 		private Duration timeToLive = Duration.of(1L, ChronoUnit.HOURS);
+
+		@NonNull
+		public Optional<String> getIssuer() {
+			return Optional.ofNullable(issuer).filter(StringUtils::hasText);
+		}
 
 		@NonNull
 		public Optional<String> getAudience() {

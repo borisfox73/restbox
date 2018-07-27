@@ -7,7 +7,7 @@ plugins {
   id "idea"
   id "java"
   id "groovy"
-  id "org.springframework.boot" version "2.0.1.RELEASE"
+  id "org.springframework.boot" version "2.0.3.RELEASE"
   id "nebula.optional-base" version "3.3.0"
 //  id "net.linguica.maven-settings" version "0.5"
 }
@@ -18,7 +18,7 @@ description = 'Cisco RESTBox Middleware in Java'
 
 group = 'ru.khv.fox.software.web.cisco.restbox'
 version = '0.0.1-SNAPSHOT'
-sourceCompatibility = 1.9
+sourceCompatibility = 1.10
 
 compileJava.options.encoding = 'UTF-8'
 javadoc {
@@ -33,9 +33,11 @@ repositories {
 	maven { url = 'https://repo.spring.io/milestone' }
 }
 
-//configurations {
-//	compile.exclude module: "spring-boot-starter-reactor-netty"	// default embedded web server with starter-webflux
-//}
+/*
+configurations {
+	compile.exclude module: "spring-boot-starter-reactor-netty"	// default embedded web server with starter-webflux
+}
+*/
 
 //compileJava.dependsOn(processResources)
 
@@ -56,6 +58,24 @@ dependencies {
 	compile group: 'javax.annotation', name: 'javax.annotation-api', version: '1.3.+'
 	compile group: 'javax.xml', name: 'jaxb-api', version: '2.+'
 	compile group: 'io.jsonwebtoken', name: 'jjwt', version: '0.+'
+
+// https://mvnrepository.com/artifact/org.webjars/webjars-locator
+	compile group: 'org.webjars', name: 'webjars-locator', version: '0.34'
+// https://mvnrepository.com/artifact/org.webjars.bower/bootstrap
+	compile group: 'org.webjars.bower', name: 'bootstrap', version: '4.1.2'
+// https://mvnrepository.com/artifact/org.webjars.bower/angular
+	compile group: 'org.webjars.bower', name: 'angular', version: '1.7.2'
+// https://mvnrepository.com/artifact/org.webjars.bower/angular-resource
+	compile group: 'org.webjars.bower', name: 'angular-resource', version: '1.7.0'
+// https://mvnrepository.com/artifact/org.webjars.bower/angular-route
+	compile group: 'org.webjars.bower', name: 'angular-route', version: '1.7.0'
+// https://mvnrepository.com/artifact/org.webjars.bower/jquery
+	compile group: 'org.webjars.bower', name: 'jquery', version: '3.3.1'
+// https://mvnrepository.com/artifact/org.webjars.bower/es5-shim
+	compile group: 'org.webjars.bower', name: 'es5-shim', version: '4.5.9'
+// https://mvnrepository.com/artifact/org.webjars.bower/json3
+	compile group: 'org.webjars.bower', name: 'json3', version: '3.3.2'
+
 	compile 'org.springframework.boot:spring-boot-configuration-processor', optional
 	runtime('org.springframework.boot:spring-boot-devtools')
 //	compileOnly('org.springframework.boot:spring-boot-configuration-processor')

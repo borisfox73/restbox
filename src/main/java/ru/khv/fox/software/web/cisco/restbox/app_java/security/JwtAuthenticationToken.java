@@ -15,12 +15,16 @@ import org.springframework.util.Assert;
 
 import java.util.Collection;
 
+/**
+ * JSON Web Token authentication container.
+ * Used both with raw and parsed tokens by authentication converter and manager.
+ */
 @Getter
 @EqualsAndHashCode(callSuper = false)
 public class JwtAuthenticationToken extends AbstractAuthenticationToken {
 
 	@Nullable private final Object id;
-	@Nullable private final Object principal;
+	@NonNull private final Object principal;
 
 
 	/**
@@ -31,6 +35,8 @@ public class JwtAuthenticationToken extends AbstractAuthenticationToken {
 	 */
 	JwtAuthenticationToken(@NonNull final String jwtEncoded) {
 		super(null);
+
+		Assert.notNull(jwtEncoded, "Cannot pass null JWT to constructor");
 
 		this.id = null;
 		this.principal = jwtEncoded;
@@ -56,6 +62,15 @@ public class JwtAuthenticationToken extends AbstractAuthenticationToken {
 		super.setAuthenticated(true); // must use super, as we override
 	}
 
+	/**
+	 * Override the default implementation to prevent seting of authenticated state externally.
+	 * Authenticated tokens are created only by constructor above.
+	 *
+	 * @param isAuthenticated Authenticated state
+	 *
+	 * @throws IllegalArgumentException On attempts to set authenticated state to true
+	 */
+	@Override
 	public void setAuthenticated(boolean isAuthenticated) throws IllegalArgumentException {
 		if (isAuthenticated)
 			throw new IllegalArgumentException("Cannot set this token to trusted - use constructor which takes a GrantedAuthority list instead");
@@ -63,7 +78,8 @@ public class JwtAuthenticationToken extends AbstractAuthenticationToken {
 	}
 
 	/**
-	 * Always returns an empty <code>String</code>
+	 * JWT does not carry user credentials.
+	 * Always returns an empty <code>String</code>.
 	 *
 	 * @return an empty String
 	 */

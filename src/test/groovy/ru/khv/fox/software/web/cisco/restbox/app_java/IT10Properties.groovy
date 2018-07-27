@@ -49,6 +49,7 @@ class IT10Properties {
 
         assertThat(properties, is(pojo(AppProperties.class)
                 .withProperty("jwt", is(pojo(AppProperties.JwtProperties.class)
+                .withProperty("issuer", is(optionalWithValue(equalTo("http://localhost"))))
                 .withProperty("audience", is(optionalWithValue(equalTo("restbox_java"))))
                 .withProperty("secret", is("qweasdzxc123"))
                 .withProperty("timeToLive", is(equalTo(Duration.of(5, ChronoUnit.MINUTES))))))))
