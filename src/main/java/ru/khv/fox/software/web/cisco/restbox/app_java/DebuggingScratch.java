@@ -46,11 +46,10 @@ class DebuggingScratch {
 		log.warn("test1 warn");
 		log.error("test1 error");
 
+/*
 		// print out a properties bean contents
 		log.debug("app properties = " + properties);
-/*
 		log.debug("message source = " + messageSource);
-
 		log.debug("test error message system = " + messageSource.getMessage("test.errmsg", null, Locale.getDefault()));
 		log.debug("test error message en = " + messageSource.getMessage("test.errmsg", null, Locale.ENGLISH));
 		log.debug("test error message en_US = " + messageSource.getMessage("test.errmsg", null, Locale.US));
@@ -65,5 +64,7 @@ class DebuggingScratch {
 		log.debug("test error message = " + accessor.getMessage("test.errmsg"));
 		log.debug("test user message = " + accessor.getMessage("test.usermsg"));
 */
+
+		log.debug("boxcontrol = {}", properties.getBoxcontrol());
 	}
 }

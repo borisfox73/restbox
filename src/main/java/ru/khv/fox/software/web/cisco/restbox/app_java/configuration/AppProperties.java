@@ -6,6 +6,7 @@
 package ru.khv.fox.software.web.cisco.restbox.app_java.configuration;
 
 import lombok.Data;
+import lombok.RequiredArgsConstructor;
 import org.apache.logging.log4j.util.Strings;
 import org.hibernate.validator.constraints.time.DurationMin;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -14,10 +15,12 @@ import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
 import org.springframework.util.StringUtils;
 import org.springframework.validation.annotation.Validated;
+import ru.khv.fox.software.web.cisco.restbox.app_java.configuration.validation.ValidBoxControl;
 
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.PositiveOrZero;
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
@@ -33,15 +36,25 @@ public class AppProperties {
 	/**
 	 * JSON Web Ticket parameters
 	 */
+	@SuppressWarnings("NullableProblems")
+	@NotNull
 	private JwtProperties jwt;
 	/**
 	 * Routers
 	 */
+	@NotEmpty
 	private Map<String, RouterProperties> routers = new HashMap<>();
 	/**
 	 * Users
 	 */
+	@NotEmpty
 	private List<UserProperties> users = new ArrayList<>();
+
+	/**
+	 * Boxes
+	 */
+	@NotEmpty
+	private List<BoxProperties> boxcontrol = new ArrayList<>();
 
 
 	/*
@@ -125,5 +138,71 @@ public class AppProperties {
 		public Optional<String> getAudience() {
 			return Optional.ofNullable(audience).filter(StringUtils::hasText);
 		}
+	}
+
+	// TODO refactor into properties and model classes
+	/*
+	 * Box controls, sensors and indicators.
+	 */
+	@Data
+	@ValidBoxControl
+	public static class BoxControlProperties {
+		@RequiredArgsConstructor
+		public enum ControlTypes {
+			SWITCH(ControlKinds.SENSOR), BUTTON(ControlKinds.SENSOR), USONIC(ControlKinds.SENSOR), LED(ControlKinds.INDICATOR);
+
+			private enum ControlKinds {SENSOR, INDICATOR}
+
+			private final ControlKinds kind;
+
+			public boolean isSensor() {
+				return kind == ControlKinds.SENSOR;
+			}
+
+			public boolean isIndicator() {
+				return kind == ControlKinds.INDICATOR;
+			}
+		}
+
+		// type should be SWITCH, BUTTON or USONIC
+		public enum OnOffFunctions {
+			ANONE
+		}
+
+		// type should be LED
+		public enum RFunctions {
+			RNONE
+		}
+
+		@SuppressWarnings("NullableProblems")
+		@NotNull
+		private ControlTypes type;
+		@PositiveOrZero
+		private int id;
+		@PositiveOrZero
+		private int status;
+		@Nullable
+		private String descr;
+		@Nullable
+		private OnOffFunctions onFunc;
+		@Nullable
+		private OnOffFunctions offFunc;
+		@Nullable
+		private RFunctions rFunc;
+	}
+
+	/*
+	 * Box descriptor.
+	 */
+	@Data
+	private static class BoxProperties {
+		@NotBlank
+		private String name;
+		@NotBlank
+		private String secret;
+		@PositiveOrZero
+		private int ready;
+		@NotEmpty
+		private List<BoxControlProperties> boxes = new ArrayList<>();
 	}
 }
