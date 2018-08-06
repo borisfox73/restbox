@@ -1,0 +1,24 @@
+{
+  "properties": [
+    {
+      "name": "app.config.jwt.issuer",
+      "type": "java.lang.String",
+      "description": "JWT issuer claim value."
+    },
+    {
+      "name": "app.config.jwt.audience",
+      "type": "java.lang.String",
+      "description": "JWT audience claim value."
+    },
+    {
+      "name": "app.config.jwt.secret",
+      "type": "java.lang.String",
+      "description": "JWT signature secret phrase."
+    },
+    {
+      "name": "app.config.jwt.time-to-live",
+      "type": "java.lang.String",
+      "description": "JWT time to live in ISO format."
+    }
+  ]
+}
