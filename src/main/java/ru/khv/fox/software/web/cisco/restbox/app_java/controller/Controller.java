@@ -8,7 +8,6 @@ package ru.khv.fox.software.web.cisco.restbox.app_java.controller;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.lang.NonNull;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -46,7 +45,8 @@ public class Controller {
 
 	// TODO why authorization response is sent in text/plain instead of json ?
 	@GetMapping(path = "jsontest", produces = MediaType.APPLICATION_JSON_VALUE)
-	@PreAuthorize("isFullyAuthenticated() and hasRole('ADMIN')")
+// TODO does not work in 2.0.5 - exception handlers didn't get invoked
+//	@PreAuthorize("isFullyAuthenticated() and hasRole('ADMIN')")
 	public Mono<Principal> jsonTest(@NonNull final Mono<Principal> principal) {
 		log.debug("principal: {}", principal);
 		return principal;

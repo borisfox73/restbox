@@ -5,8 +5,10 @@
 
 package ru.khv.fox.software.web.cisco.restbox.app_java.configuration;
 
+import lombok.AccessLevel;
 import lombok.Data;
-import lombok.RequiredArgsConstructor;
+import lombok.Getter;
+import lombok.Setter;
 import org.apache.logging.log4j.util.Strings;
 import org.hibernate.validator.constraints.time.DurationMin;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -16,7 +18,12 @@ import org.springframework.lang.Nullable;
 import org.springframework.util.StringUtils;
 import org.springframework.validation.annotation.Validated;
 import ru.khv.fox.software.web.cisco.restbox.app_java.configuration.validation.ValidBoxControl;
+import ru.khv.fox.software.web.cisco.restbox.app_java.model.box.Box;
+import ru.khv.fox.software.web.cisco.restbox.app_java.model.box.BoxControlOnOffFunctions;
+import ru.khv.fox.software.web.cisco.restbox.app_java.model.box.BoxControlRFunctions;
+import ru.khv.fox.software.web.cisco.restbox.app_java.model.box.BoxControlTypes;
 
+import javax.annotation.PostConstruct;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
@@ -24,6 +31,7 @@ import javax.validation.constraints.PositiveOrZero;
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Configurable application properties.
@@ -48,13 +56,27 @@ public class AppProperties {
 	 * Users
 	 */
 	@NotEmpty
-	private List<UserProperties> users = new ArrayList<>();
+	private Set<UserProperties> users = new HashSet<>();
 
 	/**
-	 * Boxes
+	 * Boxes (intermediate configuration objects)
 	 */
+	@Getter(AccessLevel.NONE)
 	@NotEmpty
-	private List<BoxProperties> boxcontrol = new ArrayList<>();
+	private Set<BoxProperties> boxcontrol = new HashSet<>();
+
+	/**
+	 * Boxes dynamic objects
+	 */
+	@Setter(AccessLevel.NONE)
+	private Set<Box> boxes;
+
+
+	@PostConstruct
+	void postConstruct() {
+		// Instantiate dynamic objects with state from configuration properties
+		boxes = boxcontrol.stream().map(Box::getInstance).collect(Collectors.toSet());
+	}
 
 
 	/*
@@ -112,6 +134,20 @@ public class AppProperties {
 			             .filter(Strings::isNotEmpty)
 			             .toArray(String[]::new);
 		}
+
+		// Uniqueness on username
+		@Override
+		public boolean equals(final Object o) {
+			if (this == o) return true;
+			if (o == null || getClass() != o.getClass()) return false;
+			final UserProperties that = (UserProperties) o;
+			return Objects.equals(username, that.username);
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(username);
+		}
 	}
 
 	/*
@@ -147,62 +183,51 @@ public class AppProperties {
 	@Data
 	@ValidBoxControl
 	public static class BoxControlProperties {
-		@RequiredArgsConstructor
-		public enum ControlTypes {
-			SWITCH(ControlKinds.SENSOR), BUTTON(ControlKinds.SENSOR), USONIC(ControlKinds.SENSOR), LED(ControlKinds.INDICATOR);
-
-			private enum ControlKinds {SENSOR, INDICATOR}
-
-			private final ControlKinds kind;
-
-			public boolean isSensor() {
-				return kind == ControlKinds.SENSOR;
-			}
-
-			public boolean isIndicator() {
-				return kind == ControlKinds.INDICATOR;
-			}
-		}
-
-		// type should be SWITCH, BUTTON or USONIC
-		public enum OnOffFunctions {
-			ANONE
-		}
-
-		// type should be LED
-		public enum RFunctions {
-			RNONE
-		}
-
 		@SuppressWarnings("NullableProblems")
 		@NotNull
-		private ControlTypes type;
+		private BoxControlTypes type;
 		@PositiveOrZero
 		private int id;
-		@PositiveOrZero
-		private int status;
 		@Nullable
 		private String descr;
-		@Nullable
-		private OnOffFunctions onFunc;
-		@Nullable
-		private OnOffFunctions offFunc;
-		@Nullable
-		private RFunctions rFunc;
+		// runtime state fields are allowed in configuration but ignored
+		//@PositiveOrZero
+		private int status;
+		//@Nullable
+		private BoxControlOnOffFunctions onFunc;
+		//@Nullable
+		private BoxControlOnOffFunctions offFunc;
+		//@Nullable
+		private BoxControlRFunctions rFunc;
 	}
 
 	/*
 	 * Box descriptor.
 	 */
 	@Data
-	private static class BoxProperties {
+	public static class BoxProperties {
 		@NotBlank
 		private String name;
 		@NotBlank
 		private String secret;
-		@PositiveOrZero
+		// runtime state fields are allowed in configuration but ignored
+		//@PositiveOrZero
 		private int ready;
 		@NotEmpty
 		private List<BoxControlProperties> boxes = new ArrayList<>();
+
+		// Uniqueness on box name
+		@Override
+		public boolean equals(final Object o) {
+			if (this == o) return true;
+			if (o == null || getClass() != o.getClass()) return false;
+			final BoxProperties that = (BoxProperties) o;
+			return Objects.equals(name, that.name);
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(name);
+		}
 	}
 }

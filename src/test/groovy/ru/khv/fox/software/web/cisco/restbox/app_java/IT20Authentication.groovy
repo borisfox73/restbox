@@ -5,6 +5,7 @@
 
 package ru.khv.fox.software.web.cisco.restbox.app_java
 
+import com.fasterxml.jackson.annotation.JsonProperty
 import io.jsonwebtoken.Claims
 import io.jsonwebtoken.JwtParser
 import io.jsonwebtoken.Jwts
@@ -13,6 +14,7 @@ import io.restassured.filter.log.RequestLoggingFilter
 import io.restassured.filter.log.ResponseLoggingFilter
 import io.restassured.http.ContentType
 import org.apache.http.HttpStatus
+import org.hamcrest.Matcher
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -23,11 +25,10 @@ import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.junit4.SpringRunner
 import ru.khv.fox.software.web.cisco.restbox.app_java.configuration.AppProperties
 import ru.khv.fox.software.web.cisco.restbox.app_java.configuration.AppProperties.JwtProperties
-import ru.khv.fox.software.web.cisco.restbox.app_java.model.LoginRequest
 
 import static io.restassured.RestAssured.given
+import static org.hamcrest.MatcherAssert.assertThat
 import static org.hamcrest.Matchers.*
-import static org.junit.Assert.assertThat
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -37,7 +38,14 @@ class IT20Authentication {
     private static final String LOGIN_ENDPOINT = "/login"
     private static final String USERINFO_ENDPOINT = "/userinfo"
 
-    @LocalServerPort
+	private static class LoginRequest {
+		@JsonProperty
+		private String username
+		@JsonProperty
+		private String password
+	}
+
+	@LocalServerPort
     private int serverPort
     @Autowired
     private AppProperties appProperties
@@ -45,13 +53,17 @@ class IT20Authentication {
 
 
     private void invalidCredentials() {
-        loginRequest.setUsername("unknownuser")
-        loginRequest.setPassword("zzz")
+//        loginRequest.setUsername("unknownuser")
+//        loginRequest.setPassword("zzz")
+	    loginRequest.username = "unknownuser"
+	    loginRequest.password = "zzz"
     }
 
     private void validCredentials() {
-        loginRequest.setUsername("testuser")
-        loginRequest.setPassword("testpass")
+//	    loginRequest.setUsername("testuser")
+//	    loginRequest.setPassword("testpass")
+	    loginRequest.username = "testuser"
+	    loginRequest.password = "testpass"
     }
 
 
@@ -71,7 +83,7 @@ class IT20Authentication {
             .get(USERINFO_ENDPOINT)
         .then()
             .statusCode(HttpStatus.SC_UNAUTHORIZED)
-            .body("error.code", is(401),
+            .body("error.status", is(401),
                   "error.reason", is("Access Denied: Not Authenticated"))
     	// @formatter:on
     }
@@ -88,8 +100,8 @@ class IT20Authentication {
             .post(LOGIN_ENDPOINT)
         .then()
             .statusCode(HttpStatus.SC_UNAUTHORIZED)
-            .body("error.code", is(401),
-                  "error.reason", is("Unauthenticated access: Invalid Credentials"))
+            .body("error.status", is(401),
+                  "error.reason", is("Invalid Credentials"))
     	// @formatter:on
     }
 
@@ -120,8 +132,9 @@ class IT20Authentication {
         UUID jwtId = UUID.fromString(jwtBody.getId())
         assertThat(jwtId, is(notNullValue(UUID.class)))
         assertThat(jwtBody.getSubject(), is("testuser"))
-        assertThat(jwtBody.getIssuer(), is("http://localhost:$serverPort/".toString()))
+//	    assertThat(jwtBody.getIssuer(), is("http://localhost:$serverPort/".toString()))
+	    assertThat(jwtBody.getIssuer(), is("http://localhost".toString()))
         Collection<String> authorities = jwtBody.get("authorities", Collection.class)
-        assertThat(authorities, contains("ROLE_USER"))
+	    assertThat(authorities, contains("ROLE_USER") as Matcher<? super Collection>)
     }
 }
