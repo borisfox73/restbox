@@ -7,7 +7,7 @@ plugins {
   id "idea"
   id "java"
   id "groovy"
-  id "org.springframework.boot" version "2.0.3.RELEASE"
+  id "org.springframework.boot" version "2.0.5.RELEASE"
   id "nebula.optional-base" version "3.3.0"
 //  id "net.linguica.maven-settings" version "0.5"
 }
@@ -20,7 +20,10 @@ group = 'ru.khv.fox.software.web.cisco.restbox'
 version = '0.0.1-SNAPSHOT'
 sourceCompatibility = 1.10
 
-compileJava.options.encoding = 'UTF-8'
+
+defaultTasks 'build'
+
+// compileJava.options.encoding = 'UTF-8'
 javadoc {
     options.encoding = 'UTF-8'
     options.charSet = 'UTF-8'
@@ -77,11 +80,17 @@ dependencies {
 // https://mvnrepository.com/artifact/org.webjars.bower/json3
 	compile group: 'org.webjars.bower', name: 'json3', version: '3.3.2'
 
-	compile 'org.springframework.boot:spring-boot-configuration-processor', optional
+//	compile 'org.springframework.boot:spring-boot-configuration-processor', optional
 	runtime('org.springframework.boot:spring-boot-devtools')
+
+	compileOnly 'org.springframework.boot:spring-boot-configuration-processor', optional
 //	compileOnly('org.springframework.boot:spring-boot-configuration-processor')
-	compileOnly('org.projectlombok:lombok')
+
 	compileOnly('com.google.code.findbugs:jsr305:3.+')
+	compileOnly('org.projectlombok:lombok')
+
+	annotationProcessor group: 'org.projectlombok', name: 'lombok', version: '1.18.+'
+
 	testCompile('org.springframework.boot:spring-boot-starter-test')
 	testCompile('org.springframework.security:spring-security-test')
 	testCompile('io.projectreactor:reactor-test')

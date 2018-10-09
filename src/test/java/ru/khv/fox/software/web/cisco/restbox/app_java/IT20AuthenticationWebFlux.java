@@ -5,6 +5,7 @@
 
 package ru.khv.fox.software.web.cisco.restbox.app_java;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,12 +25,13 @@ import ru.khv.fox.software.web.cisco.restbox.app_java.controller.Controller;
  @Controller, @ControllerAdvice, @JsonComponent, Converter, GenericConverter, and WebFluxConfigurer.
  Regular @Component beans are not scanned when the @WebFluxTest annotation is used.
  */
+@Ignore("WebFluxTest cannot be used for this")
 @RunWith(SpringRunner.class)
 @WebFluxTest(controllers = {Controller.class})
 @ActiveProfiles("test")
 public class IT20AuthenticationWebFlux {
 
-	private static String TEST_ENDPOINT = "/jsontest";
+	private static final String TEST_ENDPOINT = "/jsontest";
 
 	@Autowired
 	private WebTestClient webClient;

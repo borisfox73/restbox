@@ -6,6 +6,7 @@
 package ru.khv.fox.software.web.cisco.restbox.app_java.configuration;
 
 import lombok.val;
+import org.springframework.boot.autoconfigure.security.reactive.PathRequest;
 import org.springframework.boot.web.reactive.error.ErrorWebExceptionHandler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -106,19 +107,18 @@ class WebSecurityConfiguration {
 		           .authenticationManager(null) // discard autoconfigured from a bean in ServerHttpSecurityConfiguration
 		           .addFilterAt(loginAuthenticationWebFilter(), SecurityWebFiltersOrder.HTTP_BASIC)
 		           .addFilterAt(jwtAuthenticationWebFilter(), SecurityWebFiltersOrder.AUTHENTICATION)
-	               .exceptionHandling()     // для всех фильтров, в том числе authorization. TODO включить обратно
+	               .exceptionHandling()     // для всех фильтров, в том числе authorization
 	                    .authenticationEntryPoint(authenticationEntryPoint)
 		                .accessDeniedHandler(accessDeniedHandler)
-/* now relies on method security
+// TODO cannot use reactive method security because exception handlers does not get invoked.
 	               .and()
 				        .authorizeExchange()
 		                    .matchers(PathRequest.toStaticResources().atCommonLocations()).permitAll()
 		                    .pathMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 //		                    .pathMatchers(HttpMethod.POST, LOGIN_ENDPOINT).permitAll()  // TODO cleanup, now implemented as filter
-//		                    .pathMatchers("/jsontest").hasAuthority("ROLE_ADMIN")  // TODO cleanup test
+		                    .pathMatchers("/jsontest").hasAuthority("ROLE_ADMIN")  // TODO cleanup test
 		                .anyExchange()
 		                    .authenticated()
-*/
 		           .and()
 		                .build();
 		// @formatter:on

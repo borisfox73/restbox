@@ -13,7 +13,6 @@ import org.springframework.test.context.junit4.SpringRunner
 import ru.khv.fox.software.web.cisco.restbox.app_java.configuration.AppProperties
 
 import java.time.Duration
-import java.time.temporal.ChronoUnit
 
 import static com.spotify.hamcrest.optional.OptionalMatchers.optionalWithValue
 import static com.spotify.hamcrest.pojo.IsPojo.pojo
@@ -52,7 +51,7 @@ class IT10Properties {
                 .withProperty("issuer", is(optionalWithValue(equalTo("http://localhost"))))
                 .withProperty("audience", is(optionalWithValue(equalTo("restbox_java"))))
                 .withProperty("secret", is("qweasdzxc123"))
-                .withProperty("timeToLive", is(equalTo(Duration.of(5, ChronoUnit.MINUTES))))))))
+		        .withProperty("timeToLive", is(equalTo(Duration.ofHours(8))))))))
 
         assertThat(properties, hasProperty("routers", hasEntry(equalTo("testcsr1"), pojo(AppProperties.RouterProperties.class)
                 .withProperty("name", is("CSR-WAN"))

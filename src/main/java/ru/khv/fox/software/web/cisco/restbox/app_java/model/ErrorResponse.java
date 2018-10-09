@@ -59,13 +59,25 @@ public class ErrorResponse extends CommonResponse {
 	}
 
 	// TODO from application exception with short message
-/*
 	// TODO убрать?
+/*
 	@NonNull
-	public static ErrorResponse create(@NonNull final String message, final int code, @Nullable final String reason) {
-		return new ErrorResponse(message, new ErrorResponse.ErrorDetails(code, reason));
+	public static ErrorResponse create(@NonNull final String message, @Nullable final HttpStatus status, @Nullable final Exception exception) {
+		val errorAttributesModel = new LinkedHashMap<String,Object>();
+		errorAttributesModel.put("timestamp", new Date());
+		errorAttributesModel.put("path", "UNKNOWN");    // TODO get actual path
+		if (status != null)
+			errorAttributesModel.put("status", status.value());
+		if (exception != null) {
+			errorAttributesModel.put("error", exception.getLocalizedMessage());
+			Optional.ofNullable(exception.getCause()).map(Throwable::getLocalizedMessage).ifPresent(r -> errorAttributesModel.put("reason", r));
+		} else
+			errorAttributesModel.put("error", message);
+		return new ErrorResponse(message, errorAttributesModel);
 	}
+*/
 
+/*
 	// TODO убрать
 	// Endpoint not mapped
 	public static Mono<Void> notFound(@NonNull final ServerWebExchange exchange) {

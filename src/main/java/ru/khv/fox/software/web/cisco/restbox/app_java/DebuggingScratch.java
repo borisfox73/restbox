@@ -65,6 +65,6 @@ class DebuggingScratch {
 		log.debug("test user message = " + accessor.getMessage("test.usermsg"));
 */
 
-		log.debug("boxcontrol = {}", properties.getBoxcontrol());
+		log.debug("boxes = {}", properties.getBoxes());
 	}
 }
