@@ -15,17 +15,32 @@ import org.springframework.lang.Nullable;
 @Getter
 @Setter
 @ToString
-@EqualsAndHashCode(of = {"type", "descr"})
+@EqualsAndHashCode(of = {"type", "id"})
 @RequiredArgsConstructor(access = AccessLevel.PACKAGE)
 public abstract class BoxControl {
 	// parameters
 	@NonNull
-	private final BoxControlTypes type;
+	private final BoxControlType type;
 	private final int id;
 	@Nullable
 	private final String descr;
 	// state
 	private int status;
 
-	// TODO add factory method to compose a concrete type from app properties
+	// TODO add stub methods to be overriden in childs
+
+	@Nullable
+	public BoxControlOnOffFunctions getOnFunc() {
+		throw new UnsupportedOperationException("Method is not implemented");
+	}
+
+	@Nullable
+	public BoxControlOnOffFunctions getOffFunc() {
+		throw new UnsupportedOperationException("Method is not implemented");
+	}
+
+	@Nullable
+	public BoxControlRFunctions getRFunc() {
+		throw new UnsupportedOperationException("Method is not implemented");
+	}
 }

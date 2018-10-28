@@ -8,7 +8,6 @@ package ru.khv.fox.software.web.cisco.restbox.app_java.configuration;
 import lombok.AccessLevel;
 import lombok.Data;
 import lombok.Getter;
-import lombok.Setter;
 import org.apache.logging.log4j.util.Strings;
 import org.hibernate.validator.constraints.time.DurationMin;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -18,12 +17,10 @@ import org.springframework.lang.Nullable;
 import org.springframework.util.StringUtils;
 import org.springframework.validation.annotation.Validated;
 import ru.khv.fox.software.web.cisco.restbox.app_java.configuration.validation.ValidBoxControl;
-import ru.khv.fox.software.web.cisco.restbox.app_java.model.box.Box;
 import ru.khv.fox.software.web.cisco.restbox.app_java.model.box.BoxControlOnOffFunctions;
 import ru.khv.fox.software.web.cisco.restbox.app_java.model.box.BoxControlRFunctions;
-import ru.khv.fox.software.web.cisco.restbox.app_java.model.box.BoxControlTypes;
+import ru.khv.fox.software.web.cisco.restbox.app_java.model.box.BoxControlType;
 
-import javax.annotation.PostConstruct;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
@@ -31,7 +28,6 @@ import javax.validation.constraints.PositiveOrZero;
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * Configurable application properties.
@@ -61,22 +57,24 @@ public class AppProperties {
 	/**
 	 * Boxes (intermediate configuration objects)
 	 */
-	@Getter(AccessLevel.NONE)
+	@Getter(AccessLevel.PACKAGE)
+//	@Getter(AccessLevel.NONE)
 	@NotEmpty
 	private Set<BoxProperties> boxcontrol = new HashSet<>();
 
-	/**
-	 * Boxes dynamic objects
-	 */
-	@Setter(AccessLevel.NONE)
-	private Set<Box> boxes;
-
-
-	@PostConstruct
-	void postConstruct() {
-		// Instantiate dynamic objects with state from configuration properties
-		boxes = boxcontrol.stream().map(Box::getInstance).collect(Collectors.toSet());
-	}
+//	/**
+//	 * Boxes dynamic objects
+//	 */
+//	@Getter(AccessLevel.PACKAGE)
+//	@Setter(AccessLevel.NONE)
+//	private Set<Box> boxes;
+//
+//
+//	@PostConstruct
+//	void postConstruct() {
+//		// Instantiate dynamic objects with state from configuration properties
+//		boxes = boxcontrol.stream().map(Box::getInstance).collect(Collectors.toSet());
+//	}
 
 
 	/*
@@ -185,7 +183,7 @@ public class AppProperties {
 	public static class BoxControlProperties {
 		@SuppressWarnings("NullableProblems")
 		@NotNull
-		private BoxControlTypes type;
+		private BoxControlType type;
 		@PositiveOrZero
 		private int id;
 		@Nullable
