@@ -52,4 +52,5 @@ public class Controller {
 		return principal;
 	}
 
+	// TODO implement controller for box interaction
 }

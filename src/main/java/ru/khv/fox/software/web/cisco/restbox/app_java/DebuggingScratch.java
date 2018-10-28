@@ -9,8 +9,13 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
+import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
 import ru.khv.fox.software.web.cisco.restbox.app_java.configuration.AppProperties;
+import ru.khv.fox.software.web.cisco.restbox.app_java.model.box.Box;
+import ru.khv.fox.software.web.cisco.restbox.app_java.service.BoxService;
+
+import java.util.Collection;
 
 /**
  * Scratchpad for debugging purposes.
@@ -21,6 +26,19 @@ import ru.khv.fox.software.web.cisco.restbox.app_java.configuration.AppPropertie
 class DebuggingScratch {
 	//class DebuggingScratch implements MessageSourceAware {
 	private final AppProperties properties;
+	@NonNull private final Collection<Box> boxCollection;    // mandatory injection
+	@NonNull private BoxService boxService;
+
+/*
+	// optional injection
+	@Nullable private Collection<Box> boxCollection;
+
+	@Autowired(required = false)
+	void setBoxCollection(@Nullable final Collection<Box> boxCollection) {
+		this.boxCollection = boxCollection;
+	}
+*/
+
 /*
 	private MessageSource messageSource;
 
@@ -65,6 +83,9 @@ class DebuggingScratch {
 		log.debug("test user message = " + accessor.getMessage("test.usermsg"));
 */
 
-		log.debug("boxes = {}", properties.getBoxes());
+//		log.debug("boxes = {}", properties.getBoxes());
+		log.debug("boxes = {}", boxCollection);
+		log.debug("boxservice: {}", boxService);
+		log.debug("check access: {}", boxService.checkAccess("b1", "cisco123"));
 	}
 }
