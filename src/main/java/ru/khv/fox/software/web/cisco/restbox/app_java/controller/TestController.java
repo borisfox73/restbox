@@ -19,7 +19,7 @@ import java.security.Principal;
 // TODO test endpoints.
 @Slf4j
 @RestController
-public class Controller {
+public class TestController {
 
 	@GetMapping("css/hello")
 	public Mono<String> cssHello() {
@@ -43,14 +43,11 @@ public class Controller {
 				.map(name -> String.format("Hello, %s", name));
 	}
 
-	// TODO why authorization response is sent in text/plain instead of json ?
 	@GetMapping(path = "jsontest", produces = MediaType.APPLICATION_JSON_VALUE)
-// TODO does not work in 2.0.5 - exception handlers didn't get invoked
+// TODO method security does not work in 2.0.5 - exception handlers didn't get invoked
 //	@PreAuthorize("isFullyAuthenticated() and hasRole('ADMIN')")
 	public Mono<Principal> jsonTest(@NonNull final Mono<Principal> principal) {
 		log.debug("principal: {}", principal);
 		return principal;
 	}
-
-	// TODO implement controller for box interaction
 }

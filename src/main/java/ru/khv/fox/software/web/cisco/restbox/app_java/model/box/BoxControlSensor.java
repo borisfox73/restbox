@@ -5,6 +5,8 @@
 
 package ru.khv.fox.software.web.cisco.restbox.app_java.model.box;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
@@ -18,8 +20,12 @@ import static ru.khv.fox.software.web.cisco.restbox.app_java.model.box.BoxContro
 @ToString(callSuper = true)
 public class BoxControlSensor extends BoxControl {
 	// state
+	@JsonProperty("onfunc")
+	@JsonPropertyDescription("Box control sensor On function")
 	@Nullable
 	private BoxControlOnOffFunctions onFunc = ANONE;
+	@JsonProperty("offfunc")
+	@JsonPropertyDescription("Box control sensor Off function")
 	@Nullable
 	private BoxControlOnOffFunctions offFunc = ANONE;
 

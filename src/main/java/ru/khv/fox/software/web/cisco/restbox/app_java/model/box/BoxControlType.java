@@ -5,7 +5,6 @@
 
 package ru.khv.fox.software.web.cisco.restbox.app_java.model.box;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 import lombok.RequiredArgsConstructor;
 import org.springframework.lang.NonNull;
@@ -53,13 +52,15 @@ public enum BoxControlType {
 		return kind.instantiate(this, id, description);
 	}
 
-	// for serialization and deserialization
-	@Nullable
-	@JsonCreator
-	private static BoxControlType fromJson(@Nullable final String value) {
-		return value != null ? BoxControlType.valueOf(value.toUpperCase()) : null;
-	}
-
+	/* TODO cleanup
+		// for serialization
+		@Nullable
+		@JsonCreator
+		private static BoxControlType fromJson(@Nullable final String value) {
+			return value != null ? BoxControlType.valueOf(value.toUpperCase()) : null;
+		}
+	*/
+	// for deserialization
 	@NonNull
 	@JsonValue
 	private String toJson() {

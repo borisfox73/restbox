@@ -14,7 +14,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.reactive.server.WebTestClient;
-import ru.khv.fox.software.web.cisco.restbox.app_java.controller.Controller;
+import ru.khv.fox.software.web.cisco.restbox.app_java.controller.TestController;
 
 /*
  Spring WebFlux Testing cannot be used with Spring WebFlux Security due to autoconfiguration restrictions:
@@ -27,7 +27,7 @@ import ru.khv.fox.software.web.cisco.restbox.app_java.controller.Controller;
  */
 @Ignore("WebFluxTest cannot be used for this")
 @RunWith(SpringRunner.class)
-@WebFluxTest(controllers = {Controller.class})
+@WebFluxTest(controllers = {TestController.class})
 @ActiveProfiles("test")
 public class IT20AuthenticationWebFlux {
 

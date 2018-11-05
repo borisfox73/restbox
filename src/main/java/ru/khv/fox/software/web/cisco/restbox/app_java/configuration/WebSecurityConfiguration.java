@@ -60,8 +60,6 @@ class WebSecurityConfiguration {
 		this.accessDeniedHandler = new RestApiAccessDeniedHandler(exceptionHandler);
 	}
 
-// TODO сделать фильтр для /login endpoint
-
 	/*
 	 * Authentication filter to authenticate by Login request object.
 	 */
@@ -72,7 +70,7 @@ class WebSecurityConfiguration {
 		val loginEndpointMatcher = new AndServerWebExchangeMatcher(loginPathMatcher, restMatcher);
 		val authenticationFilter = new AuthenticationWebFilter(new LoginReactiveAuthenticationManager(userAuthenticationManager, jwtService));
 		authenticationFilter.setRequiresAuthenticationMatcher(loginEndpointMatcher);
-		authenticationFilter.setAuthenticationConverter(new ServerHttpLoginAuthenticationConverter(webRequestHelper));
+		authenticationFilter.setServerAuthenticationConverter(new ServerHttpLoginAuthenticationConverter(webRequestHelper));
 		authenticationFilter.setAuthenticationFailureHandler(new ServerAuthenticationEntryPointFailureHandler(authenticationEntryPoint));
 		authenticationFilter.setAuthenticationSuccessHandler(new ResponseBodyServerAuthenticationSuccessHandler(webResponseHelper, LoginResponse::from, HttpStatus.CREATED));
 		return authenticationFilter;
@@ -86,7 +84,7 @@ class WebSecurityConfiguration {
 		restMatcher.setIgnoredMediaTypes(Collections.singleton(MediaType.ALL));
 		val authenticationFilter = new AuthenticationWebFilter(new JwtReactiveAuthenticationManager(jwtService));
 		authenticationFilter.setRequiresAuthenticationMatcher(restMatcher);
-		authenticationFilter.setAuthenticationConverter(new ServerHttpJwtAuthenticationConverter());
+		authenticationFilter.setServerAuthenticationConverter(new ServerHttpJwtAuthenticationConverter());
 		authenticationFilter.setAuthenticationFailureHandler(new ServerAuthenticationEntryPointFailureHandler(authenticationEntryPoint));
 		return authenticationFilter;
 	}
@@ -110,14 +108,14 @@ class WebSecurityConfiguration {
 	               .exceptionHandling()     // для всех фильтров, в том числе authorization
 	                    .authenticationEntryPoint(authenticationEntryPoint)
 		                .accessDeniedHandler(accessDeniedHandler)
-// TODO cannot use reactive method security because exception handlers does not get invoked.
+// TODO cannot use reactive method security because above exception handlers did not get invoked.
 	               .and()
 				        .authorizeExchange()
 		                    .matchers(PathRequest.toStaticResources().atCommonLocations()).permitAll()
 		                    .pathMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-//		                    .pathMatchers(HttpMethod.POST, LOGIN_ENDPOINT).permitAll()  // TODO cleanup, now implemented as filter
+		                    .pathMatchers("/webapi/**").authenticated()     // Single page web app endpoints
 		                    .pathMatchers("/jsontest").hasAuthority("ROLE_ADMIN")  // TODO cleanup test
-		                .anyExchange()
+		                .anyExchange()  // any other paths
 		                    .authenticated()
 		           .and()
 		                .build();

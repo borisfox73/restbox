@@ -15,14 +15,15 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+// TODO reactivize
 // TODO cleanup
 @Slf4j
 @Service
-class BoxServiceImpl implements BoxService {
+class RestBoxServiceImpl implements RestBoxService {
 	@NonNull private final Map<String, Box> boxes;
 
 
-	BoxServiceImpl(@NonNull final Collection<Box> boxCollection) {
+	RestBoxServiceImpl(@NonNull final Collection<Box> boxCollection) {
 		boxes = boxCollection.stream().collect(Collectors.toUnmodifiableMap(Box::getName, box -> box));
 		log.trace("Box map: {}", boxes);
 	}

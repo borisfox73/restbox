@@ -13,7 +13,7 @@ import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
 import ru.khv.fox.software.web.cisco.restbox.app_java.configuration.AppProperties;
 import ru.khv.fox.software.web.cisco.restbox.app_java.model.box.Box;
-import ru.khv.fox.software.web.cisco.restbox.app_java.service.BoxService;
+import ru.khv.fox.software.web.cisco.restbox.app_java.service.RestBoxService;
 
 import java.util.Collection;
 
@@ -27,7 +27,7 @@ class DebuggingScratch {
 	//class DebuggingScratch implements MessageSourceAware {
 	private final AppProperties properties;
 	@NonNull private final Collection<Box> boxCollection;    // mandatory injection
-	@NonNull private BoxService boxService;
+	@NonNull private RestBoxService restBoxService;
 
 /*
 	// optional injection
@@ -85,7 +85,10 @@ class DebuggingScratch {
 
 //		log.debug("boxes = {}", properties.getBoxes());
 		log.debug("boxes = {}", boxCollection);
-		log.debug("boxservice: {}", boxService);
-		log.debug("check access: {}", boxService.checkAccess("b1", "cisco123"));
+		log.debug("boxservice: {}", restBoxService);
+		log.debug("check access: {}", restBoxService.checkAccess("b1", "cisco123"));
 	}
 }
+
+// TODO configure Jackson JSON deserializer properties (in configuration classes):
+// enum case insensitive, no ordinal deserialization

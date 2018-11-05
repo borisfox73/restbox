@@ -5,6 +5,8 @@
 
 package ru.khv.fox.software.web.cisco.restbox.app_java.model.box;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import lombok.*;
 import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
@@ -19,16 +21,24 @@ import org.springframework.lang.Nullable;
 @RequiredArgsConstructor(access = AccessLevel.PACKAGE)
 public abstract class BoxControl {
 	// parameters
+	@JsonProperty
+	@JsonPropertyDescription("Box control type")
 	@NonNull
 	private final BoxControlType type;
+	@JsonProperty
+	@JsonPropertyDescription("Box control id")
 	private final int id;
+	@JsonProperty
+	@JsonPropertyDescription("Box control description")
 	@Nullable
 	private final String descr;
+	@JsonProperty
+	@JsonPropertyDescription("Box control status")
 	// state
 	private int status;
 
-	// TODO add stub methods to be overriden in childs
 
+	// stub methods to be overriden in childs
 	@Nullable
 	public BoxControlOnOffFunctions getOnFunc() {
 		throw new UnsupportedOperationException("Method is not implemented");
