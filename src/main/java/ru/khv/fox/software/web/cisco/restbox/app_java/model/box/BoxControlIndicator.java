@@ -5,6 +5,8 @@
 
 package ru.khv.fox.software.web.cisco.restbox.app_java.model.box;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
@@ -18,6 +20,8 @@ import static ru.khv.fox.software.web.cisco.restbox.app_java.model.box.BoxContro
 @ToString(callSuper = true)
 public class BoxControlIndicator extends BoxControl {
 	// state
+	@JsonProperty("rfunc")
+	@JsonPropertyDescription("Box control indicator R function")
 	@Nullable
 	private BoxControlRFunctions rFunc = RNONE;
 

@@ -13,7 +13,7 @@ import ru.khv.fox.software.web.cisco.restbox.app_java.model.box.BoxControlType;
 
 import java.util.Collection;
 
-public interface BoxService {
+public interface RestBoxService {
 
 	boolean checkAccess(@NonNull final String boxName, @NonNull final String secret);
 

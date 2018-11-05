@@ -1,0 +1,42 @@
+{
+  "message": [
+    {
+      "name": "b1",
+      "secret": "cisco123",
+      "ready": 0,
+      "boxes": [
+        {
+          "type": "led",
+          "id": 0,
+          "descr": "red light",
+          "status": 0,
+          "rfunc": "rnone"
+        },
+        {
+          "type": "switch",
+          "id": 0,
+          "descr": "red switch",
+          "status": 0,
+          "onfunc": "anone",
+          "offfunc": "anone"
+        },
+        {
+          "type": "button",
+          "id": 0,
+          "descr": "big red button",
+          "status": 0,
+          "onfunc": "anone",
+          "offfunc": "anone"
+        },
+        {
+          "type": "usonic",
+          "id": 0,
+          "descr": "ultrasonic sensor",
+          "status": 0,
+          "onfunc": "anone",
+          "offfunc": "anone"
+        }
+      ]
+    }
+  ]
+}

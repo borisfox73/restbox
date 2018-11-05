@@ -39,7 +39,8 @@ public class UserAuthenticationConfiguration {
 	 * @return ReactiveUserDetailsService instance
 	 */
 	private MapReactiveUserDetailsService userDetailsService() {
-		return new MapReactiveUserDetailsService(appProperties.getUsers().stream()
+		return new MapReactiveUserDetailsService(appProperties.getUsers()
+		                                                      .stream()
 		                                                      .map(u -> User.withUsername(u.getUsername())
 		                                                                    .password(u.getPassword())
 		                                                                    .roles(u.getRoles())

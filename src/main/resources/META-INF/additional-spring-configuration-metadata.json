@@ -19,6 +19,11 @@
       "name": "app.config.jwt.time-to-live",
       "type": "java.lang.String",
       "description": "JWT time to live in ISO format."
+    },
+    {
+      "name": "app.config.boxcontrol",
+      "type": "java.lang.String",
+      "description": "REST Boxes configuration."
     }
   ]
 }

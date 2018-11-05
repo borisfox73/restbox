@@ -18,13 +18,16 @@ public class CommonResponse {
 	@JsonProperty
 	@JsonPropertyDescription("Response message")
 	@NonNull
-	private final String message;
+//	private final String message;
+	private final Object message;
 
-	CommonResponse(@NonNull final String message) {
-		this.message = message;
+	public CommonResponse(@NonNull final Object payload) {
+		this.message = payload;
 	}
 
+/*
 	public static CommonResponse with(@NonNull final String message) {
 		return new CommonResponse(message);
 	}
+*/
 }

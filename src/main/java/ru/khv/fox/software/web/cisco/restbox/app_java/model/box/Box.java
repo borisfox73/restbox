@@ -5,11 +5,14 @@
 
 package ru.khv.fox.software.web.cisco.restbox.app_java.model.box;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import lombok.*;
 import org.springframework.lang.NonNull;
 import ru.khv.fox.software.web.cisco.restbox.app_java.configuration.AppProperties;
 
 import java.util.AbstractMap.SimpleEntry;
+import java.util.Collection;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -17,6 +20,7 @@ import java.util.stream.Collectors;
 /*
  * Box is a mutable object.
  */
+// TODO jsonify
 @Getter
 @Setter
 @ToString
@@ -24,15 +28,23 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
 public class Box {
 	// parameters
+	@JsonProperty
+	@JsonPropertyDescription("Box name")
 	@NonNull
 	private final String name;
+	@JsonProperty
+	@JsonPropertyDescription("Box secret")
 	@NonNull
 	private final String secret;
 	//	@NonNull
 //	private final Set<BoxControl> controls; // TODO is it really needed ?
+//	@JsonProperty("boxes")
+//	@JsonPropertyDescription("Box controls")
 	@NonNull
 	private final Map<SimpleEntry<BoxControlType, Integer>, BoxControl> controlsMap;  // to lookup by type and id pair
 	// state
+	@JsonProperty
+	@JsonPropertyDescription("Box state")
 	private int ready;
 
 
@@ -60,5 +72,12 @@ public class Box {
 	public void incrementReady() {
 		if (ready++ > 99999)
 			ready = 0;
+	}
+
+	@JsonProperty("boxes")
+	@JsonPropertyDescription("Box controls")
+	@NonNull
+	private Collection<BoxControl> getBoxControls() {
+		return controlsMap.values();
 	}
 }
