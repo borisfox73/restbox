@@ -11,18 +11,18 @@ import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
 
 @Getter
-class CiscoRestfulApiAuthorizationException extends RuntimeException {
+class CiscoRestApiAuthorizationException extends RuntimeException {
 
 	@Nullable
 	private final HttpStatus httpStatus;
 
 
-	CiscoRestfulApiAuthorizationException(@NonNull final HttpStatus status) {
+	CiscoRestApiAuthorizationException(@NonNull final HttpStatus status) {
 		super(status.value() + " " + status.getReasonPhrase());
 		this.httpStatus = status;
 	}
 
-	CiscoRestfulApiAuthorizationException(@Nullable final HttpStatus status, @Nullable final String message) {
+	CiscoRestApiAuthorizationException(@Nullable final HttpStatus status, @Nullable final String message) {
 		super(message);
 		this.httpStatus = status;
 	}
