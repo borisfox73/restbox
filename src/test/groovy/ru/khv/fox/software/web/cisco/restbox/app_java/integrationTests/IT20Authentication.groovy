@@ -3,7 +3,7 @@
  * All rights reserved.
  */
 
-package ru.khv.fox.software.web.cisco.restbox.app_java
+package ru.khv.fox.software.web.cisco.restbox.app_java.integrationTests
 
 import com.fasterxml.jackson.annotation.JsonProperty
 import io.jsonwebtoken.Claims

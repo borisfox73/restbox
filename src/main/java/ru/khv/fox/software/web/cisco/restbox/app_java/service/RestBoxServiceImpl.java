@@ -6,13 +6,15 @@
 package ru.khv.fox.software.web.cisco.restbox.app_java.service;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Mono;
 import ru.khv.fox.software.web.cisco.restbox.app_java.model.box.*;
+import ru.khv.fox.software.web.cisco.restbox.app_java.util.RestApiException;
 
 import java.util.Collection;
 import java.util.Map;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 // TODO reactivize
@@ -28,37 +30,35 @@ class RestBoxServiceImpl implements RestBoxService {
 		log.trace("Box map: {}", boxes);
 	}
 
-	private Optional<Box> getByName(@NonNull final String boxName) {
-		return Optional.ofNullable(boxes.get(boxName));
+	private Mono<Box> getByName(@NonNull final String boxName) {
+		return Mono.justOrEmpty(boxes.get(boxName))
+		           .switchIfEmpty(Mono.defer(() -> Mono.error(new RestApiException("Box '" + boxName + "' not found", HttpStatus.NOT_FOUND))));
 	}
 
 	@Override
-	public boolean checkAccess(@NonNull final String boxName, @NonNull final String secret) {
-		return getByName(boxName).filter(b -> b.getSecret().equals(secret)).isPresent();
+	public Mono<Box> checkAccess(@NonNull final String boxName, @NonNull final String secret) {
+		return getByName(boxName).filter(b -> b.getSecret().equals(secret))
+		                         .switchIfEmpty(Mono.defer(() -> Mono.error(new RestApiException("auth_error", HttpStatus.UNAUTHORIZED))));
 	}
 
 	@Override
-	public void putStatus(@NonNull final String boxName, @NonNull final BoxControlType boxControlType, final int boxControlId, final boolean ready, final int status) {
-/*
-		getByName(boxName).ifPresent(box -> {
-			if (ready)
-				box.incrementReady();
-			box.getControlByTypeAndId(boxControlType, boxControlId).ifPresent(control -> control.setStatus(status));
-		});
-*/
-		lookupControl(boxName, boxControlType, boxControlId, ready).ifPresent(control -> control.setStatus(status));
+	public Mono<BoxControl> putStatus(@NonNull final String boxName, @NonNull final BoxControlType boxControlType, final int boxControlId, final boolean ready, final int status) {
+		return lookupControl(boxName, boxControlType, boxControlId, ready).doOnNext(control -> control.setStatus(status));
 	}
 
 	@Override
-	public int getStatus(@NonNull final String boxName, @NonNull final BoxControlType boxControlType, final int boxControlId, final boolean ready) {
-/*
-		return getByName(boxName).flatMap(box -> {
-			if (ready)
-				box.incrementReady();
-			return box.getControlByTypeAndId(boxControlType, boxControlId).map(BoxControl::getStatus);
-		}).orElse(0);
-*/
-		return lookupControl(boxName, boxControlType, boxControlId, ready).map(BoxControl::getStatus).orElse(0);
+	public Mono<BoxControl> putStatus(@NonNull final String boxName, @NonNull final String secret, @NonNull final BoxControlType boxControlType, final int boxControlId, final boolean ready, final int status) {
+		return lookupControl(checkAccess(boxName, secret), boxControlType, boxControlId, ready).doOnNext(control -> control.setStatus(status));
+	}
+
+	@Override
+	public Mono<Integer> getStatus(@NonNull final String boxName, @NonNull final BoxControlType boxControlType, final int boxControlId, final boolean ready) {
+		return lookupControl(boxName, boxControlType, boxControlId, ready).map(BoxControl::getStatus).defaultIfEmpty(0);
+	}
+
+	@Override
+	public Mono<Integer> getStatus(@NonNull final String boxName, @NonNull final String secret, @NonNull final BoxControlType boxControlType, final int boxControlId, final boolean ready) {
+		return lookupControl(checkAccess(boxName, secret), boxControlType, boxControlId, ready).map(BoxControl::getStatus).defaultIfEmpty(0);
 	}
 
 	@NonNull
@@ -68,37 +68,40 @@ class RestBoxServiceImpl implements RestBoxService {
 	}
 
 	@Override
-	public void putOnFunc(@NonNull final String boxName, @NonNull final BoxControlType boxControlType, final int boxControlId, @NonNull final BoxControlOnOffFunctions func) {
-		lookupSensor(boxName, boxControlType, boxControlId).ifPresent(boxSensor -> boxSensor.setOnFunc(func));
+	public Mono<Void> putOnFunc(@NonNull final String boxName, @NonNull final BoxControlType boxControlType, final int boxControlId, @NonNull final BoxControlOnOffFunctions func) {
+		return lookupSensor(boxName, boxControlType, boxControlId).doOnNext(boxSensor -> boxSensor.setOnFunc(func)).then();
 	}
 
 	@Override
-	public void putOffFunc(@NonNull final String boxName, @NonNull final BoxControlType boxControlType, final int boxControlId, @NonNull final BoxControlOnOffFunctions func) {
-		lookupSensor(boxName, boxControlType, boxControlId).ifPresent(boxSensor -> boxSensor.setOffFunc(func));
+	public Mono<Void> putOffFunc(@NonNull final String boxName, @NonNull final BoxControlType boxControlType, final int boxControlId, @NonNull final BoxControlOnOffFunctions func) {
+		return lookupSensor(boxName, boxControlType, boxControlId).doOnNext(boxSensor -> boxSensor.setOffFunc(func)).then();
 	}
 
 	@Override
-	public void putRFunc(@NonNull final String boxName, @NonNull final BoxControlType boxControlType, final int boxControlId, @NonNull final BoxControlRFunctions func) {
-		lookupIndicator(boxName, boxControlType, boxControlId).ifPresent(boxSensor -> boxSensor.setRFunc(func));
+	public Mono<Void> putRFunc(@NonNull final String boxName, @NonNull final BoxControlType boxControlType, final int boxControlId, @NonNull final BoxControlRFunctions func) {
+		return lookupIndicator(boxName, boxControlType, boxControlId).doOnNext(boxSensor -> boxSensor.setRFunc(func)).then();
 	}
 
 	// non-idempotent, has side effects (bumps ready counter)
-	private Optional<BoxControl> lookupControl(@NonNull final String boxName, @NonNull final BoxControlType boxControlType, final int boxControlId, final boolean ready) {
-		return getByName(boxName).stream()
-		                         .peek(box -> { if (ready) box.incrementReady(); })
-		                         .findAny()
-		                         .flatMap(box -> box.getControlByTypeAndId(boxControlType, boxControlId));
+	private Mono<BoxControl> lookupControl(@NonNull final Mono<Box> boxMono, @NonNull final BoxControlType boxControlType, final int boxControlId, final boolean ready) {
+		return boxMono.doOnNext(box -> { if (ready) box.incrementReady(); })
+		              .flatMap(box -> Mono.justOrEmpty(box.getControlByTypeAndId(boxControlType, boxControlId)))
+		              .switchIfEmpty(Mono.defer(() -> Mono.error(new RestApiException("Control with type '" + boxControlType + "' and id " + boxControlId + " not found", HttpStatus.NOT_FOUND))));
 	}
 
-	private Optional<BoxControlSensor> lookupSensor(@NonNull final String boxName, @NonNull final BoxControlType boxControlType, final int boxControlId) {
-		return getByName(boxName).flatMap(box -> box.getControlByTypeAndId(boxControlType, boxControlId))
-		                         .filter(BoxControlSensor.class::isInstance)
-		                         .map(BoxControlSensor.class::cast);
+	private Mono<BoxControl> lookupControl(@NonNull final String boxName, @NonNull final BoxControlType boxControlType, final int boxControlId, final boolean ready) {
+		return lookupControl(getByName(boxName), boxControlType, boxControlId, ready);
 	}
 
-	private Optional<BoxControlIndicator> lookupIndicator(@NonNull final String boxName, @NonNull final BoxControlType boxControlType, final int boxControlId) {
-		return getByName(boxName).flatMap(box -> box.getControlByTypeAndId(boxControlType, boxControlId))
-		                         .filter(BoxControlIndicator.class::isInstance)
-		                         .map(BoxControlIndicator.class::cast);
+	private Mono<BoxControlSensor> lookupSensor(@NonNull final String boxName, @NonNull final BoxControlType boxControlType, final int boxControlId) {
+		return getByName(boxName).flatMap(box -> Mono.justOrEmpty(box.getControlByTypeAndId(boxControlType, boxControlId)))
+		                         .ofType(BoxControlSensor.class)
+		                         .switchIfEmpty(Mono.defer(() -> Mono.error(new RestApiException("Sensor with type '" + boxControlType + "' and id " + boxControlId + " not found", HttpStatus.NOT_FOUND))));
+	}
+
+	private Mono<BoxControlIndicator> lookupIndicator(@NonNull final String boxName, @NonNull final BoxControlType boxControlType, final int boxControlId) {
+		return getByName(boxName).flatMap(box -> Mono.justOrEmpty(box.getControlByTypeAndId(boxControlType, boxControlId)))
+		                         .ofType(BoxControlIndicator.class)
+		                         .switchIfEmpty(Mono.defer(() -> Mono.error(new RestApiException("Indicator with type '" + boxControlType + "' and id " + boxControlId + " not found", HttpStatus.NOT_FOUND))));
 	}
 }

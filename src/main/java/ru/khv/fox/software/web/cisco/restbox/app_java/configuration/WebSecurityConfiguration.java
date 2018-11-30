@@ -113,6 +113,7 @@ class WebSecurityConfiguration {
 				        .authorizeExchange()
 		                    .matchers(PathRequest.toStaticResources().atCommonLocations()).permitAll()
 		                    .pathMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+		                    .pathMatchers("/api/**").permitAll()            // Rest Boxes endpoints
 		                    .pathMatchers("/webapi/**").authenticated()     // Single page web app endpoints
 		                    .pathMatchers("/jsontest").hasAuthority("ROLE_ADMIN")  // TODO cleanup test
 		                .anyExchange()  // any other paths

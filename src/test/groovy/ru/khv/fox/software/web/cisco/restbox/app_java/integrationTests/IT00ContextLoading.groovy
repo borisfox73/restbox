@@ -3,7 +3,7 @@
  * All rights reserved.
  */
 
-package ru.khv.fox.software.web.cisco.restbox.app_java
+package ru.khv.fox.software.web.cisco.restbox.app_java.integrationTests
 
 import org.junit.Test
 import org.junit.runner.RunWith
