@@ -26,7 +26,7 @@ import org.springframework.lang.NonNull;
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class HostnameServiceResponse extends CiscoRestApiResponseBase {
+public class HostnameServiceResponse extends SuccessResponseBase {
 	@NonNull
 	private String hostName;
 

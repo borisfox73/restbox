@@ -36,7 +36,7 @@ import java.time.LocalDateTime;
 //@Valid
 //@Validated
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class AuthServiceResponse extends CiscoRestApiResponseBase {
+public class AuthServiceResponse extends SuccessResponseBase {
 	//	@JsonProperty
 //	@JsonPropertyDescription("authentication token expiry time")
 //	@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "EEE MMM d hh:mm:ss yyyy", locale = "C")

@@ -5,10 +5,7 @@
 
 package ru.khv.fox.software.web.cisco.restbox.app_java.model.cisco;
 
-import lombok.AccessLevel;
-import lombok.EqualsAndHashCode;
-import lombok.RequiredArgsConstructor;
-import lombok.ToString;
+import lombok.*;
 import org.springframework.lang.NonNull;
 
 /**
@@ -19,10 +16,11 @@ import org.springframework.lang.NonNull;
  * }
  * </pre>
  */
+@Getter
 @ToString
 @EqualsAndHashCode
 @RequiredArgsConstructor(access = AccessLevel.PACKAGE)
-abstract class CiscoRestApiResponseBase {
+abstract class SuccessResponseBase {
 	@NonNull
 	private final String kind;
 }

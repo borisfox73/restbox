@@ -53,9 +53,40 @@ public class IT50CiscoRestfulApiService {
 */
 		StepVerifier.create(ciscoRestfulService.getHostname("testcsr1"))
 		            .assertNext(hostnameServiceResponse -> {
-			            System.out.println("host name response: " + hostnameServiceResponse);
+			            System.out.println("host name service response: " + hostnameServiceResponse);
 			            System.out.println("host name: " + hostnameServiceResponse.getHostName());
 			            assertThat(hostnameServiceResponse, hasProperty("hostName", equalTo("csr1000v-test")));
+		            })
+		            .verifyComplete();
+		StepVerifier.create(ciscoRestfulService.getUser("testcsr1", "rest"))
+		            .assertNext(userServiceResponse -> {
+			            System.out.println("user service response: " + userServiceResponse);
+			            System.out.println("user name: " + userServiceResponse.getUsername());
+			            assertThat(userServiceResponse, hasProperty("username", equalTo("rest")));
+		            })
+		            .verifyComplete();
+		StepVerifier.create(ciscoRestfulService.getUsers("testcsr1"))
+		            .expectSubscription()
+		            .thenRequest(10)
+//		            .expectNextCount(1)
+//		            .expectNextCount(2)
+//		            .assertNext(userServiceResponse -> {
+//			            System.out.println("user service response1: " + userServiceResponse);
+//			            System.out.println("user name1: " + userServiceResponse.getUsername());
+//			            assertThat(userServiceResponse, hasProperty("username", equalTo("adm")));
+//		            })
+                    .assertNext(userServiceResponse -> {
+	                    System.out.println("user service response2: " + userServiceResponse);
+	                    System.out.println("user name2: " + userServiceResponse.getUsername());
+	                    assertThat(userServiceResponse, hasProperty("username", equalTo("rest")));
+                    })
+//		            .expectNextMatches(user -> "adm".equals(user.getUsername()))
+//		            .expectNextMatches(user -> "rest".equals(user.getUsername()))
+                    .verifyComplete();
+		StepVerifier.create(ciscoRestfulService.checkAuthToken("testcsr1"))
+		            .assertNext(authServiceResponse -> {
+			            System.out.println("auth service response: " + authServiceResponse);
+			            assertThat(authServiceResponse, hasProperty("kind", equalTo("object#auth-token")));
 		            })
 		            .verifyComplete();
 		StepVerifier.create(ciscoRestfulService.invalidateAuthToken("testcsr1"))
