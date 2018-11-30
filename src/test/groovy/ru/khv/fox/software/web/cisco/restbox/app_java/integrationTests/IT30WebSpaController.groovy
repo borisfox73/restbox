@@ -3,7 +3,7 @@
  * All rights reserved.
  */
 
-package ru.khv.fox.software.web.cisco.restbox.app_java
+package ru.khv.fox.software.web.cisco.restbox.app_java.integrationTests
 
 import com.fasterxml.jackson.annotation.JsonProperty
 import io.restassured.RestAssured
@@ -153,6 +153,65 @@ class IT30WebSpaController {
 	void 'put and get lights b1 led 1'() {
 		putLights('b1', 'led', 1, 1)
 		getLights('b1', 'led', 1, 1)
+		putLights('b1', 'led', 1, 0)
+		getLights('b1', 'led', 1, 0)
+	}
+
+	@Test
+	void 'box not found'() {
+		def endpoint = GETLIGHTS_ENDPOINT.replace('{boxName}', 'nonexistentbox').replace('{boxControlType}', 'led').replace('{boxControlId}', "1")
+		print "GET endpoint = $endpoint"
+		// @formatter:off
+        given()
+            .contentType(ContentType.JSON)
+            .accept(ContentType.JSON)
+            .auth().preemptive()
+                .oauth2(jwt)
+            .when()
+                .get(endpoint)
+            .then()
+                .assertThat()
+                    .statusCode(HttpStatus.SC_NOT_FOUND)
+                    .body("message", is("Box 'nonexistentbox' not found"))
+    	// @formatter:on
+	}
+
+	@Test
+	void 'control not found (get)'() {
+		def endpoint = GETLIGHTS_ENDPOINT.replace('{boxName}', 'b1').replace('{boxControlType}', 'led').replace('{boxControlId}', "5")
+		print "GET endpoint = $endpoint"
+		// @formatter:off
+        given()
+            .contentType(ContentType.JSON)
+            .accept(ContentType.JSON)
+            .auth().preemptive()
+                .oauth2(jwt)
+            .when()
+                .get(endpoint)
+            .then()
+                .assertThat()
+                    .statusCode(HttpStatus.SC_NOT_FOUND)
+                    .body("message", is("Control with type 'LED' and id 5 not found"))
+    	// @formatter:on
+	}
+
+	@Test
+	void 'control not found (put)'() {
+		def endpoint = PUTLIGHTS_ENDPOINT.replace('{boxName}', 'b1').replace('{boxControlType}', 'led').replace('{boxControlId}', "5").replace('{status}', "1")
+		print "PUT endpoint = $endpoint"
+		// @formatter:off
+        given()
+            .contentType(ContentType.JSON)
+            .accept(ContentType.JSON)
+            .auth().preemptive()
+                .oauth2(jwt)
+            .when()
+                .put(endpoint)
+            .then()
+                .assertThat()
+                    .statusCode(HttpStatus.SC_NOT_FOUND)
+                    .body("message", is("Control with type 'LED' and id 5 not found"))
+    	// @formatter:on
 	}
 
 	private void getLights(final String boxName, final String boxControlType, final int boxControlId, final int expected) {

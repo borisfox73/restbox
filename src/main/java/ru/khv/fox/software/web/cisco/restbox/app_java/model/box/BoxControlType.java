@@ -10,12 +10,28 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
 
+import static ru.khv.fox.software.web.cisco.restbox.app_java.model.box.BoxControlAction.*;
 import static ru.khv.fox.software.web.cisco.restbox.app_java.model.box.BoxControlType.BoxControlKind.INDICATOR;
 import static ru.khv.fox.software.web.cisco.restbox.app_java.model.box.BoxControlType.BoxControlKind.SENSOR;
 
 @RequiredArgsConstructor
 public enum BoxControlType {
-	SWITCH(SENSOR), BUTTON(SENSOR), USONIC(SENSOR), LED(INDICATOR);
+	SWITCH(SENSOR),
+	BUTTON(SENSOR),
+	USONIC(SENSOR) {
+		@NonNull
+		@Override
+		public BoxControlAction getAction(final int state) {
+			return state > 5 && state < 50 ? OFF : state > 50 && state < 100 ? ON : NOOP;
+		}
+	},
+	LED(INDICATOR) {
+		@NonNull
+		@Override
+		public BoxControlAction getAction(final int state) {
+			throw new UnsupportedOperationException("Method is not implemented");
+		}
+	};
 
 	enum BoxControlKind {
 		SENSOR {
@@ -50,6 +66,11 @@ public enum BoxControlType {
 	@NonNull
 	BoxControl getInstance(final int id, @Nullable final String description) {
 		return kind.instantiate(this, id, description);
+	}
+
+	@NonNull
+	public BoxControlAction getAction(final int state) {
+		return state == 1 ? ON : state == 0 ? OFF : NOOP;
 	}
 
 	/* TODO cleanup

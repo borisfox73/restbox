@@ -11,12 +11,13 @@ import lombok.Getter;
 import org.apache.logging.log4j.util.Strings;
 import org.hibernate.validator.constraints.time.DurationMin;
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
+import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.validation.annotation.Validated;
 import ru.khv.fox.software.web.cisco.restbox.app_java.configuration.validation.ValidBoxControl;
+import ru.khv.fox.software.web.cisco.restbox.app_java.model.RouterType;
 import ru.khv.fox.software.web.cisco.restbox.app_java.model.box.BoxControlOnOffFunctions;
 import ru.khv.fox.software.web.cisco.restbox.app_java.model.box.BoxControlRFunctions;
 import ru.khv.fox.software.web.cisco.restbox.app_java.model.box.BoxControlType;
@@ -34,18 +35,23 @@ import java.util.*;
  */
 @Data
 @Validated
-@Configuration
+@Component
 @ConfigurationProperties(prefix = "app.config")
 public class AppProperties {
 	/**
+	 * Ignore SSL certificate issuer and host name validation for REST API client.
+	 */
+	private boolean sslIgnoreValidation;
+
+	/**
 	 * JSON Web Ticket parameters
 	 */
-	@SuppressWarnings("NullableProblems")
 	@NotNull
 	private JwtProperties jwt;
 	/**
 	 * Routers
 	 */
+	@Getter(AccessLevel.PACKAGE)
 	@NotEmpty
 	private Map<String, RouterProperties> routers = new HashMap<>();
 	/**
@@ -58,23 +64,8 @@ public class AppProperties {
 	 * Boxes (intermediate configuration objects)
 	 */
 	@Getter(AccessLevel.PACKAGE)
-//	@Getter(AccessLevel.NONE)
 	@NotEmpty
 	private Set<BoxProperties> boxcontrol = new HashSet<>();
-
-//	/**
-//	 * Boxes dynamic objects
-//	 */
-//	@Getter(AccessLevel.PACKAGE)
-//	@Setter(AccessLevel.NONE)
-//	private Set<Box> boxes;
-//
-//
-//	@PostConstruct
-//	void postConstruct() {
-//		// Instantiate dynamic objects with state from configuration properties
-//		boxes = boxcontrol.stream().map(Box::getInstance).collect(Collectors.toSet());
-//	}
 
 
 	/*
@@ -82,8 +73,6 @@ public class AppProperties {
 	 */
 	@Data
 	public static class RouterProperties {
-		public enum RouterTypes {CSRV, @SuppressWarnings("unused") ASR}
-
 		@NotEmpty
 		private String name;
 		@NotEmpty
@@ -92,21 +81,8 @@ public class AppProperties {
 		private String username;
 		@NotEmpty
 		private String password;
-		@SuppressWarnings("NullableProblems")
 		@NotNull
-		private RouterTypes type;
-
-/* not needed - default StringToEnum converter is capable to perform case-insensitive matching.
-		@Component
-		@ConfigurationPropertiesBinding
-		public class RouterTypesConverter implements Converter<String, RouterTypes> {
-			@Nullable
-			@Override
-			public RouterTypes convert(@Nullable final String source) {
-				return source != null ? RouterTypes.valueOf(source.toUpperCase()) : null;
-			}
-		}
-*/
+		private RouterType type;
 	}
 
 	/*
@@ -174,14 +150,12 @@ public class AppProperties {
 		}
 	}
 
-	// TODO refactor into properties and model classes
 	/*
 	 * Box controls, sensors and indicators.
 	 */
 	@Data
 	@ValidBoxControl
 	public static class BoxControlProperties {
-		@SuppressWarnings("NullableProblems")
 		@NotNull
 		private BoxControlType type;
 		@PositiveOrZero

@@ -8,6 +8,7 @@ package ru.khv.fox.software.web.cisco.restbox.app_java.model.box;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import lombok.*;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.lang.NonNull;
 import ru.khv.fox.software.web.cisco.restbox.app_java.configuration.AppProperties;
 
@@ -20,7 +21,7 @@ import java.util.stream.Collectors;
 /*
  * Box is a mutable object.
  */
-// TODO jsonify
+@Slf4j
 @Getter
 @Setter
 @ToString
@@ -36,10 +37,6 @@ public class Box {
 	@JsonPropertyDescription("Box secret")
 	@NonNull
 	private final String secret;
-	//	@NonNull
-//	private final Set<BoxControl> controls; // TODO is it really needed ?
-//	@JsonProperty("boxes")
-//	@JsonPropertyDescription("Box controls")
 	@NonNull
 	private final Map<SimpleEntry<BoxControlType, Integer>, BoxControl> controlsMap;  // to lookup by type and id pair
 	// state
@@ -49,29 +46,21 @@ public class Box {
 
 
 	public static Box getInstance(@NonNull final AppProperties.BoxProperties boxProperties) {
-		// TODO cleanup
-/*
-		val boxControls = boxProperties.getBoxes()
-		                               .stream()
-		                               .map(bc -> bc.getType().getInstance(bc.getId(), bc.getDescr()))
-		                               .collect(Collectors.toSet());
-*/
 		val boxControlsMap = boxProperties.getBoxes()
 		                                  .stream()
 		                                  .map(bc -> bc.getType().getInstance(bc.getId(), bc.getDescr()))
 		                                  .collect(Collectors.toMap(bc -> new SimpleEntry<>(bc.getType(), bc.getId()), bc -> bc));
-//		return new Box(boxProperties.getName(), boxProperties.getSecret(), boxControls);
 		return new Box(boxProperties.getName(), boxProperties.getSecret(), boxControlsMap);
 	}
 
 	public Optional<BoxControl> getControlByTypeAndId(@NonNull final BoxControlType boxControlType, final int boxControlId) {
-//		return controls.stream().filter(c -> c.getType() == boxControlType && c.getId() == boxControlId).findAny();
 		return Optional.ofNullable(controlsMap.get(new SimpleEntry<>(boxControlType, boxControlId)));
 	}
 
 	public void incrementReady() {
 		if (ready++ > 99999)
 			ready = 0;
+		log.trace("ready = {}", ready);
 	}
 
 	@JsonProperty("boxes")

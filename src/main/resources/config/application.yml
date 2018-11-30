@@ -1,4 +1,5 @@
 app.config:
+  ssl-ignore-validation: true
   jwt:
     issuer: http://localhost
     audience: restbox_java
@@ -8,13 +9,19 @@ app.config:
     - username: user1
       password: user123
       roles: USER
+    - username: user1
+      password: user2pwd
+      roles: USER
+    - username: user3
+      password: user3pwd
+      roles: USER
     - username: admin
       password: password
       roles: ADMIN,OTHER
   routers:
     testcsr1:
       name: CSR-WAN
-      host: 10.1.2.3
+      host: 192.168.70.70
       username: rest
       password: restpwd
       type: csrv

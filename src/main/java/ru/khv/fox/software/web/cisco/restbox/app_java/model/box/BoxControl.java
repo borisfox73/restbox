@@ -5,6 +5,7 @@
 
 package ru.khv.fox.software.web.cisco.restbox.app_java.model.box;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import lombok.*;
@@ -19,6 +20,7 @@ import org.springframework.lang.Nullable;
 @ToString
 @EqualsAndHashCode(of = {"type", "id"})
 @RequiredArgsConstructor(access = AccessLevel.PACKAGE)
+@JsonAutoDetect(getterVisibility = JsonAutoDetect.Visibility.NONE)
 public abstract class BoxControl {
 	// parameters
 	@JsonProperty
@@ -37,6 +39,11 @@ public abstract class BoxControl {
 	// state
 	private int status;
 
+
+	// Get required action
+	public BoxControlAction getAction() {
+		return type.getAction(status);
+	}
 
 	// stub methods to be overriden in childs
 	@Nullable

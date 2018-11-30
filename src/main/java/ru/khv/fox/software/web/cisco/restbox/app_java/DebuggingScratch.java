@@ -9,13 +9,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
-import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
-import ru.khv.fox.software.web.cisco.restbox.app_java.configuration.AppProperties;
-import ru.khv.fox.software.web.cisco.restbox.app_java.model.box.Box;
-import ru.khv.fox.software.web.cisco.restbox.app_java.service.RestBoxService;
-
-import java.util.Collection;
 
 /**
  * Scratchpad for debugging purposes.
@@ -25,10 +19,9 @@ import java.util.Collection;
 @Component
 class DebuggingScratch {
 	//class DebuggingScratch implements MessageSourceAware {
-	private final AppProperties properties;
-	@NonNull private final Collection<Box> boxCollection;    // mandatory injection
-	@NonNull private RestBoxService restBoxService;
+//	private final AppProperties properties;
 
+//	private final CiscoRestfulService ciscoRestfulService;
 /*
 	// optional injection
 	@Nullable private Collection<Box> boxCollection;
@@ -84,9 +77,23 @@ class DebuggingScratch {
 */
 
 //		log.debug("boxes = {}", properties.getBoxes());
-		log.debug("boxes = {}", boxCollection);
-		log.debug("boxservice: {}", restBoxService);
-		log.debug("check access: {}", restBoxService.checkAccess("b1", "cisco123"));
+//		log.debug("boxes = {}", boxCollection);
+//		log.debug("boxservice: {}", restBoxService);
+		//log.debug("check access: {}", restBoxService.checkAccess("b1", "cisco123"));
+
+/*
+		log.debug("cisco restful service: {}", ciscoRestfulService);
+		final AuthServiceResponse authServiceResponse = ciscoRestfulService.authenticate("testcsr1").block();
+		log.debug("auth response: {}", authServiceResponse);
+		final AuthServiceResponse tokenCheckResponse = ciscoRestfulService.checkAuthToken("testcsr1").block();
+		log.debug("token check response: {}", tokenCheckResponse);
+		final HostnameServiceResponse hostnameServiceResponse = ciscoRestfulService.getHostname("testcsr1").block();
+		log.debug("host name response: {}", hostnameServiceResponse);
+		ciscoRestfulService.invalidateAuthToken("testcsr1").block();
+		log.debug("token invalidated ok");
+		//final AuthServiceResponse tokenCheckResponse2 = ciscoRestfulService.checkAuthToken("testcsr1").block();
+		//log.debug("token check2 response: {}", tokenCheckResponse2);
+*/
 	}
 }
 
