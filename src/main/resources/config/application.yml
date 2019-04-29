@@ -1,10 +1,11 @@
 app.config:
   ssl-ignore-validation: true
+  indicator-poll-interval: PT20S
   jwt:
     issuer: http://localhost
     audience: restbox_java
     secret: qweasdzxc123
-    time-to-live: PT8H
+    time-to-live: PT5H
   users:
     - username: user1
       password: user123
@@ -26,8 +27,8 @@ app.config:
       password: restpwd
       type: csrv
     testcsr2:
-      name: CSR-WAN2
-      host: 10.1.2.4
+      name: CSR-AWS
+      host: 192.168.70.71
       username: rest2
       password: restpwd2
       type: asr
@@ -58,12 +59,12 @@ app.config:
       id: 0
       status: 0
       descr: red light
-      rfunc: rnone
+      rfunc: rfunc1
     - type: led
       id: 1
       status: 0
       descr: green light
-      rfunc: rnone
+      rfunc: rfunc2
   - name: b2
     secret: cisco123
     ready: 0
@@ -95,4 +96,4 @@ app.config:
       id: 1
       status: 0
       descr: green light
-      rfunc: rnone
+      rfunc: rfunc3

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Boris Fox.
+ * Copyright (c) 2019 Boris Fox.
  * All rights reserved.
  */
 
@@ -43,12 +43,12 @@ class RestBoxServiceImpl implements RestBoxService {
 
 	@Override
 	public Mono<BoxControl> putStatus(@NonNull final String boxName, @NonNull final BoxControlType boxControlType, final int boxControlId, final boolean ready, final int status) {
-		return lookupControl(boxName, boxControlType, boxControlId, ready).doOnNext(control -> control.setStatus(status));
+		return lookupControl(boxName, boxControlType, boxControlId, ready).flatMap(control -> setControlStatus(control, status));
 	}
 
 	@Override
 	public Mono<BoxControl> putStatus(@NonNull final String boxName, @NonNull final String secret, @NonNull final BoxControlType boxControlType, final int boxControlId, final boolean ready, final int status) {
-		return lookupControl(checkAccess(boxName, secret), boxControlType, boxControlId, ready).doOnNext(control -> control.setStatus(status));
+		return lookupControl(checkAccess(boxName, secret), boxControlType, boxControlId, ready).flatMap(control -> setControlStatus(control, status));
 	}
 
 	@Override
@@ -67,24 +67,25 @@ class RestBoxServiceImpl implements RestBoxService {
 		return boxes.values();
 	}
 
+	// TODO is these methods still needed ?
 	@Override
-	public Mono<Void> putOnFunc(@NonNull final String boxName, @NonNull final BoxControlType boxControlType, final int boxControlId, @NonNull final BoxControlOnOffFunctions func) {
+	public Mono<Void> putOnFunc(@NonNull final String boxName, @NonNull final BoxControlType boxControlType, final int boxControlId, @NonNull final String func) {
 		return lookupSensor(boxName, boxControlType, boxControlId).doOnNext(boxSensor -> boxSensor.setOnFunc(func)).then();
 	}
 
 	@Override
-	public Mono<Void> putOffFunc(@NonNull final String boxName, @NonNull final BoxControlType boxControlType, final int boxControlId, @NonNull final BoxControlOnOffFunctions func) {
+	public Mono<Void> putOffFunc(@NonNull final String boxName, @NonNull final BoxControlType boxControlType, final int boxControlId, @NonNull final String func) {
 		return lookupSensor(boxName, boxControlType, boxControlId).doOnNext(boxSensor -> boxSensor.setOffFunc(func)).then();
 	}
 
 	@Override
-	public Mono<Void> putRFunc(@NonNull final String boxName, @NonNull final BoxControlType boxControlType, final int boxControlId, @NonNull final BoxControlRFunctions func) {
+	public Mono<Void> putRFunc(@NonNull final String boxName, @NonNull final BoxControlType boxControlType, final int boxControlId, @NonNull final String func) {
 		return lookupIndicator(boxName, boxControlType, boxControlId).doOnNext(boxSensor -> boxSensor.setRFunc(func)).then();
 	}
 
 	// non-idempotent, has side effects (bumps ready counter)
 	private Mono<BoxControl> lookupControl(@NonNull final Mono<Box> boxMono, @NonNull final BoxControlType boxControlType, final int boxControlId, final boolean ready) {
-		return boxMono.doOnNext(box -> { if (ready) box.incrementReady(); })
+		return boxMono.flatMap(box -> incrementBoxReady(box, ready))
 		              .flatMap(box -> Mono.justOrEmpty(box.getControlByTypeAndId(boxControlType, boxControlId)))
 		              .switchIfEmpty(Mono.defer(() -> Mono.error(new RestApiException("Control with type '" + boxControlType + "' and id " + boxControlId + " not found", HttpStatus.NOT_FOUND))));
 	}
@@ -103,5 +104,20 @@ class RestBoxServiceImpl implements RestBoxService {
 		return getByName(boxName).flatMap(box -> Mono.justOrEmpty(box.getControlByTypeAndId(boxControlType, boxControlId)))
 		                         .ofType(BoxControlIndicator.class)
 		                         .switchIfEmpty(Mono.defer(() -> Mono.error(new RestApiException("Indicator with type '" + boxControlType + "' and id " + boxControlId + " not found", HttpStatus.NOT_FOUND))));
+	}
+
+	// state mutating methods must use constructs deferred to execution time
+	private Mono<BoxControl> setControlStatus(@NonNull final BoxControl control, final int status) {
+		return Mono.fromCallable(() -> {
+			control.setStatus(status);
+			return control;
+		});
+	}
+
+	private Mono<Box> incrementBoxReady(@NonNull final Box box, final boolean ready) {
+		return Mono.fromCallable(() -> {
+			if (ready) box.incrementReady();
+			return box;
+		});
 	}
 }

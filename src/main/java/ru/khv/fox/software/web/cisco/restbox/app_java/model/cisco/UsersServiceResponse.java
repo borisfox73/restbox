@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Boris Fox.
+ * Copyright (c) 2019 Boris Fox.
  * All rights reserved.
  */
 
@@ -41,7 +41,7 @@ import java.util.Collection;
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class UsersServiceResponse extends SuccessResponseBase {
+public class UsersServiceResponse extends DTOBase {
 	@NonNull
 	private Collection<UserServiceResponse> users;
 

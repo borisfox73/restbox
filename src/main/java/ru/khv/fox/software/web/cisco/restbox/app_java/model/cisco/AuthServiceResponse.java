@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Boris Fox.
+ * Copyright (c) 2019 Boris Fox.
  * All rights reserved.
  */
 
@@ -36,7 +36,7 @@ import java.time.LocalDateTime;
 //@Valid
 //@Validated
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class AuthServiceResponse extends SuccessResponseBase {
+public class AuthServiceResponse extends DTOBase {
 	//	@JsonProperty
 //	@JsonPropertyDescription("authentication token expiry time")
 //	@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "EEE MMM d hh:mm:ss yyyy", locale = "C")
@@ -57,10 +57,9 @@ public class AuthServiceResponse extends SuccessResponseBase {
 
 	@JsonCreator
 	AuthServiceResponse(@JsonProperty(value = "kind", required = true) @NonNull final String kind,
-	                    @JsonProperty(value = "expiry-time", required = true) @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "EEE MMM d HH:mm:ss yyyy", locale = "C") @NonNull final LocalDateTime expiryTime,
+	                    @JsonProperty(value = "expiry-time", required = true) @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "EEE MMM ppd HH:mm:ss yyyy", locale = "C") @NonNull final LocalDateTime expiryTime,
 	                    @JsonProperty(value = "token-id", required = true) @NonNull final String tokenId,
-//	                      @JsonProperty(value = "link") @Nullable final URL link) {
-                        @JsonProperty(value = "link") @Nullable final URI link) {
+	                    @JsonProperty(value = "link") @Nullable final URI link) {
 		super(kind);
 		this.expiryTime = expiryTime;
 		this.tokenId = tokenId;

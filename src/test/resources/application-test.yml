@@ -1,5 +1,6 @@
 app.config:
   ssl-ignore-validation: true
+  indicator-poll-interval: PT1M
   jwt:
     issuer: http://localhost
     audience: restbox_java
@@ -23,8 +24,8 @@ app.config:
       password: restpwd
       type: csrv
     testcsr2:
-      name: CSR-WAN2
-      host: 10.1.2.4
+      name: CSR-AWS
+      host: 192.168.70.71
       username: rest2
       password: restpwd2
       type: asr

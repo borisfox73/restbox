@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Boris Fox.
+ * Copyright (c) 2019 Boris Fox.
  * All rights reserved.
  */
 
@@ -66,7 +66,7 @@ public class Box {
 	@JsonProperty("boxes")
 	@JsonPropertyDescription("Box controls")
 	@NonNull
-	private Collection<BoxControl> getBoxControls() {
+	public Collection<BoxControl> getBoxControls() {
 		return controlsMap.values();
 	}
 }

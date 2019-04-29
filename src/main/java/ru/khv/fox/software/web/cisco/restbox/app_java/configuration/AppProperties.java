@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Boris Fox.
+ * Copyright (c) 2019 Boris Fox.
  * All rights reserved.
  */
 
@@ -18,8 +18,6 @@ import org.springframework.util.StringUtils;
 import org.springframework.validation.annotation.Validated;
 import ru.khv.fox.software.web.cisco.restbox.app_java.configuration.validation.ValidBoxControl;
 import ru.khv.fox.software.web.cisco.restbox.app_java.model.RouterType;
-import ru.khv.fox.software.web.cisco.restbox.app_java.model.box.BoxControlOnOffFunctions;
-import ru.khv.fox.software.web.cisco.restbox.app_java.model.box.BoxControlRFunctions;
 import ru.khv.fox.software.web.cisco.restbox.app_java.model.box.BoxControlType;
 
 import javax.validation.constraints.NotBlank;
@@ -51,7 +49,7 @@ public class AppProperties {
 	/**
 	 * Routers
 	 */
-	@Getter(AccessLevel.PACKAGE)
+	// @Getter(AccessLevel.PACKAGE) // TODO to be accessible in tests
 	@NotEmpty
 	private Map<String, RouterProperties> routers = new HashMap<>();
 	/**
@@ -66,6 +64,19 @@ public class AppProperties {
 	@Getter(AccessLevel.PACKAGE)
 	@NotEmpty
 	private Set<BoxProperties> boxcontrol = new HashSet<>();
+
+	/**
+	 * Period of polling resources tied to box indicators.
+	 */
+	@NotNull
+	@DurationMin(seconds = 5)
+	private Duration indicatorPollInterval = Duration.ofSeconds(30);
+
+
+	// Poller scheduling delay in milliseconds
+	public long getIndicatorPollDelay() {
+		return indicatorPollInterval.toMillis();
+	}
 
 
 	/*
@@ -165,12 +176,13 @@ public class AppProperties {
 		// runtime state fields are allowed in configuration but ignored
 		//@PositiveOrZero
 		private int status;
+		// TODO validate by router functions set
 		//@Nullable
-		private BoxControlOnOffFunctions onFunc;
+		private String onFunc;
 		//@Nullable
-		private BoxControlOnOffFunctions offFunc;
+		private String offFunc;
 		//@Nullable
-		private BoxControlRFunctions rFunc;
+		private String rFunc;
 	}
 
 	/*

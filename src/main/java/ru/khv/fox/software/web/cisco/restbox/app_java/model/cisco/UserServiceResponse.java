@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Boris Fox.
+ * Copyright (c) 2019 Boris Fox.
  * All rights reserved.
  */
 
@@ -27,7 +27,7 @@ import org.springframework.lang.Nullable;
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class UserServiceResponse extends SuccessResponseBase {
+public class UserServiceResponse extends DTOBase {
 	@NonNull
 	private String username;
 	@Nullable
