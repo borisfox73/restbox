@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Boris Fox.
+ * Copyright (c) 2019 Boris Fox.
  * All rights reserved.
  */
 
@@ -11,11 +11,12 @@ import reactor.core.publisher.Mono;
 import ru.khv.fox.software.web.cisco.restbox.app_java.model.Router;
 import ru.khv.fox.software.web.cisco.restbox.app_java.model.cisco.AuthServiceResponse;
 import ru.khv.fox.software.web.cisco.restbox.app_java.model.cisco.HostnameServiceResponse;
+import ru.khv.fox.software.web.cisco.restbox.app_java.model.cisco.RestApiDTO;
 import ru.khv.fox.software.web.cisco.restbox.app_java.model.cisco.UserServiceResponse;
 
 import java.util.Map;
 
-public interface CiscoRestfulService {
+public interface CiscoRestfulService<Q extends RestApiDTO, T extends RestApiDTO, V> {
 
 	@NonNull
 	Map<String, Router> getRouters();
@@ -32,6 +33,12 @@ public interface CiscoRestfulService {
 	Mono<Void> invalidateAuthToken(@NonNull final String routerId);
 
 	@NonNull
+	Mono<Void> reAuthenticate(@NonNull String routerId);
+
+	@NonNull
+	Mono<Void> reAuthenticateAll();
+
+	@NonNull
 	Mono<HostnameServiceResponse> getHostname(@NonNull final String routerId);
 
 	@NonNull
@@ -39,4 +46,18 @@ public interface CiscoRestfulService {
 
 	@NonNull
 	Flux<UserServiceResponse> getUsers(@NonNull final String routerId);
+
+/*
+	// TODO variant 1
+	@NonNull
+	Mono<?> execFunction(@NonNull RouterFunction<Q, T, V> func);
+
+	// TODO variant 2
+	@NonNull
+	Mono<? extends RestApiDTO> execFunction(@NonNull RouterFunction<Q, T, V> func, @Nullable final Consumer<V> boxValueConsumer);
+*/
+
+	// TODO variant 3
+	@NonNull
+	Mono<ExecFunctionResultPair<? extends RestApiDTO, V>> execFunction(@NonNull final String rfunc);
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Boris Fox.
+ * Copyright (c) 2019 Boris Fox.
  * All rights reserved.
  */
 
@@ -23,7 +23,7 @@ import org.springframework.lang.Nullable;
  */
 @Value
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class ErrorResponse {
+public class RestApiErrorResponse {
 	private int errorCode;
 	@Nullable
 	private String errorMessage;
@@ -32,9 +32,9 @@ public class ErrorResponse {
 
 
 	@JsonCreator
-	ErrorResponse(@JsonProperty(value = "error-code", required = true) final int errorCode,
-	              @JsonProperty(value = "error-message") @Nullable final String errorMessage,
-	              @JsonProperty(value = "detail") @Nullable final String errorDetail) {
+	RestApiErrorResponse(@JsonProperty(value = "error-code", required = true) final int errorCode,
+	                     @JsonProperty(value = "error-message") @Nullable final String errorMessage,
+	                     @JsonProperty(value = "detail") @Nullable final String errorDetail) {
 		this.errorCode = errorCode;
 		this.errorMessage = errorMessage;
 		this.errorDetail = errorDetail;

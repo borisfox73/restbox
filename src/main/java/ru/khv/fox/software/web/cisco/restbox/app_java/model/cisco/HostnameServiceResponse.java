@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Boris Fox.
+ * Copyright (c) 2019 Boris Fox.
  * All rights reserved.
  */
 
@@ -26,7 +26,7 @@ import org.springframework.lang.NonNull;
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class HostnameServiceResponse extends SuccessResponseBase {
+public class HostnameServiceResponse extends DTOBase {
 	@NonNull
 	private String hostName;
 

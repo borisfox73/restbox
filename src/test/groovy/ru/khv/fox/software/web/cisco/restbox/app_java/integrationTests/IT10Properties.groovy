@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Boris Fox.
+ * Copyright (c) 2019 Boris Fox.
  * All rights reserved.
  */
 
@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.junit4.SpringRunner
 import ru.khv.fox.software.web.cisco.restbox.app_java.configuration.AppProperties
+import ru.khv.fox.software.web.cisco.restbox.app_java.model.RouterType
 
 import java.time.Duration
 
@@ -51,14 +52,14 @@ class IT10Properties {
                 .withProperty("issuer", is(optionalWithValue(equalTo("http://localhost"))))
                 .withProperty("audience", is(optionalWithValue(equalTo("restbox_java"))))
                 .withProperty("secret", is("qweasdzxc123"))
-		        .withProperty("timeToLive", is(equalTo(Duration.ofHours(8))))))))
+		                .withProperty("timeToLive", is(equalTo(Duration.ofHours(5))))))))
 
         assertThat(properties, hasProperty("routers", hasEntry(equalTo("testcsr1"), pojo(AppProperties.RouterProperties.class)
                 .withProperty("name", is("CSR-WAN"))
-                .withProperty("host", is("10.1.2.3"))
+		        .withProperty("host", is("192.168.70.70"))
                 .withProperty("username", is("rest"))
                 .withProperty("password", is("restpwd"))
-                .withProperty("type", is(AppProperties.RouterProperties.RouterTypes.CSRV)))))
+		        .withProperty("type", is(RouterType.CSRV)))))
 
         assertThat(properties, hasProperty("users", hasItem(pojo(AppProperties.UserProperties.class)
                 .withProperty("username", is("user1"))

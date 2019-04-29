@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Boris Fox.
+ * Copyright (c) 2019 Boris Fox.
  * All rights reserved.
  */
 
@@ -10,6 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
+import ru.khv.fox.software.web.cisco.restbox.app_java.configuration.AppProperties;
 
 /**
  * Scratchpad for debugging purposes.
@@ -18,8 +19,9 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 @Component
 class DebuggingScratch {
-	//class DebuggingScratch implements MessageSourceAware {
-//	private final AppProperties properties;
+	private final AppProperties appProperties;
+//	private final Collection<RouterFunction> routerFunctions;
+//	private final PollIndicatorResources poller;
 
 //	private final CiscoRestfulService ciscoRestfulService;
 /*
@@ -32,23 +34,9 @@ class DebuggingScratch {
 	}
 */
 
-/*
-	private MessageSource messageSource;
-
-	@Override
-	public void setMessageSource(@Nullable final MessageSource messageSource) {
-		this.messageSource = messageSource;
-	}
-
-	@PostConstruct
-	void init() {
-		Assert.notNull(messageSource, "MessageSource is not set!");
-	}
-*/
-
 	/*
 		This method fires after application start-up process is complete.
-		 */
+	 */
 	@EventListener(ApplicationReadyEvent.class)
 	public void runAfterStartup() {
 		log.trace("test1 trace");
@@ -93,6 +81,12 @@ class DebuggingScratch {
 		log.debug("token invalidated ok");
 		//final AuthServiceResponse tokenCheckResponse2 = ciscoRestfulService.checkAuthToken("testcsr1").block();
 		//log.debug("token check2 response: {}", tokenCheckResponse2);
+*/
+		log.debug("poll interval: {}, in ms: {}", appProperties.getIndicatorPollInterval(), appProperties.getIndicatorPollDelay());
+/*
+		log.debug("router functions: {}", routerFunctions);
+		log.debug("Run poll cycle");
+		poller.pollCycle();
 */
 	}
 }

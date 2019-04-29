@@ -1,15 +1,11 @@
 /*
- * Copyright (c) 2018 Boris Fox.
+ * Copyright (c) 2019 Boris Fox.
  * All rights reserved.
  */
 
 package ru.khv.fox.software.web.cisco.restbox.app_java.service;
 
-import lombok.Getter;
-import org.springframework.http.HttpStatus;
-import org.springframework.lang.NonNull;
-import org.springframework.lang.Nullable;
-
+/*
 @Getter
 class CiscoRestApiAuthorizationException extends RuntimeException {
 
@@ -27,3 +23,4 @@ class CiscoRestApiAuthorizationException extends RuntimeException {
 		this.httpStatus = status;
 	}
 }
+*/

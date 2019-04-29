@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Boris Fox.
+ * Copyright (c) 2019 Boris Fox.
  * All rights reserved.
  */
 
@@ -45,19 +45,21 @@ public abstract class BoxControl {
 		return type.getAction(status);
 	}
 
+/*
 	// stub methods to be overriden in childs
 	@Nullable
-	public BoxControlOnOffFunctions getOnFunc() {
+	public String getOnFunc() {
 		throw new UnsupportedOperationException("Method is not implemented");
 	}
 
 	@Nullable
-	public BoxControlOnOffFunctions getOffFunc() {
+	public String getOffFunc() {
 		throw new UnsupportedOperationException("Method is not implemented");
 	}
 
 	@Nullable
-	public BoxControlRFunctions getRFunc() {
+	public String getRFunc() {
 		throw new UnsupportedOperationException("Method is not implemented");
 	}
+*/
 }
