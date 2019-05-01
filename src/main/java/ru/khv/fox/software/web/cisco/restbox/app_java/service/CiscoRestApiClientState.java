@@ -24,7 +24,6 @@ import org.springframework.web.reactive.function.client.ExchangeFilterFunction;
 import org.springframework.web.reactive.function.client.ExchangeFilterFunctions;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
-import reactor.core.publisher.Signal;
 import reactor.netty.http.client.HttpClient;
 import reactor.netty.tcp.TcpClient;
 import reactor.retry.Retry;
@@ -107,119 +106,71 @@ final class CiscoRestApiClientState {
 		};
 	}
 
-	// TODO synchronize.
 	// Use authentication service web client to request a new token
 	@NonNull
 	private Mono<String> obtainAuthenticationToken() {
-		// TODO synchronize entire chain. May be get rid of defer?
-		//      пока никак не получается синхронизировать доступ к этой цепочке по экземпляру данного класса
-/*
-		return getAuthenticationToken().switchIfEmpty(Mono.defer(() -> getAuthWebClient()
-				.post()
-				.uri(TOKEN_SERVICES_ENDPOINT)
-				.retrieve()
-				.onStatus(status -> status == HttpStatus.NOT_FOUND, clientResponse -> Mono.error(new CiscoRestApiException(clientResponse.statusCode(), null)))
-				.onStatus(HttpStatus.UNAUTHORIZED::equals,
-				          clientResponse -> Mono.error(new CiscoRestApiException(clientResponse.statusCode())))
-				.bodyToMono(AuthServiceResponse.class)
-				.flatMap(this::processAuthServiceResponse)));
-*/
+		// Token request chain is synchronized per router.
+		val lockSupplier = Mono.subscriberContext()
+		                       .doOnNext(ctx -> log.trace("ctx1 = {}", ctx))
+		                       .map(ctx -> ctx.get(Lock.class))
+		                       .cast(Lock.class)
+		                       .doOnNext(Lock::lock);
+		val lockDisposer = Mono.subscriberContext()
+		                       .doOnNext(ctx -> log.trace("ctx3 = {}", ctx))
+		                       .map(ctx -> ctx.get(Lock.class))
+		                       .cast(Lock.class)
+		                       .doOnNext(Lock::unlock)
+		                       .then();
+		// Release lock early after obtaining a token, either saved or requested
 		return getAuthenticationToken().switchIfEmpty(
-//				Mono.fromRunnable(this::acquireSemaphore)   // works
-//				Mono.subscriberContext().flatMap(ctx -> { log.trace("ctx1 = {}", ctx); ctx.getOrEmpty("lock").ifPresent(l -> ((Lock)l).lock()); return Mono.empty(); })
-				acquireLock()
-						.then(getAuthenticationToken())
-						.switchIfEmpty(
-								getAuthWebClient().post()
-								                  .uri(TOKEN_SERVICES_ENDPOINT)
-								                  .retrieve()
-								                  .onStatus(status -> status == HttpStatus.NOT_FOUND,
-								                            clientResponse -> Mono.defer(() -> Mono.error(new CiscoRestApiException(clientResponse.statusCode(), null))))
-								                  .onStatus(HttpStatus.UNAUTHORIZED::equals,
-								                            clientResponse -> Mono.defer(() -> Mono.error(new CiscoRestApiException(clientResponse.statusCode()))))
-								                  .bodyToMono(AuthServiceResponse.class)
-								                  .flatMap(this::processAuthServiceResponse)
-								                  .flatMap(CiscoRestApiClientState::releaseLock)
-						              )
-//                    .doFinally(signal -> releaseSemaphore())  // works but too late
-						.doOnEach(CiscoRestApiClientState::releaseLock)
-						.subscriberContext(ctx -> ctx.put("lock", new Lock()))
-		                                             );
-		// Release lock early after processAuthServiceResponse, but only if this chain is holding it
+				Mono.usingWhen(lockSupplier,
+				               lock -> getAuthenticationToken().switchIfEmpty(getAuthWebClient().post()
+				                                                                                .uri(TOKEN_SERVICES_ENDPOINT)
+				                                                                                .retrieve()
+				                                                                                .onStatus(status -> status == HttpStatus.NOT_FOUND,
+				                                                                                          clientResponse -> Mono.defer(() -> Mono.error(new CiscoRestApiException(clientResponse.statusCode(), null))))
+				                                                                                .onStatus(HttpStatus.UNAUTHORIZED::equals,
+				                                                                                          clientResponse -> Mono.defer(() -> Mono.error(new CiscoRestApiException(clientResponse.statusCode()))))
+				                                                                                .bodyToMono(AuthServiceResponse.class)
+				                                                                                .flatMap(this::processAuthServiceResponse))
+				                                               .doOnNext(r -> lock.unlock()),
+				               complete -> lockDisposer,
+				               error -> lockDisposer,
+				               cancel -> lockDisposer)
+				    .subscriberContext(ctx -> ctx.put(Lock.class, new Lock())));
 	}
 
-	// Main purprose of this class is to bind mutex state (holding or not) to executing chain.
+	// Solely purprose of this class is to bind the lock state to executing chain.
 	// Therefore instances are subscriber-bound through context.
-	// This class have access to container instance methods.
+	// This class have access to container instance fields (semaphore and router).
 	private final class Lock {
 		private boolean holding = false;
 
 		private synchronized void lock() {
+			log.trace("Acquire lock for router {}", router.getName());
 			if (!holding) {
-				acquireSemaphore();
+				try {
+					semaphore.acquire();
+				} catch (InterruptedException ex) {
+					throw new RuntimeException("Semaphore waiting interrupted", ex);
+				}
 				holding = true;
-				log.trace("lock acquired");
+				log.trace("Lock for router {} acquired", router.getName());
 			} else
-				log.warn("lock has been ALREADY HELD");
+				log.warn("Lock has been ALREADY HELD for router {}", router.getName());
 		}
 
 		private synchronized void unlock() {
+			log.trace("Release lock for router {}", router.getName());
 			if (holding) {
 				holding = false;
-				releaseSemaphore();
-				log.trace("lock released");
+				if (semaphore.availablePermits() == 0)
+					semaphore.release();
+				else
+					log.warn("Semaphore WAS NOT ACQUIRED for router {}", router.getName());
+				log.trace("Lock for router {} released", router.getName());
 			} else
-				log.trace("lock isn't held");
-		}
-	}
-
-	// Helper methods
-	@NonNull
-	private static Mono<Void> acquireLock() {
-		return Mono.subscriberContext()
-		           .flatMap(ctx -> {
-			           log.trace("ctx1 = {}", ctx);
-			           ctx.getOrEmpty("lock")
-			              .ifPresent(l -> ((Lock) l).lock());
-			           return Mono.empty();
-		           });
-	}
-
-	@NonNull
-	private static <R> Mono<R> releaseLock(final R a) {
-		return Mono.subscriberContext()
-		           .map(ctx -> {
-			           log.trace("ctx2 = {}", ctx);
-			           ctx.getOrEmpty("lock")
-			              .ifPresent(l -> ((Lock) l).unlock());
-			           return a;
-		           });
-	}
-
-	private static void releaseLock(final Signal<String> signal) {
-		// TODO how to run on cancel ?
-		if (signal.isOnComplete() || signal.isOnError()) {
-			val ctx = signal.getContext();
-			log.trace("ctx3 = {}", ctx);
-			ctx.getOrEmpty("lock")
-			   .ifPresent(l -> ((Lock) l).unlock());
-		}
-	}
-
-	private void acquireSemaphore() {
-		try {
-			log.trace("Acquire semaphore for router {}", router.getName());
-			semaphore.acquire();
-			log.trace("Semaphore for router {} acquired", router.getName());
-		} catch (InterruptedException ex) {
-			throw new RuntimeException("Semaphore waiting interrupted", ex);
-		}
-	}
-
-	private synchronized void releaseSemaphore() {
-		if (semaphore.availablePermits() == 0) {
-			log.trace("Release semaphore for router {}", router.getName());
-			semaphore.release();
+				log.trace("Lock isn't held");
 		}
 	}
 
