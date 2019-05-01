@@ -124,15 +124,15 @@ final class CiscoRestApiClientState {
 		// Release lock early after obtaining a token, either saved or requested
 		return getAuthenticationToken().switchIfEmpty(
 				Mono.usingWhen(lockSupplier,
-				               lock -> getAuthenticationToken().switchIfEmpty(getAuthWebClient().post()
-				                                                                                .uri(TOKEN_SERVICES_ENDPOINT)
-				                                                                                .retrieve()
-				                                                                                .onStatus(status -> status == HttpStatus.NOT_FOUND,
-				                                                                                          clientResponse -> Mono.defer(() -> Mono.error(new CiscoRestApiException(clientResponse.statusCode(), null))))
-				                                                                                .onStatus(HttpStatus.UNAUTHORIZED::equals,
-				                                                                                          clientResponse -> Mono.defer(() -> Mono.error(new CiscoRestApiException(clientResponse.statusCode()))))
-				                                                                                .bodyToMono(AuthServiceResponse.class)
-				                                                                                .flatMap(this::processAuthServiceResponse))
+				               lock -> getAuthenticationToken().switchIfEmpty(Mono.defer(() -> getAuthWebClient().post()
+				                                                                                                 .uri(TOKEN_SERVICES_ENDPOINT)
+				                                                                                                 .retrieve()
+				                                                                                                 .onStatus(status -> status == HttpStatus.NOT_FOUND,
+				                                                                                                           clientResponse -> Mono.defer(() -> Mono.error(new CiscoRestApiException(clientResponse.statusCode(), null))))
+				                                                                                                 .onStatus(HttpStatus.UNAUTHORIZED::equals,
+				                                                                                                           clientResponse -> Mono.defer(() -> Mono.error(new CiscoRestApiException(clientResponse.statusCode()))))
+				                                                                                                 .bodyToMono(AuthServiceResponse.class)
+				                                                                                                 .flatMap(this::processAuthServiceResponse)))
 				                                               .doOnNext(r -> lock.unlock()),
 				               complete -> lockDisposer,
 				               error -> lockDisposer,
@@ -184,10 +184,7 @@ final class CiscoRestApiClientState {
 						.uri(tokenUri)
 						.retrieve()
 						.bodyToMono(AuthServiceResponse.class)
-						.map(asr -> {
-							processAuthServiceResponse(asr);
-							return asr;
-						}));
+						.flatMap(this::cacheAuthServiceResponse));
 		// Token lifetime is prolonged by this operation, so it may be useful to update cached auth response
 	}
 
@@ -196,14 +193,13 @@ final class CiscoRestApiClientState {
 	@NonNull
 	Mono<Void> destroyAuthenticationToken() {
 		return getAuthenticationTokenUri()
-				.flatMap(tokenUri -> getWebClient()
-						.delete()
-						.uri(tokenUri)
-						.retrieve()
-						.onStatus(HttpStatus.UNAUTHORIZED::equals,
-						          clientResponse -> Mono.empty())
-						.bodyToMono(Void.class)
-						.then(clearAuthentication()));
+				.flatMap(tokenUri -> getWebClient().delete()
+				                                   .uri(tokenUri)
+				                                   .retrieve()
+				                                   .onStatus(HttpStatus.UNAUTHORIZED::equals,
+				                                             clientResponse -> Mono.empty())
+				                                   .bodyToMono(Void.class)
+				                                   .then(clearAuthentication()));
 	}
 
 
@@ -213,19 +209,23 @@ final class CiscoRestApiClientState {
 		return destroyAuthenticationToken().then(obtainAuthenticationToken()).then();
 	}
 
+	// Get authentication token
+	@NonNull
+	private Mono<String> getAuthenticationToken(@NonNull final Mono<AuthServiceResponse> authServiceResponse) {
+		return authServiceResponse.filter(resp -> resp.getExpiryTime().isAfter(LocalDateTime.now()))
+		                          .map(AuthServiceResponse::getTokenId);
+	}
+
 	@NonNull
 	private Mono<String> getAuthenticationToken() {
-		return getAuthServiceResponse()
-		           .filter(resp -> resp.getExpiryTime().isAfter(LocalDateTime.now()))
-		           .map(AuthServiceResponse::getTokenId);
+		return getAuthenticationToken(getAuthServiceResponse());
 	}
 
 	// Return token URI with opaque id
 	@NonNull
 	private Mono<URI> getAuthenticationTokenUri() {
-		return getAuthServiceResponse()
-		           .map(AuthServiceResponse::getLink)
-		           .flatMap(Mono::justOrEmpty);
+		return getAuthServiceResponse().map(AuthServiceResponse::getLink)
+		                               .flatMap(Mono::justOrEmpty);
 	}
 
 	@NonNull
@@ -243,18 +243,19 @@ final class CiscoRestApiClientState {
 		this.authServiceResponse = null;
 	}
 
+	private Mono<AuthServiceResponse> cacheAuthServiceResponse(@NonNull final AuthServiceResponse authServiceResponse) {
+		return Mono.fromRunnable(() -> setAuthServiceResponse(authServiceResponse))
+		           .thenReturn(authServiceResponse);
+	}
+
 	private Mono<String> processAuthServiceResponse(@NonNull final AuthServiceResponse authServiceResponse) {
-		setAuthServiceResponse(authServiceResponse);
-		return getAuthenticationToken()
+		return getAuthenticationToken(cacheAuthServiceResponse(authServiceResponse))
 				.switchIfEmpty(Mono.defer(() -> Mono.error(new CiscoServiceException("Authorization service didn't provide token"))));
 	}
 
 	@NonNull
 	private Mono<Void> clearAuthentication() {
-		return Mono.fromCallable(() -> {
-			clearAuthServiceResponse();
-			return null;
-		});
+		return Mono.fromRunnable(this::clearAuthServiceResponse);
 	}
 
 
