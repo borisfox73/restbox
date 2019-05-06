@@ -34,6 +34,7 @@ import javax.net.ssl.SSLException;
 import java.net.URI;
 import java.time.LocalDateTime;
 import java.util.concurrent.Semaphore;
+import java.util.concurrent.atomic.AtomicReference;
 
 @Slf4j
 @ToString
@@ -50,8 +51,8 @@ final class CiscoRestApiClientState {
 	private final WebClient webClient;      // payload services access
 	@NonNull
 	private final WebClient authWebClient;  // authentication service access
-	@Nullable
-	private volatile AuthServiceResponse authServiceResponse;
+	@NonNull
+	private final AtomicReference<AuthServiceResponse> authServiceResponse = new AtomicReference<>();
 
 
 	private CiscoRestApiClientState(@NonNull final Router router,
@@ -64,7 +65,7 @@ final class CiscoRestApiClientState {
 		                                     .baseUrl(BASE_URI_TEMPLATE.replace("{hostname}", router.getHost()))
 		                                     .defaultHeader(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE)
 		                                     .filter(ExchangeFilterFunctions.basicAuthentication(router.getUsername(), router.getPassword()))
-		                                     .filter(requestLoggingFilter())    // TODO for debugging
+		                                     .filter(requestLoggingFilter())    // for debugging
 		                                     .build();
 		// TODO is content-type required on all requests?
 		this.webClient = webClientBuilder.clone()
@@ -73,7 +74,7 @@ final class CiscoRestApiClientState {
 		                                 .defaultHeader(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE)
 		                                 .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
 		                                 .filter(tokenAuthenticationFilter())
-		                                 .filter(requestLoggingFilter())    // TODO for debugging
+		                                 .filter(requestLoggingFilter())    // for debugging
 		                                 .build();
 	}
 
@@ -81,13 +82,16 @@ final class CiscoRestApiClientState {
 	@NonNull
 	private static ExchangeFilterFunction requestLoggingFilter() {
 		return (clientRequest, next) -> {
-			log.trace("Request: {} {}", clientRequest.method(), clientRequest.url());
-			clientRequest.headers()
-			             .forEach((name, values) -> values.forEach(value -> log.trace("{}={}", name, value)));
+			if (log.isTraceEnabled()) {
+				log.trace("Request: {} {}", clientRequest.method(), clientRequest.url());
+				clientRequest.headers()
+				             .forEach((name, values) -> values.forEach(value -> log.trace("{}={}", name, value)));
+			}
 			return next.exchange(clientRequest);
 		};
 	}
 
+	// Adds token authentication header
 	@NonNull
 	private ExchangeFilterFunction tokenAuthenticationFilter() {
 		return (clientRequest, next) -> {
@@ -140,40 +144,6 @@ final class CiscoRestApiClientState {
 				    .subscriberContext(ctx -> ctx.put(Lock.class, new Lock())));
 	}
 
-	// Solely purprose of this class is to bind the lock state to executing chain.
-	// Therefore instances are subscriber-bound through context.
-	// This class have access to container instance fields (semaphore and router).
-	private final class Lock {
-		private boolean holding = false;
-
-		private synchronized void lock() {
-			log.trace("Acquire lock for router {}", router.getName());
-			if (!holding) {
-				try {
-					semaphore.acquire();
-				} catch (InterruptedException ex) {
-					throw new RuntimeException("Semaphore waiting interrupted", ex);
-				}
-				holding = true;
-				log.trace("Lock for router {} acquired", router.getName());
-			} else
-				log.warn("Lock has been ALREADY HELD for router {}", router.getName());
-		}
-
-		private synchronized void unlock() {
-			log.trace("Release lock for router {}", router.getName());
-			if (holding) {
-				holding = false;
-				if (semaphore.availablePermits() == 0)
-					semaphore.release();
-				else
-					log.warn("Semaphore WAS NOT ACQUIRED for router {}", router.getName());
-				log.trace("Lock for router {} released", router.getName());
-			} else
-				log.trace("Lock isn't held");
-		}
-	}
-
 	// Check authentication token server-side state
 	@NonNull
 	Mono<AuthServiceResponse> checkAuthenticationToken() {
@@ -216,31 +186,19 @@ final class CiscoRestApiClientState {
 		                          .map(AuthServiceResponse::getTokenId);
 	}
 
-	@NonNull
-	private Mono<String> getAuthenticationToken() {
-		return getAuthenticationToken(getAuthServiceResponse());
+	@Nullable
+	private AuthServiceResponse getAuthServiceResponse() {
+		return authServiceResponse.get();
 	}
 
-	// Return token URI with opaque id
-	@NonNull
-	private Mono<URI> getAuthenticationTokenUri() {
-		return getAuthServiceResponse().map(AuthServiceResponse::getLink)
-		                               .flatMap(Mono::justOrEmpty);
-	}
-
-	@NonNull
-	private Mono<AuthServiceResponse> getAuthServiceResponse() {
-		return Mono.defer(() -> Mono.justOrEmpty(authServiceResponse));
-	}
-
-	private synchronized void setAuthServiceResponse(@Nullable final AuthServiceResponse authServiceResponse) {
+	private void setAuthServiceResponse(@Nullable final AuthServiceResponse authServiceResponse) {
 		log.debug("set authservice response to {} for router {}", authServiceResponse, router.getName());
-		this.authServiceResponse = authServiceResponse;
+		this.authServiceResponse.set(authServiceResponse);
 	}
 
-	private synchronized void clearAuthServiceResponse() {
+	private void clearAuthServiceResponse() {
 		log.debug("clear authservice response for router {}", router.getName());
-		this.authServiceResponse = null;
+		setAuthServiceResponse(null);
 	}
 
 	private Mono<AuthServiceResponse> cacheAuthServiceResponse(@NonNull final AuthServiceResponse authServiceResponse) {
@@ -258,6 +216,23 @@ final class CiscoRestApiClientState {
 		return Mono.fromRunnable(this::clearAuthServiceResponse);
 	}
 
+	@NonNull
+	private Mono<AuthServiceResponse> retrieveAuthServiceResponse() {
+		return Mono.fromCallable(this::getAuthServiceResponse);
+	}
+
+	@NonNull
+	private Mono<String> getAuthenticationToken() {
+		return getAuthenticationToken(retrieveAuthServiceResponse());
+	}
+
+	// Return token URI with opaque id
+	@NonNull
+	private Mono<URI> getAuthenticationTokenUri() {
+		return retrieveAuthServiceResponse().map(AuthServiceResponse::getLink)
+		                                    .flatMap(Mono::justOrEmpty);
+	}
+
 
 	/**
 	 * Get Cisco RESTful Api Client State object factory instance.
@@ -272,6 +247,41 @@ final class CiscoRestApiClientState {
 	static Factory getFactory(@NonNull final WebClient.Builder webClientBuilder,
 	                          final boolean sslIgnoreValidation) throws SSLException {
 		return Factory.getInstance(webClientBuilder, sslIgnoreValidation);
+	}
+
+
+	// Solely purprose of this class is to bind the lock state to executing chain.
+	// Therefore instances are subscriber-bound through context.
+	// This class have access to container instance fields (semaphore and router).
+	private final class Lock {
+		private boolean holding = false;
+
+		private synchronized void lock() {
+			log.trace("Acquire lock for router {}", router.getName());
+			if (!holding) {
+				try {
+					semaphore.acquire();
+				} catch (InterruptedException ex) {
+					throw new RuntimeException("Semaphore waiting interrupted", ex);
+				}
+				holding = true;
+				log.trace("Lock for router {} acquired", router.getName());
+			} else
+				log.warn("Lock has been ALREADY HELD for router {}", router.getName());
+		}
+
+		private synchronized void unlock() {
+			log.trace("Release lock for router {}", router.getName());
+			if (holding) {
+				holding = false;
+				if (semaphore.availablePermits() == 0)
+					semaphore.release();
+				else
+					log.warn("Semaphore WAS NOT ACQUIRED for router {}", router.getName());
+				log.trace("Lock for router {} released", router.getName());
+			} else
+				log.trace("Lock isn't held");
+		}
 	}
 
 
