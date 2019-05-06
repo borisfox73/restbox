@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Boris Fox.
+ * Copyright (c) 2019 Boris Fox.
  * All rights reserved.
  */
 
@@ -71,7 +71,8 @@ def put_box(boxname,secret,t,i,value):
 	                                                @PathVariable @Valid @NotEmpty final String secret,
 	                                                @PathVariable @Valid @NotNull final BoxControlType boxControlType,
 	                                                @PathVariable final int boxControlId) {
-		return restBoxService.getStatus(boxName, secret, boxControlType, boxControlId, true).map(CommonResponse::new);
+		return restBoxService.checkAccess(boxName, secret)
+		                     .then(restBoxService.getStatus(boxName, boxControlType, boxControlId, true).map(CommonResponse::new));
 	}
 
 	// box reports sensor state change
@@ -81,12 +82,8 @@ def put_box(boxname,secret,t,i,value):
 	                                                @PathVariable @Valid @NotNull final BoxControlType boxControlType,
 	                                                @PathVariable final int boxControlId,
 	                                                @PathVariable final int status) {
-/*
-		log.trace("PUT: box {} control {} id {} status {}", boxName, boxControlType, boxControlId, status);
-		restBoxService.putStatus(boxName, boxControlType, boxControlId, false, status);
-		return Mono.just(new CommonResponse("ok"));
-*/
-		return restBoxService.putStatus(boxName, secret, boxControlType, boxControlId, true, status)
+		return restBoxService.checkAccess(boxName, secret)
+		                     .then(restBoxService.putStatus(boxName, boxControlType, boxControlId, true, status))
 		                     .map(BoxControl::getAction)
 		                     .doOnNext(a -> log.debug("Action = {}", a))
 		                     .thenReturn(new CommonResponse("ok"));
