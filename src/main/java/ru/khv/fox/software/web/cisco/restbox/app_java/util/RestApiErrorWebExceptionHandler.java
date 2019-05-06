@@ -7,17 +7,13 @@ package ru.khv.fox.software.web.cisco.restbox.app_java.util;
 
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
-import org.apache.commons.logging.Log;
 import org.springframework.boot.autoconfigure.web.ErrorProperties;
 import org.springframework.boot.autoconfigure.web.ResourceProperties;
 import org.springframework.boot.autoconfigure.web.reactive.error.DefaultErrorWebExceptionHandler;
 import org.springframework.boot.web.reactive.error.ErrorAttributes;
 import org.springframework.context.ApplicationContext;
-import org.springframework.http.HttpLogging;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.lang.NonNull;
-import org.springframework.util.StringUtils;
 import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.server.*;
 import reactor.core.publisher.Mono;
@@ -96,10 +92,11 @@ public class RestApiErrorWebExceptionHandler extends DefaultErrorWebExceptionHan
 		// from superclass
 		return ServerResponse.status(errorStatus)
 		                     .contentType(MediaType.APPLICATION_JSON_UTF8)
-		                     .body(BodyInserters.fromObject(errorResponse))
-		                     .doOnNext((resp) -> logError(request, errorStatus));
+		                     .body(BodyInserters.fromObject(errorResponse));
+//		                     .doOnNext(resp -> logError(request, errorStatus));
 	}
 
+/*
 	// moved from DefaultErrorWebExceptionHandler to AbstractErrorWebExceptionHandler and became private in Spring Boot 2.1.4
 	// Resurrected here.
 	private static final Log logger = HttpLogging.forLogName(RestApiErrorWebExceptionHandler.class);
@@ -127,8 +124,7 @@ public class RestApiErrorWebExceptionHandler extends DefaultErrorWebExceptionHan
 		String query = StringUtils.hasText(rawQuery) ? "?" + rawQuery : "";
 		return "HTTP " + request.methodName() + " \"" + request.path() + query + "\"";
 	}
-
-	// from superclass
+*/
 
 	/**
 	 * Predicate that checks whether the current request explicitly support
