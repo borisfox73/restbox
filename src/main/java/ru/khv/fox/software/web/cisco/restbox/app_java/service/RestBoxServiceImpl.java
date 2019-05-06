@@ -17,8 +17,6 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-// TODO reactivize
-// TODO cleanup
 @Slf4j
 @Service
 class RestBoxServiceImpl implements RestBoxService {
@@ -43,22 +41,12 @@ class RestBoxServiceImpl implements RestBoxService {
 
 	@Override
 	public Mono<BoxControl> putStatus(@NonNull final String boxName, @NonNull final BoxControlType boxControlType, final int boxControlId, final boolean ready, final int status) {
-		return lookupControl(boxName, boxControlType, boxControlId, ready).flatMap(control -> setControlStatus(control, status));
-	}
-
-	@Override
-	public Mono<BoxControl> putStatus(@NonNull final String boxName, @NonNull final String secret, @NonNull final BoxControlType boxControlType, final int boxControlId, final boolean ready, final int status) {
-		return lookupControl(checkAccess(boxName, secret), boxControlType, boxControlId, ready).flatMap(control -> setControlStatus(control, status));
+		return lookupControl(boxName, boxControlType, boxControlId, ready).doOnNext(control -> control.setStatus(status));
 	}
 
 	@Override
 	public Mono<Integer> getStatus(@NonNull final String boxName, @NonNull final BoxControlType boxControlType, final int boxControlId, final boolean ready) {
 		return lookupControl(boxName, boxControlType, boxControlId, ready).map(BoxControl::getStatus).defaultIfEmpty(0);
-	}
-
-	@Override
-	public Mono<Integer> getStatus(@NonNull final String boxName, @NonNull final String secret, @NonNull final BoxControlType boxControlType, final int boxControlId, final boolean ready) {
-		return lookupControl(checkAccess(boxName, secret), boxControlType, boxControlId, ready).map(BoxControl::getStatus).defaultIfEmpty(0);
 	}
 
 	@NonNull
@@ -83,10 +71,15 @@ class RestBoxServiceImpl implements RestBoxService {
 		return lookupIndicator(boxName, boxControlType, boxControlId).doOnNext(boxSensor -> boxSensor.setRFunc(func)).then();
 	}
 
+
+	private Mono<BoxControl> getBoxControlMonoByTypeAndId(final Box box, @NonNull final BoxControlType boxControlType, final int boxControlId) {
+		return Mono.justOrEmpty(box.getControlByTypeAndId(boxControlType, boxControlId));
+	}
+
 	// non-idempotent, has side effects (bumps ready counter)
 	private Mono<BoxControl> lookupControl(@NonNull final Mono<Box> boxMono, @NonNull final BoxControlType boxControlType, final int boxControlId, final boolean ready) {
-		return boxMono.flatMap(box -> incrementBoxReady(box, ready))
-		              .flatMap(box -> Mono.justOrEmpty(box.getControlByTypeAndId(boxControlType, boxControlId)))
+		return boxMono.doOnNext(box -> box.incrementReady(ready))
+		              .flatMap(box -> getBoxControlMonoByTypeAndId(box, boxControlType, boxControlId))
 		              .switchIfEmpty(Mono.defer(() -> Mono.error(new RestApiException("Control with type '" + boxControlType + "' and id " + boxControlId + " not found", HttpStatus.NOT_FOUND))));
 	}
 
@@ -95,29 +88,14 @@ class RestBoxServiceImpl implements RestBoxService {
 	}
 
 	private Mono<BoxControlSensor> lookupSensor(@NonNull final String boxName, @NonNull final BoxControlType boxControlType, final int boxControlId) {
-		return getByName(boxName).flatMap(box -> Mono.justOrEmpty(box.getControlByTypeAndId(boxControlType, boxControlId)))
+		return getByName(boxName).flatMap(box -> getBoxControlMonoByTypeAndId(box, boxControlType, boxControlId))
 		                         .ofType(BoxControlSensor.class)
 		                         .switchIfEmpty(Mono.defer(() -> Mono.error(new RestApiException("Sensor with type '" + boxControlType + "' and id " + boxControlId + " not found", HttpStatus.NOT_FOUND))));
 	}
 
 	private Mono<BoxControlIndicator> lookupIndicator(@NonNull final String boxName, @NonNull final BoxControlType boxControlType, final int boxControlId) {
-		return getByName(boxName).flatMap(box -> Mono.justOrEmpty(box.getControlByTypeAndId(boxControlType, boxControlId)))
+		return getByName(boxName).flatMap(box -> getBoxControlMonoByTypeAndId(box, boxControlType, boxControlId))
 		                         .ofType(BoxControlIndicator.class)
 		                         .switchIfEmpty(Mono.defer(() -> Mono.error(new RestApiException("Indicator with type '" + boxControlType + "' and id " + boxControlId + " not found", HttpStatus.NOT_FOUND))));
-	}
-
-	// state mutating methods must use constructs deferred to execution time
-	private Mono<BoxControl> setControlStatus(@NonNull final BoxControl control, final int status) {
-		return Mono.fromCallable(() -> {
-			control.setStatus(status);
-			return control;
-		});
-	}
-
-	private Mono<Box> incrementBoxReady(@NonNull final Box box, final boolean ready) {
-		return Mono.fromCallable(() -> {
-			if (ready) box.incrementReady();
-			return box;
-		});
 	}
 }

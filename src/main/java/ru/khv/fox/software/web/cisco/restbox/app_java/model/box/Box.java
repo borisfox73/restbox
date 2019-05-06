@@ -57,10 +57,12 @@ public class Box {
 		return Optional.ofNullable(controlsMap.get(new SimpleEntry<>(boxControlType, boxControlId)));
 	}
 
-	public void incrementReady() {
-		if (ready++ > 99999)
-			ready = 0;
-		log.trace("ready = {}", ready);
+	public void incrementReady(final boolean ready) {
+		if (ready) {
+			if (this.ready++ > 99999)
+				this.ready = 0;
+			log.trace("ready = {}", this.ready);
+		}
 	}
 
 	@JsonProperty("boxes")
