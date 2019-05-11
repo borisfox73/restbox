@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Boris Fox.
+ * Copyright (c) 2019 Boris Fox.
  * All rights reserved.
  */
 
@@ -29,7 +29,6 @@ import javax.validation.constraints.NotNull;
 @RestController
 public class WebSpaController {
 	private final RestBoxService restBoxService;
-
 
 	// TODO cleanup
 

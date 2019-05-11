@@ -6,9 +6,11 @@
 package ru.khv.fox.software.web.cisco.restbox.app_java.model.cisco;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Value;
+import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
 
 /**
@@ -38,5 +40,11 @@ public class RestApiErrorResponse {
 		this.errorCode = errorCode;
 		this.errorMessage = errorMessage;
 		this.errorDetail = errorDetail;
+	}
+
+	@JsonIgnore
+	@NonNull
+	public String getReason() {
+		return "errorCode=" + this.getErrorCode() + ", errorMessage=" + this.getErrorMessage() + ", errorDetail=" + this.getErrorDetail();
 	}
 }

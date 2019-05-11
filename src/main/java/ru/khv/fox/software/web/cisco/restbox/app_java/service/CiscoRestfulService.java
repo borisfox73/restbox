@@ -21,7 +21,7 @@ public interface CiscoRestfulService<Q extends RestApiDTO, T extends RestApiDTO,
 	@NonNull
 	Map<String, Router> getRouters();
 
-/*
+/* TODO cleanup
 	@NonNull
 	Mono<AuthServiceResponse> authenticate(@NonNull final String routerId);
 */
@@ -59,5 +59,9 @@ public interface CiscoRestfulService<Q extends RestApiDTO, T extends RestApiDTO,
 
 	// TODO variant 3
 	@NonNull
-	Mono<ExecFunctionResultPair<? extends RestApiDTO, V>> execFunction(@NonNull final String rfunc);
+	Mono<ExecFunctionResultPair<? extends RestApiDTO, V>> execFunction(@NonNull final String func);
+
+	// TODO implement method for function existence and type checking (ACTION/READ) ?
+	// now execFunction just return an empty stream on non-existing names.
+	// Type checking is redundant because action functions can return responses too (so action implied read).
 }

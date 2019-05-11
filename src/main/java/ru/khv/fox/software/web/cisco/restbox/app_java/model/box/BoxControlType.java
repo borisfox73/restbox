@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Boris Fox.
+ * Copyright (c) 2019 Boris Fox.
  * All rights reserved.
  */
 
@@ -35,22 +35,25 @@ public enum BoxControlType {
 
 	enum BoxControlKind {
 		SENSOR {
-			@Override
 			@NonNull
-			BoxControlSensor instantiate(@NonNull final BoxControlType type, final int id, @Nullable final String description) {
-				return new BoxControlSensor(type, id, description);
+			@Override
+			BoxControlSensor instantiate(@NonNull final BoxControlType type, final int id, @Nullable final String description,
+			                             @Nullable final String rFunc, @Nullable final String onFunc, @Nullable final String offFunc) {
+				return new BoxControlSensor(type, id, description, onFunc, offFunc);
 			}
 		},
 		INDICATOR {
-			@Override
 			@NonNull
-			BoxControlIndicator instantiate(@NonNull final BoxControlType type, final int id, @Nullable final String description) {
-				return new BoxControlIndicator(type, id, description);
+			@Override
+			BoxControlIndicator instantiate(@NonNull final BoxControlType type, final int id, @Nullable final String description,
+			                                @Nullable final String rFunc, @Nullable final String onFunc, @Nullable final String offFunc) {
+				return new BoxControlIndicator(type, id, description, rFunc);
 			}
 		};
 
 		@NonNull
-		abstract BoxControl instantiate(@NonNull final BoxControlType type, final int id, @Nullable final String description);
+		abstract BoxControl instantiate(@NonNull final BoxControlType type, final int id, @Nullable final String description,
+		                                @Nullable final String rFunc, @Nullable final String onFunc, @Nullable final String offFunc);
 	}
 
 	private final BoxControlKind kind;
@@ -64,8 +67,10 @@ public enum BoxControlType {
 	}
 
 	@NonNull
-	BoxControl getInstance(final int id, @Nullable final String description) {
-		return kind.instantiate(this, id, description);
+	BoxControl getInstance(final int id, @Nullable final String description,
+	                       @Nullable final String rFunc,
+	                       @Nullable final String onFunc, @Nullable final String offFunc) {
+		return kind.instantiate(this, id, description, rFunc, onFunc, offFunc);
 	}
 
 	@NonNull

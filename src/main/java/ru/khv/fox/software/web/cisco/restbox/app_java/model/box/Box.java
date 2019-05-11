@@ -48,7 +48,7 @@ public class Box {
 	public static Box getInstance(@NonNull final AppProperties.BoxProperties boxProperties) {
 		val boxControlsMap = boxProperties.getBoxes()
 		                                  .stream()
-		                                  .map(bc -> bc.getType().getInstance(bc.getId(), bc.getDescr()))
+		                                  .map(bc -> bc.getType().getInstance(bc.getId(), bc.getDescr(), bc.getRFunc(), bc.getOnFunc(), bc.getOffFunc()))
 		                                  .collect(Collectors.toMap(bc -> new SimpleEntry<>(bc.getType(), bc.getId()), bc -> bc));
 		return new Box(boxProperties.getName(), boxProperties.getSecret(), boxControlsMap);
 	}

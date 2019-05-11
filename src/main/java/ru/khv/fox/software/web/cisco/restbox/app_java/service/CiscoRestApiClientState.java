@@ -17,12 +17,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.client.reactive.ClientHttpConnector;
 import org.springframework.http.client.reactive.ReactorClientHttpConnector;
+import org.springframework.http.codec.ClientCodecConfigurer;
 import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
-import org.springframework.web.reactive.function.client.ClientRequest;
-import org.springframework.web.reactive.function.client.ExchangeFilterFunction;
-import org.springframework.web.reactive.function.client.ExchangeFilterFunctions;
-import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.reactive.function.client.*;
 import reactor.core.publisher.Mono;
 import reactor.netty.http.client.HttpClient;
 import reactor.netty.tcp.TcpClient;
@@ -35,6 +33,7 @@ import java.net.URI;
 import java.time.LocalDateTime;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Consumer;
 
 @Slf4j
 @ToString
@@ -65,7 +64,6 @@ final class CiscoRestApiClientState {
 		                                     .baseUrl(BASE_URI_TEMPLATE.replace("{hostname}", router.getHost()))
 		                                     .defaultHeader(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE)
 		                                     .filter(ExchangeFilterFunctions.basicAuthentication(router.getUsername(), router.getPassword()))
-		                                     .filter(requestLoggingFilter())    // for debugging
 		                                     .build();
 		// TODO is content-type required on all requests?
 		this.webClient = webClientBuilder.clone()
@@ -74,10 +72,10 @@ final class CiscoRestApiClientState {
 		                                 .defaultHeader(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE)
 		                                 .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
 		                                 .filter(tokenAuthenticationFilter())
-		                                 .filter(requestLoggingFilter())    // for debugging
 		                                 .build();
 	}
 
+/* TODO remove
 	// Request logger
 	@NonNull
 	private static ExchangeFilterFunction requestLoggingFilter() {
@@ -85,11 +83,16 @@ final class CiscoRestApiClientState {
 			if (log.isTraceEnabled()) {
 				log.trace("Request: {} {}", clientRequest.method(), clientRequest.url());
 				clientRequest.headers()
-				             .forEach((name, values) -> values.forEach(value -> log.trace("{}={}", name, value)));
+				             .forEach((name, values) -> values.forEach(value -> log.trace("H: {}={}", name, value)));
+				clientRequest.cookies()
+				             .forEach((name, value) -> log.trace("C: {}={}", name, value));
+				clientRequest.attributes()
+				             .forEach((name, value) -> log.trace("A: {}={}", name, value));
 			}
 			return next.exchange(clientRequest);
 		};
 	}
+*/
 
 	// Adds token authentication header
 	@NonNull
@@ -245,8 +248,9 @@ final class CiscoRestApiClientState {
 	 * @throws SSLException On SSL configuration errors
 	 */
 	static Factory getFactory(@NonNull final WebClient.Builder webClientBuilder,
+	                          final boolean traceRequests,
 	                          final boolean sslIgnoreValidation) throws SSLException {
-		return Factory.getInstance(webClientBuilder, sslIgnoreValidation);
+		return Factory.getInstance(webClientBuilder, traceRequests, sslIgnoreValidation);
 	}
 
 
@@ -295,7 +299,8 @@ final class CiscoRestApiClientState {
 
 
 		@NonNull
-		private static Factory getInstance(@NonNull final WebClient.Builder webClientBuilder,
+		private static Factory getInstance(@NonNull WebClient.Builder webClientBuilder,
+		                                   final boolean traceRequests,
 		                                   final boolean sslIgnoreValidation) throws SSLException {
 			val tcpClient = TcpClient.create()
 			                         .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 10 * 1000)
@@ -305,11 +310,19 @@ final class CiscoRestApiClientState {
 					                                        connection.addHandlerLast(new ReadTimeoutHandler(30))       // to send the request
 					                                                  .addHandlerLast(new WriteTimeoutHandler(10)));    // to wait for the response
 			var httpClient = HttpClient.from(tcpClient);
+			if (traceRequests)
+				httpClient = httpClient.wiretap(true);
 			if (sslIgnoreValidation) {
 				val sslContext = SslContextBuilder.forClient()
 				                                  .trustManager(InsecureTrustManagerFactory.INSTANCE)
 				                                  .build();
 				httpClient = httpClient.secure(t -> t.sslContext(sslContext));
+			}
+			if (traceRequests) {
+				final Consumer<ClientCodecConfigurer> consumer = configurer ->
+						configurer.defaultCodecs().enableLoggingRequestDetails(true);
+				webClientBuilder = webClientBuilder.exchangeStrategies(ExchangeStrategies.builder().codecs(consumer).build());
+//												   .filter(requestLoggingFilter()); // TODO remove?
 			}
 			return new Factory(webClientBuilder, new ReactorClientHttpConnector(httpClient));
 		}

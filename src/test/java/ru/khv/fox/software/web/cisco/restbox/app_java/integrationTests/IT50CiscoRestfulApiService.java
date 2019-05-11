@@ -3,7 +3,7 @@
  * All rights reserved.
  */
 
-package ru.khv.fox.software.web.cisco.restbox.app_java;
+package ru.khv.fox.software.web.cisco.restbox.app_java.integrationTests;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -151,4 +151,6 @@ public class IT50CiscoRestfulApiService<Q extends RestApiDTO, T extends RestApiD
 		StepVerifier.create(ciscoRestfulService.reAuthenticateAll())
 		            .verifyComplete();
 	}
+
+	// TODO write test for all the Router Functions defined in EntityConfiguration
 }

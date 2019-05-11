@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Boris Fox.
+ * Copyright (c) 2019 Boris Fox.
  * All rights reserved.
  */
 
@@ -40,8 +40,7 @@ public class WebResponseHelper {
 	public Mono<? extends Void> write(@NonNull ServerWebExchange exchange,
 	                                  @NonNull ServerResponse response) {
 		// force content-type since writeTo won't overwrite response header values
-		exchange.getResponse().getHeaders()
-		        .setContentType(response.headers().getContentType());
+		exchange.getResponse().getHeaders().setContentType(response.headers().getContentType());
 		return response.writeTo(exchange, new ResponseContext());
 	}
 

@@ -6,6 +6,8 @@
 package ru.khv.fox.software.web.cisco.restbox.app_java.model.cisco;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.databind.PropertyNamingStrategy;
+import com.fasterxml.jackson.databind.annotation.JsonNaming;
 import lombok.*;
 import org.springframework.lang.NonNull;
 
@@ -20,6 +22,7 @@ import org.springframework.lang.NonNull;
 @ToString
 @EqualsAndHashCode
 @RequiredArgsConstructor(access = AccessLevel.PACKAGE)
+@JsonNaming(PropertyNamingStrategy.KebabCaseStrategy.class)
 abstract class DTOBase implements RestApiDTO {
 	// Exclude field from serialization as kind is not applicable to mutating requests
 	@Getter(onMethod_ = {@JsonIgnore})

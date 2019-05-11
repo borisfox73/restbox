@@ -93,38 +93,7 @@ public class RestApiErrorWebExceptionHandler extends DefaultErrorWebExceptionHan
 		return ServerResponse.status(errorStatus)
 		                     .contentType(MediaType.APPLICATION_JSON_UTF8)
 		                     .body(BodyInserters.fromObject(errorResponse));
-//		                     .doOnNext(resp -> logError(request, errorStatus));
 	}
-
-/*
-	// moved from DefaultErrorWebExceptionHandler to AbstractErrorWebExceptionHandler and became private in Spring Boot 2.1.4
-	// Resurrected here.
-	private static final Log logger = HttpLogging.forLogName(RestApiErrorWebExceptionHandler.class);
-
-	private void logError(ServerRequest request, HttpStatus errorStatus) {
-		Throwable throwable = getError(request);
-		if (logger.isDebugEnabled()) {
-			logger.debug(
-					request.exchange().getLogPrefix() + formatError(throwable, request));
-		}
-		if (errorStatus.equals(HttpStatus.INTERNAL_SERVER_ERROR)) {
-			logger.error(request.exchange().getLogPrefix() + "500 Server Error for "
-			             + formatRequest(request), throwable);
-		}
-	}
-
-	private String formatError(Throwable ex, ServerRequest request) {
-		String reason = ex.getClass().getSimpleName() + ": " + ex.getMessage();
-		return "Resolved [" + reason + "] for HTTP " + request.methodName() + " "
-		       + request.path();
-	}
-
-	private String formatRequest(ServerRequest request) {
-		String rawQuery = request.uri().getRawQuery();
-		String query = StringUtils.hasText(rawQuery) ? "?" + rawQuery : "";
-		return "HTTP " + request.methodName() + " \"" + request.path() + query + "\"";
-	}
-*/
 
 	/**
 	 * Predicate that checks whether the current request explicitly support

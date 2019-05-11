@@ -23,8 +23,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-@Configuration
 @RequiredArgsConstructor
+@Configuration
 class EntityConfiguration {
 	@NonNull private final AppProperties appProperties;
 
@@ -59,6 +59,7 @@ class EntityConfiguration {
 		val routerMap = routers().stream().collect(Collectors.toUnmodifiableMap(Router::getName, r -> r));
 
 		// TODO make configurable from YAML configuration properties file. Create static constructor from conf.props object
+		// ACTION functions
 		val f1 =
 				RouterFunction.builder(routerMap)
 				              .type(RouterFunction.FunctionType.ACTION)
@@ -180,7 +181,7 @@ class EntityConfiguration {
 				              .uriPath("acl/STOP443/interfaces/gigabitEthernet1_inside")
 				              .requestMethod(HttpMethod.DELETE)
 				              .build();
-
+		// READ functions
 		val rf1 =
 				RouterFunction.builder(routerMap)
 				              .type(RouterFunction.FunctionType.READ)
@@ -198,12 +199,7 @@ class EntityConfiguration {
 						.uriPath("interfaces/gigabitEthernet3/state")
 						.requestMethod(HttpMethod.GET)
 						.responseClazz(InterfaceStateDTO.class)
-						.mapFunction(responseDto -> {
-							// console.log('down='+data.enabled);
-							// cback(responseDto.isEnabled() ? 0 : 1);
-							System.out.println("intf " + responseDto.getIfName() + " enabled? = " + responseDto.isEnabled());
-							return bool2int(!responseDto.isEnabled());
-						})
+						.mapFunction(responseDto -> bool2int(!responseDto.isEnabled()))
 						.build();
 		val rf3 =
 				RouterFunction.<RestApiDTO, InterfaceStateDTO, Integer>builder(routerMap)
@@ -214,12 +210,7 @@ class EntityConfiguration {
 						.uriPath("interfaces/gigabitEthernet3/state")
 						.requestMethod(HttpMethod.GET)
 						.responseClazz(InterfaceStateDTO.class)
-						.mapFunction(responseDto -> {
-							// console.log('down='+data.enabled);
-							// cback(responseDto.isEnabled() ? 1 : 0);
-							System.out.println("intf " + responseDto.getIfName() + " enabled? = " + responseDto.isEnabled());
-							return bool2int(responseDto.isEnabled());
-						})
+						.mapFunction(responseDto -> bool2int(responseDto.isEnabled()))
 						.build();
 		val rf4 =
 				RouterFunction.<RestApiDTO, InterfaceStateDTO, Integer>builder(routerMap)
@@ -230,14 +221,9 @@ class EntityConfiguration {
 						.uriPath("interfaces/gigabitEthernet1/state")
 						.requestMethod(HttpMethod.GET)
 						.responseClazz(InterfaceStateDTO.class)
-						.mapFunction(responseDto -> {
-							// console.log('down='+data.enabled);
-							// cback(responseDto.isEnabled() ? 1 : 0);
-							System.out.println("intf " + responseDto.getIfName() + " enabled? = " + responseDto.isEnabled());
-							return bool2int(responseDto.isEnabled());
-						})
+						.mapFunction(responseDto -> bool2int(responseDto.isEnabled()))
 						.build();
-		// TODO pack into collection
+		// pack into map
 		return Set.of(f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12, f13, rf1, rf2, rf3, rf4)
 		          .stream()
 		          .collect(Collectors.toUnmodifiableMap(RouterFunction::getName, f -> f));
