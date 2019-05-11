@@ -12,6 +12,8 @@ import lombok.*;
 import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
 
+import java.util.Optional;
+
 /*
  Box Control is a mutable object.
  */
@@ -41,9 +43,20 @@ public abstract class BoxControl {
 
 
 	// Get required action
+	@NonNull
 	public BoxControlAction getAction() {
 		return type.getAction(status);
 	}
+
+	// Get router function depending on state (to be implemented in concrete controls)
+	@NonNull
+	public String getRouterFunc() {
+		// Use empty string as non-null placeholder to be used in streams and as map key
+		return getRouterFuncInternal().orElse("");
+	}
+
+	@NonNull
+	abstract Optional<String> getRouterFuncInternal();
 
 /*
 	// stub methods to be overriden in childs

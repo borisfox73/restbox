@@ -55,7 +55,7 @@ class RestBoxServiceImpl implements RestBoxService {
 		return boxes.values();
 	}
 
-	// TODO is these methods still needed ?
+	// TODO are these methods still needed ?
 	@Override
 	public Mono<Void> putOnFunc(@NonNull final String boxName, @NonNull final BoxControlType boxControlType, final int boxControlId, @NonNull final String func) {
 		return lookupSensor(boxName, boxControlType, boxControlId).doOnNext(boxSensor -> boxSensor.setOnFunc(func)).then();

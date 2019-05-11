@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Boris Fox.
+ * Copyright (c) 2019 Boris Fox.
  * All rights reserved.
  */
 
@@ -32,7 +32,7 @@ import static org.hamcrest.Matchers.is
 //        "app.config.jwt.time-to-live=PT1M"
 //])
 @ActiveProfiles("test")
-class IT40RestBoxController {
+class IT80RestBoxController {
 
 //	@ContextConfiguration
 //	public class SpringTestConfig {	}

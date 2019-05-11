@@ -1,4 +1,5 @@
 app.config:
+  trace-web-client-requests: true
   ssl-ignore-validation: true
   indicator-poll-interval: PT20S
   jwt:

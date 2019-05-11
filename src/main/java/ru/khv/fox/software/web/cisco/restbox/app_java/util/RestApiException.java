@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Boris Fox.
+ * Copyright (c) 2019 Boris Fox.
  * All rights reserved.
  */
 
@@ -29,8 +29,8 @@ public class RestApiException extends ResponseStatusException {
 		this(message, status, cause, determineReason(cause));
 	}
 
-	private RestApiException(@Nullable final String message, @NonNull final HttpStatus status,
-	                         @Nullable Throwable cause, @Nullable final String reason) {
+	public RestApiException(@Nullable final String message, @NonNull final HttpStatus status,
+	                        @Nullable Throwable cause, @Nullable final String reason) {
 		super(status, reason, cause);
 		this.message = message;
 		this.suppressDetails = reason == null && cause == null;

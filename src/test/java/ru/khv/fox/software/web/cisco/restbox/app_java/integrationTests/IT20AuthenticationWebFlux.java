@@ -1,9 +1,9 @@
 /*
- * Copyright (c) 2018 Boris Fox.
+ * Copyright (c) 2019 Boris Fox.
  * All rights reserved.
  */
 
-package ru.khv.fox.software.web.cisco.restbox.app_java;
+package ru.khv.fox.software.web.cisco.restbox.app_java.integrationTests;
 
 import org.junit.Ignore;
 import org.junit.Test;

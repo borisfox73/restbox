@@ -37,6 +37,10 @@ import java.util.*;
 @ConfigurationProperties(prefix = "app.config")
 public class AppProperties {
 	/**
+	 * Trace WebClient requests.
+	 */
+	private boolean traceWebClientRequests;
+	/**
 	 * Ignore SSL certificate issuer and host name validation for REST API client.
 	 */
 	private boolean sslIgnoreValidation;
@@ -215,3 +219,27 @@ public class AppProperties {
 		}
 	}
 }
+/*
+TODO cleanup if not used in frontend
+// list of users
+cfg.labusers = [
+  { login: 'user1',
+    password: 'user1pwd'
+  },
+  { login: 'user2',
+    password: 'user2pwd'
+  },
+  { login: 'user3',
+    password: 'user3pwd'
+  }
+];
+cfg.checkuser = function(login, pwd) {
+    var u;
+    for(var i=0; u=cfg.labusers[i]; i++) {
+        if(u.login === login && u.password === pwd) {
+            return true;
+        }
+    }
+    return false;
+};
+ */

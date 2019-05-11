@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Boris Fox.
+ * Copyright (c) 2019 Boris Fox.
  * All rights reserved.
  */
 
@@ -57,7 +57,6 @@ public class WebRequestHelper {
 				                                         .findFirst()
 				                                         .orElseThrow(() -> new IllegalStateException("No JSON HttpMessageReader.")))
 						.readMono(tType, request, Collections.emptyMap())
-//						.switchIfEmpty(Mono.empty())    // TODO need ?
 						.onErrorMap(exceptionMapper)
 						.cache();
 			}
