@@ -15,18 +15,33 @@ import java.util.Collection;
 
 public interface RestBoxService {
 
+	@NonNull
 	Mono<Box> checkAccess(@NonNull final String boxName, @NonNull final String secret);
 
+	@NonNull
+	Mono<BoxControl> getBoxControl(@NonNull final String boxName, @NonNull final String secret, @NonNull final BoxControlType boxControlType, final int boxControlId);
+
+	@NonNull
+	Mono<BoxControl> putStatus(@NonNull final String boxName, @NonNull final String secret, @NonNull final BoxControlType boxControlType, final int boxControlId, final boolean ready, final int status);
+
+	@NonNull
 	Mono<BoxControl> putStatus(@NonNull final String boxName, @NonNull final BoxControlType boxControlType, final int boxControlId, final boolean ready, final int status);
 
+	@NonNull
 	Mono<Integer> getStatus(@NonNull final String boxName, @NonNull final BoxControlType boxControlType, final int boxControlId, final boolean ready);
 
 	@NonNull
 	Collection<Box> getConf();
 
+	// TODO cleanup
+/*
+	@NonNull
 	Mono<Void> putOnFunc(@NonNull final String boxName, @NonNull final BoxControlType boxControlType, final int boxControlId, @NonNull final String func);
 
+	@NonNull
 	Mono<Void> putOffFunc(@NonNull final String boxName, @NonNull final BoxControlType boxControlType, final int boxControlId, @NonNull final String func);
 
+	@NonNull
 	Mono<Void> putRFunc(@NonNull final String boxName, @NonNull final BoxControlType boxControlType, final int boxControlId, @NonNull final String func);
+*/
 }

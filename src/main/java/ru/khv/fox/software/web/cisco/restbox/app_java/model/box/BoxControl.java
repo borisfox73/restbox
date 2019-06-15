@@ -50,13 +50,7 @@ public abstract class BoxControl {
 
 	// Get router function depending on state (to be implemented in concrete controls)
 	@NonNull
-	public String getRouterFunc() {
-		// Use empty string as non-null placeholder to be used in streams and as map key
-		return getRouterFuncInternal().orElse("");
-	}
-
-	@NonNull
-	abstract Optional<String> getRouterFuncInternal();
+	public abstract Optional<String> getRouterFunc();
 
 /*
 	// stub methods to be overriden in childs

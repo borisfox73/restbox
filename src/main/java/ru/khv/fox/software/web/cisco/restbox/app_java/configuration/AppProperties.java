@@ -5,12 +5,11 @@
 
 package ru.khv.fox.software.web.cisco.restbox.app_java.configuration;
 
-import lombok.AccessLevel;
 import lombok.Data;
-import lombok.Getter;
 import org.apache.logging.log4j.util.Strings;
 import org.hibernate.validator.constraints.time.DurationMin;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.boot.context.properties.NestedConfigurationProperty;
 import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Component;
@@ -37,18 +36,16 @@ import java.util.*;
 @ConfigurationProperties(prefix = "app.config")
 public class AppProperties {
 	/**
-	 * Trace WebClient requests.
+	 * WebClient customization properties.
 	 */
-	private boolean traceWebClientRequests;
-	/**
-	 * Ignore SSL certificate issuer and host name validation for REST API client.
-	 */
-	private boolean sslIgnoreValidation;
-
+	@NotNull
+	@NestedConfigurationProperty
+	private WebClientProperties webClient = new WebClientProperties();
 	/**
 	 * JSON Web Ticket parameters
 	 */
 	@NotNull
+	@NestedConfigurationProperty
 	private JwtProperties jwt;
 	/**
 	 * Routers
@@ -65,7 +62,7 @@ public class AppProperties {
 	/**
 	 * Boxes (intermediate configuration objects)
 	 */
-	@Getter(AccessLevel.PACKAGE)
+//	@Getter(AccessLevel.PACKAGE)    // access level restriction causes nested properties type missing from configuration metadata
 	@NotEmpty
 	private Set<BoxProperties> boxcontrol = new HashSet<>();
 
@@ -82,6 +79,22 @@ public class AppProperties {
 		return indicatorPollInterval.toMillis();
 	}
 
+
+	/*
+	 * WebClient properties.
+	 */
+	@SuppressWarnings("WeakerAccess")
+	@Data
+	public static class WebClientProperties {
+		/**
+		 * Trace WebClient requests.
+		 */
+		private boolean traceWebClientRequests;
+		/**
+		 * Ignore SSL certificate issuer and host name validation for REST API client.
+		 */
+		private boolean sslIgnoreValidation;
+	}
 
 	/*
 	 * Router properties.

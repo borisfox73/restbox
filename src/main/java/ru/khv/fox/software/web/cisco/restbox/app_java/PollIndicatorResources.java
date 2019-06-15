@@ -19,9 +19,9 @@ import reactor.core.scheduler.Schedulers;
 import ru.khv.fox.software.web.cisco.restbox.app_java.model.box.Box;
 import ru.khv.fox.software.web.cisco.restbox.app_java.model.box.BoxControl;
 import ru.khv.fox.software.web.cisco.restbox.app_java.model.box.BoxControlIndicator;
-import ru.khv.fox.software.web.cisco.restbox.app_java.model.cisco.RestApiDTO;
 import ru.khv.fox.software.web.cisco.restbox.app_java.service.CiscoRestfulService;
 import ru.khv.fox.software.web.cisco.restbox.app_java.service.CiscoServiceException;
+import ru.khv.fox.software.web.cisco.restbox.app_java.service.ExecFunctionResultPair;
 import ru.khv.fox.software.web.cisco.restbox.app_java.service.RestBoxService;
 import ru.khv.fox.software.web.cisco.restbox.app_java.util.Utilities;
 
@@ -35,9 +35,11 @@ import java.util.Collection;
 @RequiredArgsConstructor
 @Component
 @Profile("!test")
-public class PollIndicatorResources<Q extends RestApiDTO, T extends RestApiDTO> {
+//public class PollIndicatorResources<Q extends RestApiDTO, T extends RestApiDTO> {
+public class PollIndicatorResources {
 	@NonNull
-	private final CiscoRestfulService<Q, T, Integer> ciscoService;
+//	private final CiscoRestfulService<Q, T, Integer> ciscoService;
+	private final CiscoRestfulService ciscoService;
 	@NonNull
 	private final RestBoxService boxService;
 	@NonNull
@@ -135,22 +137,21 @@ public class PollIndicatorResources<Q extends RestApiDTO, T extends RestApiDTO> 
 		                   );
 	}
 
+	// see RestBoxController#getBoxControlStatus
 	// public for tests
 	@NonNull
 	public Mono<BoxControl> pollBoxControl(@NonNull final Box box, @NonNull final BoxControl boxControl) {
 		return Mono.just(boxControl)
-		           .doOnNext(bci -> log.trace("polling box indicator {}", bci))
 		           .map(BoxControl::getRouterFunc)
-		           .filter(Utilities::nonEmpty)
+		           .transform(Utilities.getIfPresent())
 		           .doOnNext(rFunction -> log.trace("exec rFunction {}", rFunction))
 		           .flatMap(ciscoService::execFunction)
 		           .doOnNext(resultPair -> log.trace("exec result pair {}", resultPair))
-				.<Integer>handle((resultPair, sink) -> {
-					val boxValue = resultPair.getBoxValue();
-					if (boxValue != null)
-						sink.next(boxValue);
-				})
-				.flatMap(boxStatus -> boxService.putStatus(box.getName(), boxControl.getType(), boxControl.getId(), false, boxStatus))
-				.doOnNext(boxControl1 -> log.trace("box control after {}", boxControl1));
+		           .map(ExecFunctionResultPair::getBoxValue)
+		           .transform(Utilities.getIfPresent())
+		           .cast(Integer.class)
+		           .flatMap(boxStatus -> boxService.putStatus(box.getName(), boxControl.getType(), boxControl.getId(), false, boxStatus))
+		           .doOnNext(boxControl1 -> log.trace("box control after {}", boxControl1));
 	}
 }
+// TODO refactor to self-controller polling (/api/get/...) with inline=true request parameter

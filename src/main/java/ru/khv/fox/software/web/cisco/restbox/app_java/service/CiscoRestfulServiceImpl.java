@@ -7,7 +7,6 @@ package ru.khv.fox.software.web.cisco.restbox.app_java.service;
 
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
@@ -19,14 +18,16 @@ import ru.khv.fox.software.web.cisco.restbox.app_java.model.Router;
 import ru.khv.fox.software.web.cisco.restbox.app_java.model.RouterFunction;
 import ru.khv.fox.software.web.cisco.restbox.app_java.model.cisco.*;
 
-import javax.net.ssl.SSLException;
+import java.io.IOException;
 import java.util.Collection;
 import java.util.Map;
 import java.util.stream.Collectors;
 
 @Slf4j
 @Service
-public class CiscoRestfulServiceImpl<Q extends RestApiDTO, T extends RestApiDTO, V> implements CiscoRestfulService<Q, T, V> {
+//public class CiscoRestfulServiceImpl<Q extends RestApiDTO, T extends RestApiDTO, E extends RestApiErrorDTO, V> implements CiscoRestfulService<Q, T, E, V> {
+//public class CiscoRestfulServiceImpl<Q extends RestApiDTO, T extends RestApiDTO, V> implements CiscoRestfulService<Q, T, V> {
+public class CiscoRestfulServiceImpl<Q extends RestApiDTO, T extends RestApiDTO, V> implements CiscoRestfulService {
 	private static final String HOSTNAME_SERVICES_ENDPOINT = "global/host-name";
 	private static final String USERS_SERVICES_ENDPOINT = "global/local-users";
 	private static final String USER_SERVICES_ENDPOINT = USERS_SERVICES_ENDPOINT + "/{user-name}";
@@ -34,19 +35,20 @@ public class CiscoRestfulServiceImpl<Q extends RestApiDTO, T extends RestApiDTO,
 	@NonNull
 	private final Map<String, CiscoRestApiClientState> routerStates;
 	@NonNull
+//	private final Map<String, RouterFunction<Q, T, E, V>> routerFunctions;
 	private final Map<String, RouterFunction<Q, T, V>> routerFunctions;
 
 
 	CiscoRestfulServiceImpl(@NonNull final Collection<Router> routerCollection,
 	                        @SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
+//	                        @NonNull final Map<String, RouterFunction<Q, T, E, V>> routerFunctions,
 	                        @NonNull final Map<String, RouterFunction<Q, T, V>> routerFunctions,
-	                        @NonNull final WebClient.Builder webClientBuilder,
+	                        @NonNull final WebClient.Builder webClientBuilder) {/*,
 	                        @Value("#{appProperties.traceWebClientRequests}") final boolean traceRequests,
-	                        @Value("#{appProperties.sslIgnoreValidation}") final boolean sslIgnoreValidation) throws SSLException {
+	                        @Value("#{appProperties.sslIgnoreValidation}") final boolean sslIgnoreValidation) throws SSLException { */
 		this.routerFunctions = routerFunctions;
-		val clientStateFactory = CiscoRestApiClientState.getFactory(webClientBuilder, traceRequests, sslIgnoreValidation);
 		routerStates = routerCollection.stream()
-		                               .map(clientStateFactory::createRestApiClientState)
+		                               .map(router -> new CiscoRestApiClientState(router, webClientBuilder))
 		                               .collect(Collectors.toUnmodifiableMap(state -> state.getRouter().getId(), state -> state));
 		log.trace("Router client state map: {}", routerStates);
 	}
@@ -189,9 +191,12 @@ public class CiscoRestfulServiceImpl<Q extends RestApiDTO, T extends RestApiDTO,
 
 	// TODO variant 3
 	@NonNull
-	public Mono<ExecFunctionResultPair<? extends RestApiDTO, V>> execFunction(@NonNull final String func) {
+//	public Mono<ExecFunctionResultPair<? extends RestApiDTO, ? extends RestApiErrorDTO, V>> execFunction(@NonNull final String func) {
+	public Mono<ExecFunctionResultPair<? extends RestApiDTO, ? extends RestApiErrorDTO, ?>> execFunction(@NonNull final String func) {
+//		return getFunction(func).filter(RouterFunction::isExecutable)
 		Assert.notNull(func, "Function name must not be null");
 		return Mono.justOrEmpty(routerFunctions.get(func))
+		           .switchIfEmpty(Mono.defer(() -> Mono.error(new CiscoServiceException("Function \"" + func + "\" is undefined"))))
 		           .filter(RouterFunction::isExecutable)
 		           .flatMap(routerFunction -> {
 			           // already has checked by isExecutable but reassert here to keep inspection happy
@@ -200,14 +205,48 @@ public class CiscoRestfulServiceImpl<Q extends RestApiDTO, T extends RestApiDTO,
 			           val clientStateMono = getClientState(device.getId());
 			           val responseClazz = routerFunction.getResponseClazz();
 			           val mapFunc = routerFunction.getMapFunction();
+			           val errorFunc = routerFunction.getResourceNotFoundFunction();
+//			           Mono<ExecFunctionResultPair<? extends RestApiDTO, V>> r;
+			           Mono<ExecFunctionResultPair<? extends RestApiDTO, ? extends RestApiErrorDTO, V>> r;
+//			           Mono<ExecFunctionResultPair<? extends RestApiDTO, ? extends RestApiErrorDTO, ?>> r;
 			           if (responseClazz != null && mapFunc != null)
-				           return clientStateMono.flatMap(clientState -> prepareResponseSpec(clientState, routerFunction).bodyToMono(responseClazz))
-				                                 .map(rb -> ExecFunctionResultPair.of(rb, mapFunc.apply(rb)));
+				           r = clientStateMono.flatMap(clientState -> prepareResponseSpec(clientState, routerFunction).bodyToMono(responseClazz))
+				                              .map(rb -> ExecFunctionResultPair.of(rb, mapFunc.apply(rb)));
 			           else // breaks type safety for mapping function
-				           return clientStateMono.flatMap(clientState -> prepareResponseSpec(clientState, routerFunction).bodyToMono((Class<? extends RestApiDTO>) (responseClazz != null ? responseClazz : RestApiUniversalDTO.class)))
-				                                 .map(rb -> ExecFunctionResultPair.of(rb, null));
+				           r = clientStateMono.flatMap(clientState -> prepareResponseSpec(clientState, routerFunction).bodyToMono((Class<? extends RestApiDTO>) (responseClazz != null ? responseClazz : RestApiUniversalDTO.class)))
+				                              .map(rb -> ExecFunctionResultPair.of(rb, null));
+			           r = r.onErrorMap(IOException.class, e -> new CiscoServiceException("Network error", e.getLocalizedMessage(), e));
+			           return errorFunc != null ? r.onErrorResume(CiscoRestApiHandledException.class, e -> Mono.just(ExecFunctionResultPair.of(e.getErrorResponse(), errorFunc.apply(e.getErrorResponse())))) : r;
 		           });
 	}
+
+/*
+	@Override
+	@NonNull
+//	public Mono<ExecFunctionResultPair<? extends RestApiDTO, ? extends RestApiErrorDTO, V>> execFunction(@NonNull Mono<RouterFunction<Q, T, E, V>> function) {
+	public Mono<ExecFunctionResultPair<? extends RestApiDTO, ? extends RestApiErrorDTO, V>> execFunction(@NonNull Mono<RouterFunction<Q, T, V>> function) {
+		return function.filter(RouterFunction::isExecutable)
+		               .flatMap(routerFunction -> {
+			               // already has checked by isExecutable but reassert here to keep inspection happy
+			               val device = routerFunction.getDevice();
+			               assert device != null;
+			               val clientStateMono = getClientState(device.getId());
+			               val responseClazz = routerFunction.getResponseClazz();
+			               val mapFunc = routerFunction.getMapFunction();
+			               val errorFunc = routerFunction.getResourceNotFoundFunction();
+//			           Mono<ExecFunctionResultPair<? extends RestApiDTO, V>> r;
+			               Mono<ExecFunctionResultPair<? extends RestApiDTO, ? extends RestApiErrorDTO, V>> r;
+			               if (responseClazz != null && mapFunc != null)
+				               r = clientStateMono.flatMap(clientState -> prepareResponseSpec(clientState, routerFunction).bodyToMono(responseClazz))
+				                                  .map(rb -> ExecFunctionResultPair.of(rb, mapFunc.apply(rb)));
+			               else // breaks type safety for mapping function
+				               r = clientStateMono.flatMap(clientState -> prepareResponseSpec(clientState, routerFunction).bodyToMono((Class<? extends RestApiDTO>) (responseClazz != null ? responseClazz : RestApiUniversalDTO.class)))
+				                                  .map(rb -> ExecFunctionResultPair.of(rb, null));
+			               r = r.onErrorMap(IOException.class, e -> new CiscoServiceException("Network error", e.getLocalizedMessage(), e));
+			               return errorFunc != null ? r.onErrorResume(CiscoRestApiHandledException.class, e -> Mono.just(ExecFunctionResultPair.of(e.getErrorResponse(), errorFunc.apply(e.getErrorResponse())))) : r;
+		               });
+	}
+*/
 
 
 	// deduplicate code in execFunction
@@ -217,15 +256,17 @@ public class CiscoRestfulServiceImpl<Q extends RestApiDTO, T extends RestApiDTO,
 		val uriPath = func.getUriPath();
 		val requestObject = func.getRequestObject();
 		assert requestMethod != null && uriPath != null;
+		log.trace("requestObject: {}", requestObject);
 		val rbs = clientState.getWebClient()
 		                     .method(requestMethod)
 		                     .uri(uriPath);
 		// TODO may be concrete class is required here
 //		return (requestObject != null ? rbs.body(Mono.just(requestObject), RestApiDTO.class) : rbs)
-		return (requestObject != null ? rbs.syncBody(requestObject) : rbs)
-				.retrieve()
-				.onStatus(status -> status == HttpStatus.NOT_FOUND, clientResponse -> Mono.error(new CiscoRestApiException(clientResponse.statusCode())))
-				.onStatus(HttpStatus::isError, clientResponse -> clientResponse.bodyToMono(RestApiErrorResponse.class).flatMap(errorBody -> Mono.error(new CiscoRestApiException(clientResponse.statusCode(), errorBody))));
+//		return (requestObject != null ? rbs.syncBody(requestObject) : rbs)
+		var r = (requestObject != null ? rbs.syncBody(requestObject) : rbs).retrieve();
+		if (func.getResourceNotFoundFunction() != null)
+			r = r.onStatus(status -> status == HttpStatus.NOT_FOUND, clientResponse -> clientResponse.bodyToMono(RestApiErrorResponse.class).flatMap(errorBody -> Mono.error(new CiscoRestApiHandledException(clientResponse.statusCode(), errorBody))));
+		return r.onStatus(HttpStatus::isError, clientResponse -> clientResponse.bodyToMono(RestApiErrorResponse.class).flatMap(errorBody -> Mono.error(new CiscoRestApiException(clientResponse.statusCode(), errorBody))));
 	}
 
 	// TODO variant 3 returning pair always and accepts router function name as an argument
@@ -233,4 +274,16 @@ public class CiscoRestfulServiceImpl<Q extends RestApiDTO, T extends RestApiDTO,
 	// TODO on 404 errors do not translate body, it may be html, not json
 
 	// TODO continue.
+
+
+/*
+	@NonNull
+	@Override
+//	public Mono<RouterFunction<Q, T, E, V>> getFunction(@NonNull final String func) {
+	public Mono<RouterFunction<Q, T, V>> getFunction(@NonNull final String func) {
+		Assert.notNull(func, "Function name must not be null");
+		return Mono.justOrEmpty(routerFunctions.get(func))
+				   .switchIfEmpty(Mono.defer(() -> Mono.error(new CiscoServiceException("Function \"" + func + "\" is undefined"))));
+	}
+*/
 }

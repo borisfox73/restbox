@@ -5,15 +5,14 @@
 
 package ru.khv.fox.software.web.cisco.restbox.app_java.model.cisco;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonPropertyDescription;
+import com.fasterxml.jackson.annotation.*;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import io.jsonwebtoken.lang.Assert;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
 import lombok.Value;
 import org.springframework.lang.NonNull;
+import org.springframework.lang.Nullable;
 
 /**
  * Cisco RESTful API ACL Associated with an Interface Resource Data Transfer Object for request and response.
@@ -29,7 +28,11 @@ import org.springframework.lang.NonNull;
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
+@JsonInclude(Include.NON_NULL)
 public class AclInterfaceDTO extends DTOBase {
+	@JsonPropertyDescription("Access List name")
+	@Nullable
+	private String aclId;
 	@JsonPropertyDescription("Interface name")
 	@NonNull
 	private String ifId;
@@ -43,6 +46,7 @@ public class AclInterfaceDTO extends DTOBase {
 	                @JsonProperty(value = "if-id", required = true) @NonNull final String ifId,
 	                @JsonProperty(value = "direction", required = true) @NonNull final String direction) {
 		super(kind);
+		this.aclId = null;
 		this.ifId = ifId;
 		this.direction = direction;
 	}

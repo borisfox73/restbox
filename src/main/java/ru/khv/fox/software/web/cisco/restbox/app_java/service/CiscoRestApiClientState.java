@@ -5,35 +5,30 @@
 
 package ru.khv.fox.software.web.cisco.restbox.app_java.service;
 
-import io.netty.channel.ChannelOption;
-import io.netty.handler.ssl.SslContextBuilder;
-import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
-import io.netty.handler.timeout.ReadTimeoutHandler;
-import io.netty.handler.timeout.WriteTimeoutHandler;
-import lombok.*;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
+import lombok.val;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
-import org.springframework.http.client.reactive.ClientHttpConnector;
-import org.springframework.http.client.reactive.ReactorClientHttpConnector;
-import org.springframework.http.codec.ClientCodecConfigurer;
 import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
-import org.springframework.web.reactive.function.client.*;
+import org.springframework.web.reactive.function.client.ClientRequest;
+import org.springframework.web.reactive.function.client.ExchangeFilterFunction;
+import org.springframework.web.reactive.function.client.ExchangeFilterFunctions;
+import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
-import reactor.netty.http.client.HttpClient;
-import reactor.netty.tcp.TcpClient;
 import reactor.retry.Retry;
 import ru.khv.fox.software.web.cisco.restbox.app_java.model.Router;
 import ru.khv.fox.software.web.cisco.restbox.app_java.model.cisco.AuthServiceResponse;
 
-import javax.net.ssl.SSLException;
+import java.io.IOException;
 import java.net.URI;
 import java.time.LocalDateTime;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.Consumer;
 
 @Slf4j
 @ToString
@@ -54,45 +49,22 @@ final class CiscoRestApiClientState {
 	private final AtomicReference<AuthServiceResponse> authServiceResponse = new AtomicReference<>();
 
 
-	private CiscoRestApiClientState(@NonNull final Router router,
-	                                @NonNull final WebClient.Builder webClientBuilder,
-	                                @NonNull final ClientHttpConnector clientHttpConnector) {
+	CiscoRestApiClientState(@NonNull final Router router,
+	                        @NonNull final WebClient.Builder webClientBuilder) {
 		this.router = router;
-		// keep provided builder intact
-		this.authWebClient = webClientBuilder.clone()
-		                                     .clientConnector(clientHttpConnector)
-		                                     .baseUrl(BASE_URI_TEMPLATE.replace("{hostname}", router.getHost()))
-		                                     .defaultHeader(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE)
-		                                     .filter(ExchangeFilterFunctions.basicAuthentication(router.getUsername(), router.getPassword()))
-		                                     .build();
+		// Set common properties. Keep provided builder intact.
+		val baseBuilder = webClientBuilder.clone()
+		                                  .baseUrl(BASE_URI_TEMPLATE.replace("{hostname}", router.getHost()))
+		                                  .defaultHeader(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE);
+		this.authWebClient = baseBuilder.clone()
+		                                .filter(ExchangeFilterFunctions.basicAuthentication(router.getUsername(), router.getPassword()))
+		                                .build();
 		// TODO is content-type required on all requests?
-		this.webClient = webClientBuilder.clone()
-		                                 .clientConnector(clientHttpConnector)
-		                                 .baseUrl(BASE_URI_TEMPLATE.replace("{hostname}", router.getHost()))
-		                                 .defaultHeader(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE)
-		                                 .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-		                                 .filter(tokenAuthenticationFilter())
-		                                 .build();
+		this.webClient = baseBuilder.clone()
+		                            .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+		                            .filter(tokenAuthenticationFilter())
+		                            .build();
 	}
-
-/* TODO remove
-	// Request logger
-	@NonNull
-	private static ExchangeFilterFunction requestLoggingFilter() {
-		return (clientRequest, next) -> {
-			if (log.isTraceEnabled()) {
-				log.trace("Request: {} {}", clientRequest.method(), clientRequest.url());
-				clientRequest.headers()
-				             .forEach((name, values) -> values.forEach(value -> log.trace("H: {}={}", name, value)));
-				clientRequest.cookies()
-				             .forEach((name, value) -> log.trace("C: {}={}", name, value));
-				clientRequest.attributes()
-				             .forEach((name, value) -> log.trace("A: {}={}", name, value));
-			}
-			return next.exchange(clientRequest);
-		};
-	}
-*/
 
 	// Adds token authentication header
 	@NonNull
@@ -118,12 +90,12 @@ final class CiscoRestApiClientState {
 	private Mono<String> obtainAuthenticationToken() {
 		// Token request chain is synchronized per router.
 		val lockSupplier = Mono.subscriberContext()
-		                       .doOnNext(ctx -> log.trace("ctx1 = {}", ctx))
+		                       .doOnNext(ctx -> log.trace("ctxS = {}", ctx))
 		                       .map(ctx -> ctx.get(Lock.class))
 		                       .cast(Lock.class)
 		                       .doOnNext(Lock::lock);
 		val lockDisposer = Mono.subscriberContext()
-		                       .doOnNext(ctx -> log.trace("ctx3 = {}", ctx))
+		                       .doOnNext(ctx -> log.trace("ctxD = {}", ctx))
 		                       .map(ctx -> ctx.get(Lock.class))
 		                       .cast(Lock.class)
 		                       .doOnNext(Lock::unlock)
@@ -133,12 +105,14 @@ final class CiscoRestApiClientState {
 				Mono.usingWhen(lockSupplier,
 				               lock -> getAuthenticationToken().switchIfEmpty(Mono.defer(() -> getAuthWebClient().post()
 				                                                                                                 .uri(TOKEN_SERVICES_ENDPOINT)
+				                                                                                                 .contentLength(0)
 				                                                                                                 .retrieve()
 				                                                                                                 .onStatus(status -> status == HttpStatus.NOT_FOUND,
 				                                                                                                           clientResponse -> Mono.defer(() -> Mono.error(new CiscoRestApiException(clientResponse.statusCode(), null))))
 				                                                                                                 .onStatus(HttpStatus.UNAUTHORIZED::equals,
 				                                                                                                           clientResponse -> Mono.defer(() -> Mono.error(new CiscoRestApiException(clientResponse.statusCode()))))
 				                                                                                                 .bodyToMono(AuthServiceResponse.class)
+				                                                                                                 .onErrorMap(IOException.class, e -> new CiscoServiceException("Network error", e.getLocalizedMessage(), e))
 				                                                                                                 .flatMap(this::processAuthServiceResponse)))
 				                                               .doOnNext(r -> lock.unlock()),
 				               complete -> lockDisposer,
@@ -237,23 +211,6 @@ final class CiscoRestApiClientState {
 	}
 
 
-	/**
-	 * Get Cisco RESTful Api Client State object factory instance.
-	 *
-	 * @param webClientBuilder    Spring WebClient builder
-	 * @param sslIgnoreValidation Ignore SSL/TLS certificate validation, if true
-	 *
-	 * @return Factory object instance
-	 *
-	 * @throws SSLException On SSL configuration errors
-	 */
-	static Factory getFactory(@NonNull final WebClient.Builder webClientBuilder,
-	                          final boolean traceRequests,
-	                          final boolean sslIgnoreValidation) throws SSLException {
-		return Factory.getInstance(webClientBuilder, traceRequests, sslIgnoreValidation);
-	}
-
-
 	// Solely purprose of this class is to bind the lock state to executing chain.
 	// Therefore instances are subscriber-bound through context.
 	// This class have access to container instance fields (semaphore and router).
@@ -285,50 +242,6 @@ final class CiscoRestApiClientState {
 				log.trace("Lock for router {} released", router.getName());
 			} else
 				log.trace("Lock isn't held");
-		}
-	}
-
-
-	// Helper class to build router client state objects
-	@RequiredArgsConstructor(access = AccessLevel.PRIVATE)
-	static final class Factory {
-		@NonNull
-		private final WebClient.Builder webClientBuilder;
-		@NonNull
-		private final ClientHttpConnector httpConnector;
-
-
-		@NonNull
-		private static Factory getInstance(@NonNull WebClient.Builder webClientBuilder,
-		                                   final boolean traceRequests,
-		                                   final boolean sslIgnoreValidation) throws SSLException {
-			val tcpClient = TcpClient.create()
-			                         .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 10 * 1000)
-			                         .option(ChannelOption.TCP_NODELAY, true)
-			                         .option(ChannelOption.SO_KEEPALIVE, true)
-			                         .doOnConnected(connection ->
-					                                        connection.addHandlerLast(new ReadTimeoutHandler(30))       // to send the request
-					                                                  .addHandlerLast(new WriteTimeoutHandler(10)));    // to wait for the response
-			var httpClient = HttpClient.from(tcpClient);
-			if (traceRequests)
-				httpClient = httpClient.wiretap(true);
-			if (sslIgnoreValidation) {
-				val sslContext = SslContextBuilder.forClient()
-				                                  .trustManager(InsecureTrustManagerFactory.INSTANCE)
-				                                  .build();
-				httpClient = httpClient.secure(t -> t.sslContext(sslContext));
-			}
-			if (traceRequests) {
-				final Consumer<ClientCodecConfigurer> consumer = configurer ->
-						configurer.defaultCodecs().enableLoggingRequestDetails(true);
-				webClientBuilder = webClientBuilder.exchangeStrategies(ExchangeStrategies.builder().codecs(consumer).build());
-//												   .filter(requestLoggingFilter()); // TODO remove?
-			}
-			return new Factory(webClientBuilder, new ReactorClientHttpConnector(httpClient));
-		}
-
-		CiscoRestApiClientState createRestApiClientState(@NonNull final Router router) {
-			return new CiscoRestApiClientState(router, webClientBuilder, httpConnector);
 		}
 	}
 }

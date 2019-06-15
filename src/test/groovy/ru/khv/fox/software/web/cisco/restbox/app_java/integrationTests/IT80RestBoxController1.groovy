@@ -32,7 +32,7 @@ import static org.hamcrest.Matchers.is
 //        "app.config.jwt.time-to-live=PT1M"
 //])
 @ActiveProfiles("test")
-class IT80RestBoxController {
+class IT80RestBoxController1 {
 
 //	@ContextConfiguration
 //	public class SpringTestConfig {	}
@@ -53,14 +53,36 @@ class IT80RestBoxController {
 
 	// TODO mock cisco api service to test actions
 
+/*
 	@Test
-	void 'get status b1 led 0'() {
+	void 'get status b1 button 0'() {
 		getStatus('b1', 'cisco123', 'button', 0, 0)
 	}
 
 	@Test
-	void 'get status b2 led 1'() {
-		getStatus('b2', 'cisco456', 'led', 1, 0)
+	void 'get status b2 led 0'() {
+		getStatus('b2', 'cisco456', 'led', 0, 0)
+	}
+*/
+
+    @Test
+    void 'put status b1 switch 0 = 0'() {
+        putStatus('b1', 'cisco123', 'switch', 0, 0)
+    }
+
+    @Test
+    void 'put status b1 switch 0 = 1'() {
+        putStatus('b1', 'cisco123', 'switch', 0, 1)
+    }
+
+    @Test
+    void 'put status b1 switch 1 = 0'() {
+        putStatus('b1', 'cisco123', 'switch', 1, 0)
+    }
+
+    @Test
+    void 'put status b1 switch 1 = 1'() {
+        putStatus('b1', 'cisco123', 'switch', 1, 1)
 	}
 
 	@Test
@@ -73,7 +95,37 @@ class IT80RestBoxController {
 		putStatus('b1', 'cisco123', 'button', 0, 1)
 	}
 
-	@Test
+    @Test
+    void 'put status b1 usonic 0 = 20'() {
+        putStatus('b1', 'cisco123', 'usonic', 0, 20)
+    }
+
+    @Test
+    void 'put status b1 usonic 0 = 80'() {
+        putStatus('b1', 'cisco123', 'usonic', 0, 80)
+    }
+
+    @Test
+    void 'put status b2 switch 0 = 0'() {
+        putStatus('b2', 'cisco456', 'switch', 0, 0)
+    }
+
+    @Test
+    void 'put status b2 switch 0 = 1'() {
+        putStatus('b2', 'cisco456', 'switch', 0, 1)
+    }
+
+    @Test
+    void 'put status b2 button 0 = 0'() {
+        putStatus('b2', 'cisco456', 'button', 0, 0)
+    }
+
+    @Test
+    void 'put status b2 button 0 = 1'() {
+        putStatus('b2', 'cisco456', 'button', 0, 1)
+    }
+
+    @Test
 	void 'put status b2 usonic 0 = 0'() {
 		putStatus('b2', 'cisco456', 'usonic', 0, 0)
 	}
@@ -170,9 +222,9 @@ class IT80RestBoxController {
 	}
 
 
-	private static void getStatus(final String boxName, final String secret, final String boxControlType, final int boxControlId, final int expected) {
-		def endpoint = GETSTATUS_ENDPOINT.replace('{boxName}', boxName).replace('{secret}', secret).replace('{boxControlType}', boxControlType).replace('{boxControlId}', boxControlId.toString())
-		print "GET endpoint = $endpoint"
+    private static void getStatus(final String boxName, final String secret, final String boxControlType, final int boxControlId, final int expected, final boolean inline = false) {
+        def endpoint = GETSTATUS_ENDPOINT.replace('{boxName}', boxName).replace('{secret}', secret).replace('{boxControlType}', boxControlType).replace('{boxControlId}', boxControlId.toString()) + (inline ? "?inline=true" : "")
+        println "GET endpoint = $endpoint"
 		// @formatter:off
         given()
             .contentType(ContentType.JSON)
@@ -188,7 +240,7 @@ class IT80RestBoxController {
 
 	private static void putStatus(final String boxName, final String secret, final String boxControlType, final int boxControlId, final int status) {
 		def endpoint = PUTSTATUS_ENDPOINT.replace('{boxName}', boxName).replace('{secret}', secret).replace('{boxControlType}', boxControlType).replace('{boxControlId}', boxControlId.toString()).replace('{status}', status.toString())
-		print "PUT endpoint = $endpoint"
+        println "PUT endpoint = $endpoint"
 		// @formatter:off
         given()
             .contentType(ContentType.JSON)
