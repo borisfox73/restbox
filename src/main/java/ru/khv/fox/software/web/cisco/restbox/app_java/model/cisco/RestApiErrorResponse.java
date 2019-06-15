@@ -25,7 +25,7 @@ import org.springframework.lang.Nullable;
  */
 @Value
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class RestApiErrorResponse {
+public class RestApiErrorResponse implements RestApiErrorDTO {
 	private int errorCode;
 	@Nullable
 	private String errorMessage;

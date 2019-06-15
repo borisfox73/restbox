@@ -1,7 +1,8 @@
 app.config:
-  trace-web-client-requests: true
-  ssl-ignore-validation: true
   indicator-poll-interval: PT20S
+  web-client:
+    trace-web-client-requests: false
+    ssl-ignore-validation: true
   jwt:
     issuer: http://localhost
     audience: restbox_java

@@ -55,7 +55,7 @@ public class BoxControlSensor extends BoxControl {
 
 	@NonNull
 	@Override
-	Optional<String> getRouterFuncInternal() {
+	public Optional<String> getRouterFunc() {
 		// TODO Switch expressions are still preview feature in Java 12.0.1
 /*
 		return Optional.ofNullable(

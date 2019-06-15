@@ -10,6 +10,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import lombok.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.lang.NonNull;
+import org.springframework.lang.Nullable;
 import ru.khv.fox.software.web.cisco.restbox.app_java.configuration.AppProperties;
 
 import java.util.AbstractMap.SimpleEntry;
@@ -57,8 +58,8 @@ public class Box {
 		return Optional.ofNullable(controlsMap.get(new SimpleEntry<>(boxControlType, boxControlId)));
 	}
 
-	public void incrementReady(final boolean ready) {
-		if (ready) {
+	public void incrementReady(@Nullable final Boolean ready) {
+		if (ready != null && ready) {
 			if (this.ready++ > 99999)
 				this.ready = 0;
 			log.trace("ready = {}", this.ready);

@@ -223,8 +223,20 @@ class EntityConfiguration {
 						.responseClazz(InterfaceStateDTO.class)
 						.mapFunction(responseDto -> bool2int(responseDto.isEnabled()))
 						.build();
+		val rf5 =
+				RouterFunction.<RestApiDTO, AclInterfaceDTO, Integer>builder(routerMap)
+						.type(RouterFunction.FunctionType.READ)
+						.name("rfunc4")
+						.descr("Gi1 acl STOPPING enabled")
+						.routerName("CSR-AWS")
+						.uriPath("acl/STOPPING/interfaces/gigabitEthernet1_inside")
+						.requestMethod(HttpMethod.GET)
+						.responseClazz(AclInterfaceDTO.class)
+						.mapFunction(responseDto -> 1)
+						.resourceNotFoundFunction(errorDto -> 0)
+						.build();
 		// pack into map
-		return Set.of(f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12, f13, rf1, rf2, rf3, rf4)
+		return Set.of(f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12, f13, rf1, rf2, rf3, rf4, rf5)
 		          .stream()
 		          .collect(Collectors.toUnmodifiableMap(RouterFunction::getName, f -> f));
 	}

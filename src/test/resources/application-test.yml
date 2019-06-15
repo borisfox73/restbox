@@ -1,7 +1,8 @@
 app.config:
-  trace-web-client-requests: true
-  ssl-ignore-validation: true
   indicator-poll-interval: PT1M
+  web-client:
+    trace-web-client-requests: true
+    ssl-ignore-validation: true
   jwt:
     issuer: http://localhost
     audience: restbox_java
@@ -33,65 +34,78 @@ app.config:
   boxcontrol:
   - name: b1
     secret: cisco123
-    ready: 0
     boxes:
     - type: switch
       id: 0
-      status: 0
-      descr: red switch
+      descr: grey switch
       onfunc: anone
       offfunc: anone
+    - type: switch
+      id: 1
+      descr: red switch
+      onfunc: afunc1
+      offfunc: afunc2
     - type: button
       id: 0
-      status: 0
       descr: big red button
-      onfunc: anone
-      offfunc: anone
+      onfunc: afunc3
+      offfunc: afunc4
     - type: usonic
       id: 0
-      status: 0
       descr: ultrasonic sensor
-      onfunc: anone
-      offfunc: anone
+      onfunc: afunc5
+      offfunc: afunc6
     - type: led
       id: 0
-      status: 0
       descr: red light
-      rfunc: rnone
+      rfunc: rfunc1
     - type: led
       id: 1
-      status: 1
       descr: green light
-      rfunc: rnone
+      rfunc: rfunc2
   - name: b2
     secret: cisco456
-    ready: 0
     boxes:
     - type: switch
       id: 0
-      status: 0
       descr: blue switch
-      onfunc: anone
-      offfunc: anone
+      onfunc: afunc7
+      offfunc: afunc8
     - type: button
       id: 0
-      status: 0
       descr: big red button
-      onfunc: anone
-      offfunc: anone
+      onfunc: afunc9
+      offfunc: afunc10
     - type: usonic
       id: 0
-      status: 0
       descr: ultrasonic sensor
-      onfunc: anone
-      offfunc: anone
+      onfunc: afunc11
+      offfunc: afunc12
     - type: led
       id: 0
-      status: 1
       descr: red light
-      rfunc: rnone
+      rfunc: rfunc3
     - type: led
       id: 1
-      status: 0
       descr: green light
-      rfunc: rnone
+      rfunc: rfunc4
+# Router functions currently defined in EntityConfiguration:
+# READ:
+#   rnone   Dummy non-executable read function
+#   rfunc1  CSR-WAN Gi3 state is down
+#   rfunc2  CSR-WAN Gi3 state is up
+#   rfunc3  CSR-AWS Gi1 state is up
+# ACTION:
+#   anone   Dummy non-executable action function
+#   afunc1  CSR-WAN Gi3 state set to down
+#   afunc2  CSR-WAN Gi3 state set to up
+#   afunc3  CSR-WAN Gi3 attach input ACL STOP80
+#   afunc4  CSR-WAN Gi3 remove input ACL STOP80
+#   afunc5  CSR-WAN Gi3 attach input ACL STOP22
+#   afunc6  CSR-WAN Gi3 remove input ACL STOP22
+#   afunc7  CSR-AWS Gi1 attach input ACL STOP80
+#   afunc8  CSR-AWS Gi1 remove input ACL STOP80
+#   afunc9  CSR-AWS Gi1 attach input ACL STOPPING
+#   afunc10 CSR-AWS Gi1 remove input ACL STOPPING
+#   afunc11 CSR-AWS Gi1 attach input ACL STOP443
+#   afunc12 CSR-AWS Gi1 remove input ACL STOP443

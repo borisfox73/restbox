@@ -12,17 +12,26 @@ import org.springframework.lang.Nullable;
 public
 class CiscoServiceException extends RuntimeException {
 
+	private final String reason;
+
+
 	CiscoServiceException(final String message) {
 		super(message);
+		this.reason = null;
+	}
+
+	CiscoServiceException(String message, String reason, Throwable cause) {
+		super(message, cause);
+		this.reason = reason;
 	}
 
 	@Nullable
 	public String getErrorMessage() {
-		return null;
+		return getMessage();
 	}
 
 	@Nullable
 	public String getReason() {
-		return null;
+		return reason;
 	}
 }

@@ -47,7 +47,7 @@ public class BoxControlIndicator extends BoxControl {
 
 	@NonNull
 	@Override
-	Optional<String> getRouterFuncInternal() {
+	public Optional<String> getRouterFunc() {
 		return Optional.ofNullable(rFunc);
 	}
 }

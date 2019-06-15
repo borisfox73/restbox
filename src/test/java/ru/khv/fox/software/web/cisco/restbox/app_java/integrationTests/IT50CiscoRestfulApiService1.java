@@ -12,7 +12,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import reactor.test.StepVerifier;
-import ru.khv.fox.software.web.cisco.restbox.app_java.model.cisco.RestApiDTO;
 import ru.khv.fox.software.web.cisco.restbox.app_java.model.cisco.RestApiErrorResponse;
 import ru.khv.fox.software.web.cisco.restbox.app_java.service.CiscoRestApiException;
 import ru.khv.fox.software.web.cisco.restbox.app_java.service.CiscoRestfulService;
@@ -32,10 +31,12 @@ import static org.hamcrest.junit.internal.ThrowableMessageMatcher.hasMessage;
 //        "app.config.jwt.time-to-live=PT1M"
 //])
 @ActiveProfiles("test")
-public class IT50CiscoRestfulApiService<Q extends RestApiDTO, T extends RestApiDTO, V> {
+//public class IT50CiscoRestfulApiService1<Q extends RestApiDTO, T extends RestApiDTO, V> {
+public class IT50CiscoRestfulApiService1 {
 
 	@Autowired
-	private CiscoRestfulService<Q, T, V> ciscoRestfulService;
+	private CiscoRestfulService ciscoRestfulService;
+//	private CiscoRestfulService<Q, T, V> ciscoRestfulService;
 
 
 	@Test
@@ -151,6 +152,4 @@ public class IT50CiscoRestfulApiService<Q extends RestApiDTO, T extends RestApiD
 		StepVerifier.create(ciscoRestfulService.reAuthenticateAll())
 		            .verifyComplete();
 	}
-
-	// TODO write test for all the Router Functions defined in EntityConfiguration
 }

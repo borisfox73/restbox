@@ -19,7 +19,6 @@ import ru.khv.fox.software.web.cisco.restbox.app_java.PollIndicatorResources;
 import ru.khv.fox.software.web.cisco.restbox.app_java.model.box.Box;
 import ru.khv.fox.software.web.cisco.restbox.app_java.model.box.BoxControl;
 import ru.khv.fox.software.web.cisco.restbox.app_java.model.box.BoxControlType;
-import ru.khv.fox.software.web.cisco.restbox.app_java.model.cisco.RestApiDTO;
 import ru.khv.fox.software.web.cisco.restbox.app_java.service.CiscoRestfulService;
 import ru.khv.fox.software.web.cisco.restbox.app_java.service.RestBoxService;
 
@@ -50,21 +49,25 @@ import static org.hamcrest.Matchers.*;
 		"app.config.boxcontrol[1].boxes[0].rfunc=rfunc3",
 })
 @ActiveProfiles("test")
-public class IT60PollIndicators<Q extends RestApiDTO, T extends RestApiDTO> {
+//public class IT60PollIndicators<Q extends RestApiDTO, T extends RestApiDTO> {
+public class IT60PollIndicators {
 	@Autowired
-	private CiscoRestfulService<Q, T, Integer> ciscoService;
+	private CiscoRestfulService ciscoService;
+	//	private CiscoRestfulService<Q, T, Integer> ciscoService;
 	@Autowired
 	private RestBoxService boxService;
 	@Autowired
 	private Collection<Box> boxes;
 	// Could not autowire because instantiation this component is disabled by test profile
-	private PollIndicatorResources<Q, T> pollIndicatorResources;
+//	private PollIndicatorResources<Q, T> pollIndicatorResources;
+	private PollIndicatorResources pollIndicatorResources;
 
 
 	@Before
 	public void init() {
 		// So instantiate it manually
-		pollIndicatorResources = new PollIndicatorResources<>(ciscoService, boxService, boxes);
+		if (pollIndicatorResources == null)
+			pollIndicatorResources = new PollIndicatorResources(ciscoService, boxService, boxes);
 	}
 
 	@Test
