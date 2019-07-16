@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Boris Fox.
+ * Copyright (c) 2019 Boris Fox.
  * All rights reserved.
  */
 
@@ -25,7 +25,7 @@ import org.springframework.security.web.server.authentication.ServerAuthenticati
 import org.springframework.security.web.server.util.matcher.AndServerWebExchangeMatcher;
 import org.springframework.security.web.server.util.matcher.MediaTypeServerWebExchangeMatcher;
 import org.springframework.security.web.server.util.matcher.PathPatternParserServerWebExchangeMatcher;
-import ru.khv.fox.software.web.cisco.restbox.app_java.model.LoginResponse;
+import ru.khv.fox.software.web.cisco.restbox.app_java.model.dto.LoginResponse;
 import ru.khv.fox.software.web.cisco.restbox.app_java.security.*;
 import ru.khv.fox.software.web.cisco.restbox.app_java.util.WebRequestHelper;
 import ru.khv.fox.software.web.cisco.restbox.app_java.util.WebResponseHelper;

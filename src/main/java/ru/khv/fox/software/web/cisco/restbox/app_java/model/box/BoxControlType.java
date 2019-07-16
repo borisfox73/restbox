@@ -78,14 +78,6 @@ public enum BoxControlType {
 		return state == 1 ? ON : state == 0 ? OFF : NOOP;
 	}
 
-	/* TODO cleanup
-		// for serialization
-		@Nullable
-		@JsonCreator
-		private static BoxControlType fromJson(@Nullable final String value) {
-			return value != null ? BoxControlType.valueOf(value.toUpperCase()) : null;
-		}
-	*/
 	// for deserialization
 	@NonNull
 	@JsonValue

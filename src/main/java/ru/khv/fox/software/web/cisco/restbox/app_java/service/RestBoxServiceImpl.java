@@ -11,9 +11,7 @@ import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
-import ru.khv.fox.software.web.cisco.restbox.app_java.model.box.Box;
-import ru.khv.fox.software.web.cisco.restbox.app_java.model.box.BoxControl;
-import ru.khv.fox.software.web.cisco.restbox.app_java.model.box.BoxControlType;
+import ru.khv.fox.software.web.cisco.restbox.app_java.model.box.*;
 import ru.khv.fox.software.web.cisco.restbox.app_java.util.RestApiException;
 
 import java.util.Collection;
@@ -36,9 +34,16 @@ class RestBoxServiceImpl implements RestBoxService {
 		           .switchIfEmpty(Mono.defer(() -> Mono.error(new RestApiException("Box '" + boxName + "' not found", HttpStatus.NOT_FOUND))));
 	}
 
+	/*
+		@NonNull
+		@Override
+		public Mono<Box> checkAccess(@NonNull final String boxName, @NonNull final String secret) {
+			return getByName(boxName).filter(b -> b.getSecret().equals(secret))
+									 .switchIfEmpty(Mono.defer(() -> Mono.error(new RestApiException("auth_error", HttpStatus.UNAUTHORIZED))));
+		}
+	*/
 	@NonNull
-	@Override
-	public Mono<Box> checkAccess(@NonNull final String boxName, @NonNull final String secret) {
+	private Mono<Box> getByNameAndCheckAccess(@NonNull final String boxName, @NonNull final String secret) {
 		return getByName(boxName).filter(b -> b.getSecret().equals(secret))
 		                         .switchIfEmpty(Mono.defer(() -> Mono.error(new RestApiException("auth_error", HttpStatus.UNAUTHORIZED))));
 	}
@@ -46,19 +51,27 @@ class RestBoxServiceImpl implements RestBoxService {
 	@NonNull
 	@Override
 	public Mono<BoxControl> getBoxControl(@NonNull final String boxName, @NonNull final String secret, @NonNull final BoxControlType boxControlType, final int boxControlId) {
-		return checkAccess(boxName, secret).as(boxMono -> lookupControl(boxMono, boxControlType, boxControlId));
+		return getByNameAndCheckAccess(boxName, secret).as(boxMono -> lookupControl(boxMono, boxControlType, boxControlId));
 	}
+
+/*
+	@NonNull
+	@Override
+	public Mono<BoxControl> getBoxControl(@NonNull final String boxName, @NonNull final BoxControlType boxControlType, final int boxControlId) {
+		return getByName(boxName).as(boxMono -> lookupControl(boxMono, boxControlType, boxControlId));
+	}
+*/
 
 	@NonNull
 	@Override
 	public Mono<BoxControl> putStatus(@NonNull final String boxName, @NonNull final String secret, @NonNull final BoxControlType boxControlType, final int boxControlId, final boolean ready, final int status) {
-		return checkAccess(boxName, secret).as(boxMono -> lookupControl(boxMono, boxControlType, boxControlId, ready)).doOnNext(control -> control.setStatus(status));
+		return getByNameAndCheckAccess(boxName, secret).as(boxMono -> lookupControl(boxMono, boxControlType, boxControlId, ready)).doOnNext(control -> control.setStatus(status));
 	}
 
 	@NonNull
 	@Override
-	public Mono<BoxControl> putStatus(@NonNull final String boxName, @NonNull final BoxControlType boxControlType, final int boxControlId, final boolean ready, final int status) {
-		return lookupControl(boxName, boxControlType, boxControlId, ready).doOnNext(control -> control.setStatus(status));
+	public Mono<BoxControl> putStatus(@NonNull final String boxName, @NonNull final BoxControlType boxControlType, final int boxControlId, final int status) {
+		return lookupControl(boxName, boxControlType, boxControlId).doOnNext(control -> control.setStatus(status));
 	}
 
 	@NonNull
@@ -69,31 +82,39 @@ class RestBoxServiceImpl implements RestBoxService {
 
 	@NonNull
 	@Override
+	public Mono<Integer> getStatus(@NonNull final String boxName, @NonNull final BoxControlType boxControlType, final int boxControlId) {
+		return lookupControl(boxName, boxControlType, boxControlId).map(BoxControl::getStatus).defaultIfEmpty(0);
+	}
+
+	@NonNull
+	@Override
+	public Mono<BoxControlAction> getAction(@NonNull final String boxName, @NonNull final BoxControlType boxControlType, final int boxControlId) {
+		return lookupControl(boxName, boxControlType, boxControlId).map(BoxControl::getAction).defaultIfEmpty(BoxControlAction.NOOP);
+	}
+
+	@NonNull
+	@Override
 	public Collection<Box> getConf() {
 		return boxes.values();
 	}
 
-	// TODO are these methods still needed ?
-/*
 	@NonNull
 	@Override
-	public Mono<Void> putOnFunc(@NonNull final String boxName, @NonNull final BoxControlType boxControlType, final int boxControlId, @NonNull final String func) {
-		return lookupSensor(boxName, boxControlType, boxControlId).doOnNext(boxSensor -> boxSensor.setOnFunc(func)).then();
+	public Mono<BoxControlSensor> putOnFunc(@NonNull final String boxName, @NonNull final BoxControlType boxControlType, final int boxControlId, @NonNull final String func) {
+		return lookupSensor(boxName, boxControlType, boxControlId).doOnNext(boxSensor -> boxSensor.setOnFunc(func));
 	}
 
 	@NonNull
 	@Override
-	public Mono<Void> putOffFunc(@NonNull final String boxName, @NonNull final BoxControlType boxControlType, final int boxControlId, @NonNull final String func) {
-		return lookupSensor(boxName, boxControlType, boxControlId).doOnNext(boxSensor -> boxSensor.setOffFunc(func)).then();
+	public Mono<BoxControlSensor> putOffFunc(@NonNull final String boxName, @NonNull final BoxControlType boxControlType, final int boxControlId, @NonNull final String func) {
+		return lookupSensor(boxName, boxControlType, boxControlId).doOnNext(boxSensor -> boxSensor.setOffFunc(func));
 	}
 
 	@NonNull
 	@Override
-	public Mono<Void> putRFunc(@NonNull final String boxName, @NonNull final BoxControlType boxControlType, final int boxControlId, @NonNull final String func) {
-		return lookupIndicator(boxName, boxControlType, boxControlId).doOnNext(boxSensor -> boxSensor.setRFunc(func)).then();
+	public Mono<BoxControlIndicator> putRFunc(@NonNull final String boxName, @NonNull final BoxControlType boxControlType, final int boxControlId, @NonNull final String func) {
+		return lookupIndicator(boxName, boxControlType, boxControlId).doOnNext(boxSensor -> boxSensor.setRFunc(func));
 	}
-*/
-
 
 	private Mono<BoxControl> getBoxControlMonoByTypeAndId(final Box box, @NonNull final BoxControlType boxControlType, final int boxControlId) {
 		return Mono.justOrEmpty(box.getControlByTypeAndId(boxControlType, boxControlId));
@@ -110,22 +131,24 @@ class RestBoxServiceImpl implements RestBoxService {
 		return getByName(boxName).as(boxMono -> lookupControl(boxMono, boxControlType, boxControlId, ready));
 	}
 
+	private Mono<BoxControl> lookupControl(@NonNull final String boxName, @NonNull final BoxControlType boxControlType, final int boxControlId) {
+		return getByName(boxName).as(boxMono -> lookupControl(boxMono, boxControlType, boxControlId, null));
+	}
+
 	// idempotent
 	private Mono<BoxControl> lookupControl(@NonNull final Mono<Box> boxMono, @NonNull final BoxControlType boxControlType, final int boxControlId) {
 		return lookupControl(boxMono, boxControlType, boxControlId, null);
 	}
 
-/*
 	private Mono<BoxControlSensor> lookupSensor(@NonNull final String boxName, @NonNull final BoxControlType boxControlType, final int boxControlId) {
-		return getByName(boxName).flatMap(box -> getBoxControlMonoByTypeAndId(box, boxControlType, boxControlId))
+		return lookupControl(boxName, boxControlType, boxControlId)
 		                         .ofType(BoxControlSensor.class)
 		                         .switchIfEmpty(Mono.defer(() -> Mono.error(new RestApiException("Sensor with type '" + boxControlType + "' and id " + boxControlId + " not found", HttpStatus.NOT_FOUND))));
 	}
 
 	private Mono<BoxControlIndicator> lookupIndicator(@NonNull final String boxName, @NonNull final BoxControlType boxControlType, final int boxControlId) {
-		return getByName(boxName).flatMap(box -> getBoxControlMonoByTypeAndId(box, boxControlType, boxControlId))
+		return lookupControl(boxName, boxControlType, boxControlId)
 		                         .ofType(BoxControlIndicator.class)
 		                         .switchIfEmpty(Mono.defer(() -> Mono.error(new RestApiException("Indicator with type '" + boxControlType + "' and id " + boxControlId + " not found", HttpStatus.NOT_FOUND))));
 	}
-*/
 }

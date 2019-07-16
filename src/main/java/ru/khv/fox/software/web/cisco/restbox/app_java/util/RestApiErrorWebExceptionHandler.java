@@ -17,7 +17,7 @@ import org.springframework.lang.NonNull;
 import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.server.*;
 import reactor.core.publisher.Mono;
-import ru.khv.fox.software.web.cisco.restbox.app_java.model.ErrorResponse;
+import ru.khv.fox.software.web.cisco.restbox.app_java.model.dto.ErrorResponse;
 
 /**
  * Custom Error Web Exception Handler for formatting error response in JSON with custom object.

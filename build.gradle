@@ -61,6 +61,7 @@ dependencies {
 	compile group: 'org.webjars.bower', name: 'json3', version: '3.3.2'
 
 	compileOnly('org.projectlombok:lombok')
+	compileOnly group: 'com.google.code.findbugs', name: 'jsr305', version: '3.0.2'
 
 	annotationProcessor('org.springframework.boot:spring-boot-configuration-processor')
 	annotationProcessor('org.projectlombok:lombok')

@@ -5,6 +5,9 @@
 
 package ru.khv.fox.software.web.cisco.restbox.app_java.configuration;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import lombok.Data;
 import org.apache.logging.log4j.util.Strings;
 import org.hibernate.validator.constraints.time.DurationMin;
@@ -117,9 +120,20 @@ public class AppProperties {
 	 * User properties.
 	 */
 	@Data
+	@JsonAutoDetect(
+			fieldVisibility = JsonAutoDetect.Visibility.NONE,
+			setterVisibility = JsonAutoDetect.Visibility.NONE,
+			getterVisibility = JsonAutoDetect.Visibility.NONE,
+			isGetterVisibility = JsonAutoDetect.Visibility.NONE,
+			creatorVisibility = JsonAutoDetect.Visibility.NONE
+	)
 	public static class UserProperties {
+		@JsonProperty("login")
+		@JsonPropertyDescription("Login")
 		@NotBlank
 		private String username;
+		@JsonProperty
+		@JsonPropertyDescription("Password")
 		@NotBlank
 		private String password;
 		@NotBlank
