@@ -150,7 +150,7 @@ public class PollIndicatorResources {
 		           .map(ExecFunctionResultPair::getBoxValue)
 		           .transform(Utilities.getIfPresent())
 		           .cast(Integer.class)
-		           .flatMap(boxStatus -> boxService.putStatus(box.getName(), boxControl.getType(), boxControl.getId(), false, boxStatus))
+		           .flatMap(boxStatus -> boxService.putStatus(box.getName(), boxControl.getType(), boxControl.getId(), boxStatus))
 		           .doOnNext(boxControl1 -> log.trace("box control after {}", boxControl1));
 	}
 }

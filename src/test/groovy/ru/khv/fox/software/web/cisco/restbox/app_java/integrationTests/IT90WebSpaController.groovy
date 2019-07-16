@@ -21,6 +21,7 @@ import org.springframework.test.context.junit4.SpringRunner
 
 import static io.restassured.RestAssured.given
 import static io.restassured.module.jsv.JsonSchemaValidator.matchesJsonSchemaInClasspath
+import static org.hamcrest.MatcherAssert.assertThat
 import static org.hamcrest.Matchers.*
 
 @RunWith(SpringRunner.class)
@@ -39,8 +40,17 @@ class IT90WebSpaController {
 
 	private static final String LOGIN_ENDPOINT = "/login"
 	private static final String GETCONFIG_ENDPOINT = "/webapi/list/boxcontrollers"
-	private static final String GETLIGHTS_ENDPOINT = "/webapi/get/{boxName}/{boxControlType}/{boxControlId}"
-	private static final String PUTLIGHTS_ENDPOINT = "/webapi/change/{boxName}/{boxControlType}/{boxControlId}/{status}"
+	private static final String LISTLABUSERS_ENDPOINT = "/webapi/list/labusers"
+	private static final String LISTAFUNCTIONS_ENDPOINT = "/webapi/list/afunctions"
+	private static final String LISTRFUNCTIONS_ENDPOINT = "/webapi/list/rfunctions"
+	private static final String GETSTATUS_ENDPOINT = "/webapi/get/{boxName}/{boxControlType}/{boxControlId}"
+	private static final String GETACTION_ENDPOINT = "/webapi/getaction/{boxName}/{boxControlType}/{boxControlId}"
+	private static final String PUTSTATUS_ENDPOINT = "/webapi/change/{boxName}/{boxControlType}/{boxControlId}/{status}"
+	private static final String ONFUNC_ENDPOINT = "/webapi/onfunc/{boxName}/{boxControlType}/{boxControlId}/{func}"
+	private static final String OFFFUNC_ENDPOINT = "/webapi/offfunc/{boxName}/{boxControlType}/{boxControlId}/{func}"
+	private static final String RFUNC_ENDPOINT = "/webapi/rfunc/{boxName}/{boxControlType}/{boxControlId}/{func}"
+	private static final String CALL_AFUNC_ENDPOINT = "/webapi/call/afunc/{func}"
+	private static final String CALL_RFUNC_ENDPOINT = "/webapi/call/rfunc/{func}"
 
 	private static class LoginRequest {
 		@JsonProperty
@@ -130,39 +140,156 @@ class IT90WebSpaController {
     	// @formatter:on
 	}
 
-/* TODO need to prepare state first
 	@Test
-	void 'get lights b1 led 0'() {
-		getLights('b1', 'led', 0, 1)
+	void 'list lab users'() {
+		// @formatter:off
+        def userList = given()
+						.contentType(ContentType.JSON)
+			            .accept(ContentType.JSON)
+			            .auth().preemptive()
+			                .oauth2(jwt)
+			            .when()
+			                .get(LISTLABUSERS_ENDPOINT)
+			            .then()
+					        .assertThat()
+			                    .statusCode(HttpStatus.SC_OK)
+					            .contentType(ContentType.JSON)
+			                    .body(matchesJsonSchemaInClasspath("labusers_schema.json"))
+					            .body("message.size()", is(3))
+			                    .body("message.login", containsInAnyOrder("testadmin", "testuser", "test2"))
+			                    .body("message.password", containsInAnyOrder("admpass", "testpass", "pass2"))
+					        .and()
+			                    .extract()
+			                        .response()
+			                            .jsonPath()
+			                                .getList("message")
+		//noinspection GroovyAssignabilityCheck
+		assertThat(userList, containsInAnyOrder(
+				allOf(hasEntry("login", "testadmin"), hasEntry("password", "admpass")),
+				allOf(hasEntry("login", "testuser"), hasEntry("password", "testpass")),
+				allOf(hasEntry("login", "test2"), hasEntry("password", "pass2"))
+		))
+    	// @formatter:on
 	}
-*/
 
 	@Test
-	void 'get lights b2 led 0'() {
-		getLights('b2', 'led', 0, 0)
+	void 'list afunctions'() {
+		// @formatter:off
+        given()
+						.contentType(ContentType.JSON)
+			            .accept(ContentType.JSON)
+			            .auth().preemptive()
+			                .oauth2(jwt)
+			            .when()
+			                .get(LISTAFUNCTIONS_ENDPOINT)
+			            .then()
+					        .assertThat()
+			                    .statusCode(HttpStatus.SC_OK)
+					            .contentType(ContentType.JSON)
+			                    .body(matchesJsonSchemaInClasspath("routerfunctions_schema.json"))
+					            .body("message.size()", is(13))
+    	// @formatter:on
 	}
 
 	@Test
-	void 'get lights b2 led 1'() {
-        getLights('b2', 'led', 1, 1)
+	void 'list rfunctions'() {
+		// @formatter:off
+        given()
+						.contentType(ContentType.JSON)
+			            .accept(ContentType.JSON)
+			            .auth().preemptive()
+			                .oauth2(jwt)
+			            .when()
+			                .get(LISTRFUNCTIONS_ENDPOINT)
+			            .then()
+					        .assertThat()
+			                    .statusCode(HttpStatus.SC_OK)
+					            .contentType(ContentType.JSON)
+			                    .body(matchesJsonSchemaInClasspath("routerfunctions_schema.json"))
+					            .body("message.size()", is(5))
+    	// @formatter:on
 	}
 
 	@Test
-	void 'put lights b1 led 0'() {
-		putLights('b1', 'led', 0, 0)
+	void 'status b1 switch 0'() {
+		testStatus('b1', 'switch', 0)
 	}
 
 	@Test
-	void 'put and get lights b1 led 1'() {
-		putLights('b1', 'led', 1, 1)
-		getLights('b1', 'led', 1, 1)
-		putLights('b1', 'led', 1, 0)
-		getLights('b1', 'led', 1, 0)
+	void 'status b1 switch 1'() {
+		testStatus('b1', 'switch', 1)
 	}
+
+	@Test
+	void 'status b1 button 0'() {
+		testStatus('b1', 'button', 0)
+	}
+
+	@Test
+	void 'status b1 usonic 0 (20)'() {
+		testStatus('b1', 'usonic', 0, 20, "OFF")
+	}
+
+	@Test
+	void 'status b1 usonic 0 (80)'() {
+		testStatus('b1', 'usonic', 0, 80, "ON")
+	}
+
+	@Test
+	void 'status b2 switch 0'() {
+		testStatus('b2', 'switch', 0)
+	}
+
+	@Test
+	void 'status b2 button 0'() {
+		testStatus('b2', 'button', 0)
+	}
+
+	@Test
+	void 'status b2 usonic 0 (0)'() {
+		testStatus('b2', 'usonic', 0, 0, "NOOP")
+	}
+
+	@Test
+	void 'status b2 usonic 0 (10)'() {
+		testStatus('b2', 'usonic', 0, 10, "OFF")
+	}
+
+	@Test
+	void 'status b2 usonic 0 (70)'() {
+		testStatus('b2', 'usonic', 0, 70, "ON")
+	}
+
+	@Test
+	void 'status b2 usonic 0 (120)'() {
+		testStatus('b2', 'usonic', 0, 120, "NOOP")
+	}
+
+
+	@Test
+	void 'status b1 led 0'() {
+		testStatus('b1', 'led', 0)
+	}
+
+	@Test
+	void 'status b1 led 1'() {
+		testStatus('b1', 'led', 1)
+	}
+
+	@Test
+	void 'status b2 led 0'() {
+		testStatus('b2', 'led', 0)
+	}
+
+	@Test
+	void 'status b2 led 1'() {
+		testStatus('b2', 'led', 1)
+	}
+
 
 	@Test
 	void 'box not found'() {
-		def endpoint = GETLIGHTS_ENDPOINT.replace('{boxName}', 'nonexistentbox').replace('{boxControlType}', 'led').replace('{boxControlId}', "1")
+		def endpoint = GETSTATUS_ENDPOINT.replace('{boxName}', 'nonexistentbox').replace('{boxControlType}', 'led').replace('{boxControlId}', "1")
 		print "GET endpoint = $endpoint"
 		// @formatter:off
         given()
@@ -181,7 +308,7 @@ class IT90WebSpaController {
 
 	@Test
 	void 'control not found (get)'() {
-		def endpoint = GETLIGHTS_ENDPOINT.replace('{boxName}', 'b1').replace('{boxControlType}', 'led').replace('{boxControlId}', "5")
+		def endpoint = GETSTATUS_ENDPOINT.replace('{boxName}', 'b1').replace('{boxControlType}', 'led').replace('{boxControlId}', "5")
 		print "GET endpoint = $endpoint"
 		// @formatter:off
         given()
@@ -200,7 +327,7 @@ class IT90WebSpaController {
 
 	@Test
 	void 'control not found (put)'() {
-		def endpoint = PUTLIGHTS_ENDPOINT.replace('{boxName}', 'b1').replace('{boxControlType}', 'led').replace('{boxControlId}', "5").replace('{status}', "1")
+		def endpoint = PUTSTATUS_ENDPOINT.replace('{boxName}', 'b1').replace('{boxControlType}', 'led').replace('{boxControlId}', "5").replace('{status}', "1")
 		print "PUT endpoint = $endpoint"
 		// @formatter:off
         given()
@@ -217,8 +344,17 @@ class IT90WebSpaController {
     	// @formatter:on
 	}
 
-	private void getLights(final String boxName, final String boxControlType, final int boxControlId, final int expected) {
-		def endpoint = GETLIGHTS_ENDPOINT.replace('{boxName}', boxName).replace('{boxControlType}', boxControlType).replace('{boxControlId}', boxControlId.toString())
+	private void testStatus(final String boxName, final String boxControlType, final int boxControlId, final int highStatus = 1, final String expected = null) {
+		putStatus(boxName, boxControlType, boxControlId, 0)
+		getStatus(boxName, boxControlType, boxControlId, 0)
+		putStatus(boxName, boxControlType, boxControlId, highStatus)
+		getStatus(boxName, boxControlType, boxControlId, highStatus)
+		if (expected != null)
+			getAction(boxName, boxControlType, boxControlId, expected)
+	}
+
+	private void getStatus(final String boxName, final String boxControlType, final int boxControlId, final int expected) {
+		def endpoint = GETSTATUS_ENDPOINT.replace('{boxName}', boxName).replace('{boxControlType}', boxControlType).replace('{boxControlId}', boxControlId.toString())
 		print "GET endpoint = $endpoint"
 		// @formatter:off
         given()
@@ -235,8 +371,26 @@ class IT90WebSpaController {
     	// @formatter:on
 	}
 
-	private void putLights(final String boxName, final String boxControlType, final int boxControlId, final int status) {
-		def endpoint = PUTLIGHTS_ENDPOINT.replace('{boxName}', boxName).replace('{boxControlType}', boxControlType).replace('{boxControlId}', boxControlId.toString()).replace('{status}', status.toString())
+	private void getAction(final String boxName, final String boxControlType, final int boxControlId, final String expected) {
+		def endpoint = GETACTION_ENDPOINT.replace('{boxName}', boxName).replace('{boxControlType}', boxControlType).replace('{boxControlId}', boxControlId.toString())
+		print "GET endpoint = $endpoint"
+		// @formatter:off
+        given()
+            .contentType(ContentType.JSON)
+            .accept(ContentType.JSON)
+            .auth().preemptive()
+                .oauth2(jwt)
+            .when()
+                .get(endpoint)
+            .then()
+                .assertThat()
+                    .statusCode(HttpStatus.SC_OK)
+                    .body("message", is(equalTo(expected)))
+    	// @formatter:on
+	}
+
+	private void putStatus(final String boxName, final String boxControlType, final int boxControlId, final int status) {
+		def endpoint = PUTSTATUS_ENDPOINT.replace('{boxName}', boxName).replace('{boxControlType}', boxControlType).replace('{boxControlId}', boxControlId.toString()).replace('{status}', status.toString())
 		print "PUT endpoint = $endpoint"
 		// @formatter:off
         given()
@@ -250,6 +404,121 @@ class IT90WebSpaController {
                 .assertThat()
                     .statusCode(HttpStatus.SC_OK)
                     .body("message", is('ok'))
+    	// @formatter:on
+	}
+
+	@Test
+	void 'put onfunc anone'() {
+		putFunc(ONFUNC_ENDPOINT, "b1", "switch", 0, "anone")
+	}
+
+	@Test
+	void 'put offunc anone'() {
+		putFunc(OFFFUNC_ENDPOINT, "b1", "switch", 0, "anone")
+	}
+
+	@Test
+	void 'put rfunc rnone'() {
+		putFunc(RFUNC_ENDPOINT, "b1", "led", 0, "rnone")
+	}
+
+	@Test
+	void 'put onfunc afunc1'() {
+		putFunc(ONFUNC_ENDPOINT, "b2", "usonic", 0, "afunc1")
+	}
+
+	@Test
+	void 'put offunc afunc2'() {
+		putFunc(OFFFUNC_ENDPOINT, "b2", "usonic", 0, "afunc1")
+	}
+
+	@Test
+	void 'put rfunc rfunc1'() {
+		putFunc(RFUNC_ENDPOINT, "b2", "led", 1, "rfunc1")
+	}
+
+	// Test errors (func not found / wrong type)
+	@Test
+	void 'put onfunc afunc000'() {
+		putFunc(ONFUNC_ENDPOINT, "b2", "usonic", 0, "afunc000", HttpStatus.SC_NOT_FOUND, "Function 'afunc000' is not found")
+	}
+
+	@Test
+	void 'put offunc rfunc1'() {
+		putFunc(OFFFUNC_ENDPOINT, "b2", "usonic", 0, "rfunc1", HttpStatus.SC_BAD_REQUEST, "Function 'rfunc1' is not of Action type")
+	}
+
+	@Test
+	void 'put rfunc afunc2'() {
+		putFunc(RFUNC_ENDPOINT, "b2", "led", 1, "afunc2", HttpStatus.SC_BAD_REQUEST, "Function 'afunc2' is not of Read type")
+	}
+
+	@Test
+	void 'put rfunc validation err 1'() {
+		putFunc(RFUNC_ENDPOINT, " ", "led", 1, "rnone", HttpStatus.SC_BAD_REQUEST, "request constraint violation error")
+	}
+
+	@Test
+	void 'put rfunc validation err 2'() {
+		putFunc(RFUNC_ENDPOINT, "b1", "xxx", 1, "rnone", HttpStatus.SC_BAD_REQUEST, "request data conversion error")
+	}
+
+
+	@Test
+	void 'call afunc anone'() {
+		callFunc(CALL_AFUNC_ENDPOINT, "anone")
+	}
+
+	@Test
+	void 'call rfunc rnone'() {
+		callFunc(CALL_RFUNC_ENDPOINT, "rnone")
+	}
+
+	@Test
+	void 'call afunc afunc1-12'() {
+		(1..12).each { callFunc(CALL_AFUNC_ENDPOINT, "afunc" + it) }
+	}
+
+	@Test
+	void 'call rfunc rfunc1-4'() {
+		(1..4).each { callFunc(CALL_RFUNC_ENDPOINT, "rfunc" + it) }
+	}
+
+	@Test
+	void 'call afunc afunc000'() {
+		callFunc(CALL_AFUNC_ENDPOINT, "afunc000", HttpStatus.SC_NOT_FOUND, "Function 'afunc000' is not found")
+	}
+
+	@Test
+	void 'call afunc rfunc1'() {
+		callFunc(CALL_AFUNC_ENDPOINT, "rfunc1", HttpStatus.SC_BAD_REQUEST, "Function 'rfunc1' is not of Action type")
+	}
+
+	@Test
+	void 'call rfunc afunc2'() {
+		callFunc(CALL_RFUNC_ENDPOINT, "afunc2", HttpStatus.SC_BAD_REQUEST, "Function 'afunc2' is not of Read type")
+	}
+
+	private void putFunc(final String endpointTemplate, final String boxName, final String boxControlType, final int boxControlId, final String func, final int status = HttpStatus.SC_OK, final String message = 'ok') {
+		def endpoint = endpointTemplate.replace('{boxName}', boxName).replace('{boxControlType}', boxControlType).replace('{boxControlId}', boxControlId.toString())
+		callFunc(endpoint, func, status, message)
+	}
+
+	private void callFunc(final String endpointTemplate, final String func, final int status = HttpStatus.SC_OK, final String message = 'ok') {
+		def endpoint = endpointTemplate.replace('{func}', func)
+		print "PUT endpoint = $endpoint"
+		// @formatter:off
+        given()
+            .contentType(ContentType.JSON)
+            .accept(ContentType.JSON)
+            .auth().preemptive()
+                .oauth2(jwt)
+            .when()
+                .put(endpoint)
+            .then()
+                .assertThat()
+                    .statusCode(status)
+                    .body("message", equalTo(message))
     	// @formatter:on
 	}
 }

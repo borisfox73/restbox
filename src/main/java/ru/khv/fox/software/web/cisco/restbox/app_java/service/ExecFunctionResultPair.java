@@ -5,10 +5,7 @@
 
 package ru.khv.fox.software.web.cisco.restbox.app_java.service;
 
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
-import lombok.NonNull;
-import lombok.Value;
+import lombok.*;
 import org.springframework.lang.Nullable;
 import ru.khv.fox.software.web.cisco.restbox.app_java.model.cisco.RestApiDTO;
 import ru.khv.fox.software.web.cisco.restbox.app_java.model.cisco.RestApiErrorDTO;
@@ -17,6 +14,7 @@ import java.util.Optional;
 
 @Value
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
+@ToString(doNotUseGetters = true)
 public class ExecFunctionResultPair<T extends RestApiDTO, E extends RestApiErrorDTO, V> {
 	private T successDto;
 	private E errorDto;

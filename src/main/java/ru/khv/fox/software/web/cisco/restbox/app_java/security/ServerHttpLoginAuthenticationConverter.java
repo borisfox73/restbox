@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Boris Fox.
+ * Copyright (c) 2019 Boris Fox.
  * All rights reserved.
  */
 
@@ -13,7 +13,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.web.server.authentication.ServerAuthenticationConverter;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
-import ru.khv.fox.software.web.cisco.restbox.app_java.model.LoginRequest;
+import ru.khv.fox.software.web.cisco.restbox.app_java.model.dto.LoginRequest;
 import ru.khv.fox.software.web.cisco.restbox.app_java.util.RestApiException;
 import ru.khv.fox.software.web.cisco.restbox.app_java.util.WebRequestHelper;
 
