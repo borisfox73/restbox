@@ -27,6 +27,7 @@ import ru.khv.fox.software.web.cisco.restbox.app_java.model.cisco.AuthServiceRes
 import java.io.IOException;
 import java.net.URI;
 import java.time.LocalDateTime;
+import java.util.Optional;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -64,6 +65,13 @@ final class CiscoRestApiClientState {
 		                            .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
 		                            .filter(tokenAuthenticationFilter())
 		                            .build();
+	}
+
+	// Has side effect as backsetting of the authentication token to router object
+	@NonNull
+	Router getRouter() {
+		Optional.ofNullable(getAuthServiceResponse()).map(AuthServiceResponse::getTokenId).ifPresent(router::setToken);
+		return router;
 	}
 
 	// Adds token authentication header

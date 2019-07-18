@@ -1,0 +1,12 @@
+{
+  "message": [
+    {
+      "name": "CSR1",
+      "host": "10.1.2.3",
+      "username": "test",
+      "password": "testpwd",
+      "type": "csrv",
+      "token": ""
+    }
+  ]
+}

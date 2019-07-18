@@ -41,6 +41,7 @@ class IT90WebSpaController {
 	private static final String LOGIN_ENDPOINT = "/login"
 	private static final String GETCONFIG_ENDPOINT = "/webapi/list/boxcontrollers"
 	private static final String LISTLABUSERS_ENDPOINT = "/webapi/list/labusers"
+	private static final String LISTROUTERS_ENDPOINT = "/webapi/list/routers"
 	private static final String LISTAFUNCTIONS_ENDPOINT = "/webapi/list/afunctions"
 	private static final String LISTRFUNCTIONS_ENDPOINT = "/webapi/list/rfunctions"
 	private static final String GETSTATUS_ENDPOINT = "/webapi/get/{boxName}/{boxControlType}/{boxControlId}"
@@ -51,6 +52,7 @@ class IT90WebSpaController {
 	private static final String RFUNC_ENDPOINT = "/webapi/rfunc/{boxName}/{boxControlType}/{boxControlId}/{func}"
 	private static final String CALL_AFUNC_ENDPOINT = "/webapi/call/afunc/{func}"
 	private static final String CALL_RFUNC_ENDPOINT = "/webapi/call/rfunc/{func}"
+	private static final String REAUTH_ENDPOINT = "/webapi/csr/reauth"
 
 	private static class LoginRequest {
 		@JsonProperty
@@ -75,7 +77,7 @@ class IT90WebSpaController {
 		RestAssured.filters(new ResponseLoggingFilter())
 		RestAssured.filters(new RequestLoggingFilter())
 		jwt = acquireJwt("testuser", "testpass")
-        // TODO split in two and set state of external resources to test indicator endpoints
+		// TODO split in two and set state of external resources to test indicator endpoints
 	}
 
 	private static String acquireJwt(String username, String password) {
@@ -173,21 +175,45 @@ class IT90WebSpaController {
 	}
 
 	@Test
+	void 'list routers'() {
+		// @formatter:off
+        given()
+			.contentType(ContentType.JSON)
+		    .accept(ContentType.JSON)
+		    .auth().preemptive()
+		        .oauth2(jwt)
+			.when()
+				.get(LISTROUTERS_ENDPOINT)
+			.then()
+				.assertThat()
+			        .statusCode(HttpStatus.SC_OK)
+					.contentType(ContentType.JSON)
+			        .body(matchesJsonSchemaInClasspath("routers_schema.json"))
+					.body("message.size()", is(2))
+			        .body("message.name", containsInAnyOrder("CSR-WAN", "CSR-AWS"))
+			        .body("message.host", containsInAnyOrder("192.168.70.70", "192.168.70.71"))
+			        .body("message.username", containsInAnyOrder("rest", "rest2"))
+			        .body("message.password", containsInAnyOrder("restpwd", "restpwd2"))
+			        .body("message.type", containsInAnyOrder("csrv", "asr"))
+    	// @formatter:on
+	}
+
+	@Test
 	void 'list afunctions'() {
 		// @formatter:off
         given()
-						.contentType(ContentType.JSON)
-			            .accept(ContentType.JSON)
-			            .auth().preemptive()
-			                .oauth2(jwt)
-			            .when()
-			                .get(LISTAFUNCTIONS_ENDPOINT)
-			            .then()
-					        .assertThat()
-			                    .statusCode(HttpStatus.SC_OK)
-					            .contentType(ContentType.JSON)
-			                    .body(matchesJsonSchemaInClasspath("routerfunctions_schema.json"))
-					            .body("message.size()", is(13))
+			.contentType(ContentType.JSON)
+			.accept(ContentType.JSON)
+			.auth().preemptive()
+				.oauth2(jwt)
+			.when()
+				.get(LISTAFUNCTIONS_ENDPOINT)
+			.then()
+				.assertThat()
+					.statusCode(HttpStatus.SC_OK)
+					.contentType(ContentType.JSON)
+			        .body(matchesJsonSchemaInClasspath("routerfunctions_schema.json"))
+					.body("message.size()", is(13))
     	// @formatter:on
 	}
 
@@ -195,18 +221,18 @@ class IT90WebSpaController {
 	void 'list rfunctions'() {
 		// @formatter:off
         given()
-						.contentType(ContentType.JSON)
-			            .accept(ContentType.JSON)
-			            .auth().preemptive()
-			                .oauth2(jwt)
-			            .when()
-			                .get(LISTRFUNCTIONS_ENDPOINT)
-			            .then()
-					        .assertThat()
-			                    .statusCode(HttpStatus.SC_OK)
-					            .contentType(ContentType.JSON)
-			                    .body(matchesJsonSchemaInClasspath("routerfunctions_schema.json"))
-					            .body("message.size()", is(5))
+			.contentType(ContentType.JSON)
+			.accept(ContentType.JSON)
+			.auth().preemptive()
+				.oauth2(jwt)
+			.when()
+				.get(LISTRFUNCTIONS_ENDPOINT)
+			.then()
+				.assertThat()
+			        .statusCode(HttpStatus.SC_OK)
+					.contentType(ContentType.JSON)
+			        .body(matchesJsonSchemaInClasspath("routerfunctions_schema.json"))
+					.body("message.size()", is(5))
     	// @formatter:on
 	}
 
@@ -290,57 +316,19 @@ class IT90WebSpaController {
 	@Test
 	void 'box not found'() {
 		def endpoint = GETSTATUS_ENDPOINT.replace('{boxName}', 'nonexistentbox').replace('{boxControlType}', 'led').replace('{boxControlId}', "1")
-		print "GET endpoint = $endpoint"
-		// @formatter:off
-        given()
-            .contentType(ContentType.JSON)
-            .accept(ContentType.JSON)
-            .auth().preemptive()
-                .oauth2(jwt)
-            .when()
-                .get(endpoint)
-            .then()
-                .assertThat()
-                    .statusCode(HttpStatus.SC_NOT_FOUND)
-                    .body("message", is("Box 'nonexistentbox' not found"))
-    	// @formatter:on
+		callGetEndpoint(endpoint, HttpStatus.SC_NOT_FOUND, "Box 'nonexistentbox' not found")
 	}
 
 	@Test
 	void 'control not found (get)'() {
 		def endpoint = GETSTATUS_ENDPOINT.replace('{boxName}', 'b1').replace('{boxControlType}', 'led').replace('{boxControlId}', "5")
-		print "GET endpoint = $endpoint"
-		// @formatter:off
-        given()
-            .contentType(ContentType.JSON)
-            .accept(ContentType.JSON)
-            .auth().preemptive()
-                .oauth2(jwt)
-            .when()
-                .get(endpoint)
-            .then()
-                .assertThat()
-                    .statusCode(HttpStatus.SC_NOT_FOUND)
-                    .body("message", is("Control with type 'LED' and id 5 not found"))
-    	// @formatter:on
+		callGetEndpoint(endpoint, HttpStatus.SC_NOT_FOUND, "Control with type 'LED' and id 5 not found")
 	}
 
 	@Test
 	void 'control not found (put)'() {
 		def endpoint = PUTSTATUS_ENDPOINT.replace('{boxName}', 'b1').replace('{boxControlType}', 'led').replace('{boxControlId}', "5").replace('{status}', "1")
-		print "PUT endpoint = $endpoint"
-		// @formatter:off
-        given()
-            .contentType(ContentType.JSON)
-            .accept(ContentType.JSON)
-            .auth().preemptive()
-                .oauth2(jwt)
-            .when()
-                .put(endpoint)
-            .then()
-                .assertThat()
-                    .statusCode(HttpStatus.SC_NOT_FOUND)
-                    .body("message", is("Control with type 'LED' and id 5 not found"))
+		callPutEndpoint(endpoint, HttpStatus.SC_NOT_FOUND, "Control with type 'LED' and id 5 not found")
     	// @formatter:on
 	}
 
@@ -355,56 +343,17 @@ class IT90WebSpaController {
 
 	private void getStatus(final String boxName, final String boxControlType, final int boxControlId, final int expected) {
 		def endpoint = GETSTATUS_ENDPOINT.replace('{boxName}', boxName).replace('{boxControlType}', boxControlType).replace('{boxControlId}', boxControlId.toString())
-		print "GET endpoint = $endpoint"
-		// @formatter:off
-        given()
-            .contentType(ContentType.JSON)
-            .accept(ContentType.JSON)
-            .auth().preemptive()
-                .oauth2(jwt)
-            .when()
-                .get(endpoint)
-            .then()
-                .assertThat()
-                    .statusCode(HttpStatus.SC_OK)
-                    .body("message", is(equalTo(expected)))
-    	// @formatter:on
+		callGetEndpointInt(endpoint, expected)
 	}
 
 	private void getAction(final String boxName, final String boxControlType, final int boxControlId, final String expected) {
 		def endpoint = GETACTION_ENDPOINT.replace('{boxName}', boxName).replace('{boxControlType}', boxControlType).replace('{boxControlId}', boxControlId.toString())
-		print "GET endpoint = $endpoint"
-		// @formatter:off
-        given()
-            .contentType(ContentType.JSON)
-            .accept(ContentType.JSON)
-            .auth().preemptive()
-                .oauth2(jwt)
-            .when()
-                .get(endpoint)
-            .then()
-                .assertThat()
-                    .statusCode(HttpStatus.SC_OK)
-                    .body("message", is(equalTo(expected)))
-    	// @formatter:on
+		callGetEndpoint(endpoint, HttpStatus.SC_OK, expected)
 	}
 
 	private void putStatus(final String boxName, final String boxControlType, final int boxControlId, final int status) {
 		def endpoint = PUTSTATUS_ENDPOINT.replace('{boxName}', boxName).replace('{boxControlType}', boxControlType).replace('{boxControlId}', boxControlId.toString()).replace('{status}', status.toString())
-		print "PUT endpoint = $endpoint"
-		// @formatter:off
-        given()
-            .contentType(ContentType.JSON)
-            .accept(ContentType.JSON)
-            .auth().preemptive()
-                .oauth2(jwt)
-            .when()
-                .put(endpoint)
-            .then()
-                .assertThat()
-                    .statusCode(HttpStatus.SC_OK)
-                    .body("message", is('ok'))
-    	// @formatter:on
+		callPutEndpoint(endpoint)
 	}
 
 	@Test
@@ -499,6 +448,11 @@ class IT90WebSpaController {
 		callFunc(CALL_RFUNC_ENDPOINT, "afunc2", HttpStatus.SC_BAD_REQUEST, "Function 'afunc2' is not of Read type")
 	}
 
+	@Test
+	void 'csr reauth'() {
+		callPutEndpoint(REAUTH_ENDPOINT)
+	}
+
 	private void putFunc(final String endpointTemplate, final String boxName, final String boxControlType, final int boxControlId, final String func, final int status = HttpStatus.SC_OK, final String message = 'ok') {
 		def endpoint = endpointTemplate.replace('{boxName}', boxName).replace('{boxControlType}', boxControlType).replace('{boxControlId}', boxControlId.toString())
 		callFunc(endpoint, func, status, message)
@@ -506,6 +460,44 @@ class IT90WebSpaController {
 
 	private void callFunc(final String endpointTemplate, final String func, final int status = HttpStatus.SC_OK, final String message = 'ok') {
 		def endpoint = endpointTemplate.replace('{func}', func)
+		callPutEndpoint(endpoint, status, message)
+	}
+
+	private void callGetEndpointInt(final String endpoint, final int expectedValue) {
+		print "GET endpoint = $endpoint"
+		// @formatter:off
+        given()
+            .contentType(ContentType.JSON)
+            .accept(ContentType.JSON)
+            .auth().preemptive()
+                .oauth2(jwt)
+            .when()
+                .get(endpoint)
+            .then()
+                .assertThat()
+                    .statusCode(HttpStatus.SC_OK)
+                    .body("message", equalTo(expectedValue))
+    	// @formatter:on
+	}
+
+	private void callGetEndpoint(final String endpoint, final int status = HttpStatus.SC_OK, final String message = 'ok') {
+		print "GET endpoint = $endpoint"
+		// @formatter:off
+        given()
+            .contentType(ContentType.JSON)
+            .accept(ContentType.JSON)
+            .auth().preemptive()
+                .oauth2(jwt)
+            .when()
+                .get(endpoint)
+            .then()
+                .assertThat()
+                    .statusCode(status)
+                    .body("message", equalTo(message))
+    	// @formatter:on
+	}
+
+	private void callPutEndpoint(final String endpoint, final int status = HttpStatus.SC_OK, final String message = 'ok') {
 		print "PUT endpoint = $endpoint"
 		// @formatter:off
         given()

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Boris Fox.
+ * Copyright (c) 2019 Boris Fox.
  * All rights reserved.
  */
 
@@ -26,9 +26,14 @@ public class RestApiErrorAttributes extends DefaultErrorAttributes {
 		val errorAttributes = super.getErrorAttributes(request, includeStackTrace);
 		val error = getError(request);
 		errorAttributes.put("reason", errorAttributes.get("message"));
-		errorAttributes.put("message", determineMessage(error).orElse((String) errorAttributes.get("error")));
-		errorAttributes.put("suppress_details", suppressDetails(error));
-		return errorAttributes;
+//		errorAttributes.put("message", determineMessage(error).orElse((String) errorAttributes.get("error")));
+//		errorAttributes.put("suppress_details", suppressDetails(error));
+		// for DefaultErrorWebExceptionHandler mapping
+		errorAttributes.remove("message");
+		val message = determineMessage(error).orElse((String) errorAttributes.get("error"));
+		return Map.of("message", message,
+		              "status", errorAttributes.get("status"),  // for DefaultErrorWebExceptionHandler#getHttpStatus
+		              "error", errorAttributes);
 	}
 
 	@NonNull
@@ -38,7 +43,7 @@ public class RestApiErrorAttributes extends DefaultErrorAttributes {
 		return Optional.empty();
 	}
 
-	private boolean suppressDetails(@NonNull Throwable error) {
-		return error instanceof RestApiException && error.getCause() == null;
-	}
+//	private boolean suppressDetails(@NonNull Throwable error) {
+//		return error instanceof RestApiException && error.getCause() == null;
+//	}
 }

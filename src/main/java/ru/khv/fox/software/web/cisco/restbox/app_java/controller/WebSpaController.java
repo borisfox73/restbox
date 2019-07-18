@@ -51,47 +51,8 @@ public class WebSpaController {
 	@NonNull
 	private final CiscoRestfulService ciscoService;
 
-	// TODO cleanup
 
-//	/**
-//	 * Datatype Binder for Lookup Method enum to make conversion case-insensitive.
-//	 *
-//	 * @param binder MVC DataBinder instance
-//	 */
-//	@InitBinder
-//	public void initBinder(@NonNull final WebDataBinder binder) {
-//		binder.registerCustomEditor(BoxControlType.class, new CaseInsensitiveConverter<>(BoxControlType.class));
-//	}
-
-
-	/*
-# ==== API for one-page web application, with jwt ====
-
-	# - list configured/active boxcontrollers, their modules and statuses
-	@app.route('/webapi/list/boxcontrollers', methods=['GET'])
-	@jwt_required()
-	def get_boxctrls():
-        items = box.getConf();
-        return jsonify({'message': items}), 200
-
-	# - client asks about lights status -
-	@app.route('/webapi/get/<boxname>/<t>/<i>', methods=['GET'])
-	@jwt_required()
-	def get_lights(boxname, t, i):
-        stat = box.getStatus(boxname, t, i, False)
-        return jsonify({'message': stat}), 200
-
-	# - change status for box on boxcontroller
-	@app.route('/webapi/change/<boxname>/<t>/<i>/<v>', methods=['PUT'])
-	@jwt_required()
-	def put_lights(boxname, t, i, v):
-        box.putStatus(boxname, t, i, v, False)
-        return jsonify({'message': 'ok'}), 200
-
-# ==== end of API calls from one-page web application ====
-	 */
-
-	// TODO implement web portal calls
+	// ==== API for one-page web application, with jwt ====
 
 	// ==== Web portal calls ====
 
@@ -217,6 +178,15 @@ public class WebSpaController {
 		return findRouterFunction(func, "Read", RouterFunction::isRead).transform(callRFunction(ciscoService)).thenReturn(new CommonResponse("ok"));
 	}
 
-	// TODO continue
 	// - list configured/active routers
+	@GetMapping(path = "/list/routers")
+	public Mono<CommonResponse> getRouters() {
+		return Mono.just(ciscoService.getRouters()).map(Map::values).map(CommonResponse::new);
+	}
+
+	// - force csr re-auth
+	@PutMapping(path = "/csr/reauth")
+	public Mono<CommonResponse> csrReauth() {
+		return ciscoService.reAuthenticateAll().thenReturn(new CommonResponse("ok"));
+	}
 }

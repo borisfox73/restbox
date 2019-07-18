@@ -76,8 +76,13 @@ class IT80RestBoxController2 {
     // TODO mock cisco api service to test actions
 
     @Test
-    void 'get status b1 button 0'() {
-        getStatus('b1', 'cisco123', 'button', 0, 0)
+    void 'get status b1 switch 1'() {
+	    getStatus('b1', 'cisco123', 'switch', 1, 0)
+    }
+
+	@Test
+	void 'get status b2 button 0'() {
+		getStatus('b2', 'cisco456', 'button', 0, 1)
     }
 
     @Test
