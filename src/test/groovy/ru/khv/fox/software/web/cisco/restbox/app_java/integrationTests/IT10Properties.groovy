@@ -61,7 +61,14 @@ class IT10Properties {
                 .withProperty("password", is("restpwd"))
 		        .withProperty("type", is(RouterType.CSRV)))))
 
-        assertThat(properties, hasProperty("users", hasItem(pojo(AppProperties.UserProperties.class)
+	    assertThat(properties, hasProperty("routers", hasEntry(equalTo("testcsr2"), pojo(AppProperties.RouterProperties.class)
+			    .withProperty("name", is("CSR-AWS"))
+			    .withProperty("host", is("192.168.70.71"))
+			    .withProperty("username", is("rest2"))
+			    .withProperty("password", is("restpwd2"))
+			    .withProperty("type", is(RouterType.ASR)))))
+
+	    assertThat(properties, hasProperty("users", hasItem(pojo(AppProperties.UserProperties.class)
                 .withProperty("username", is("user1"))
                 .withProperty("password", is("user123"))
                 .withProperty("roles", arrayContaining("USER")))))

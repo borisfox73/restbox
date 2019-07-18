@@ -1,14 +1,17 @@
 /*
- * Copyright (c) 2018 Boris Fox.
+ * Copyright (c) 2019 Boris Fox.
  * All rights reserved.
  */
 
 package ru.khv.fox.software.web.cisco.restbox.app_java.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import lombok.*;
+import lombok.experimental.FieldDefaults;
 import org.springframework.lang.NonNull;
+import org.springframework.lang.Nullable;
 import ru.khv.fox.software.web.cisco.restbox.app_java.configuration.AppProperties;
 
 /**
@@ -21,34 +24,40 @@ import ru.khv.fox.software.web.cisco.restbox.app_java.configuration.AppPropertie
 @ToString
 @EqualsAndHashCode(of = "id")
 @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class Router {
 	// parameters mostly resembles properties
 	// TODO should wrap other properties with value of this one
 	//@JsonProperty
 	//@JsonPropertyDescription("Router id")
+	@JsonIgnore
 	@NonNull
-	private final String id;
+	final String id;
 	@JsonProperty
 	@JsonPropertyDescription("Router name")
 	@NonNull
-	private final String name;
+	final String name;
 	@JsonProperty
 	@JsonPropertyDescription("Router host")
 	@NonNull
-	private final String host;
+	final String host;
 	@JsonProperty
 	@JsonPropertyDescription("Router authentication user name")
 	@NonNull
-	private final String username;
+	final String username;
 	@JsonProperty
 	@JsonPropertyDescription("Router authentication user password")
 	@NonNull
-	private final String password;
+	final String password;
 	@JsonProperty
 	@JsonPropertyDescription("Router type")
 	@NonNull
-	private final RouterType type;
+	final RouterType type;
 	// runtime state
+	@JsonProperty
+	@JsonPropertyDescription("Authentication token")
+	@Nullable
+	String token;   // TODO may be initialize token to empty string. Check with front-end.
 
 
 	public static Router getInstance(@NonNull final String id, @NonNull final AppProperties.RouterProperties routerProperties) {
