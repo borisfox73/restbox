@@ -10,6 +10,7 @@ import lombok.val;
 import org.springframework.http.HttpStatus;
 import org.springframework.lang.NonNull;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -71,16 +72,14 @@ class ErrorHandler {
 
 	// --- Authentication and authorization ----------------------------------------------------------------------------
 
-/* These interceptions is not really needed.
 	// Should be handled by security framework through the authentication entry point.
 	@NonNull
 	@ExceptionHandler({AuthenticationException.class})
 	@ResponseStatus(HttpStatus.UNAUTHORIZED)
-	public Mono<ErrorResponse> handleAuthenticationException(@NonNull final AuthenticationException ex) {
+	public Mono<RestApiException> handleAuthenticationException(@NonNull final AuthenticationException ex) {
 		log.debug("authentication exception caught");
-		return Mono.just(ErrorResponse.create(401, "Unauthenticated access: " + ex.getLocalizedMessage()));
+		return Mono.error(new RestApiException("authentication error", HttpStatus.UNAUTHORIZED, ex));
 	}
-*/
 
 	// Should be handled by security framework through the access denied handler.
 	// This handler intercepts exceptions thrown in Advices, e.g. PrePostAdviceReactiveMethodInterceptor for method security

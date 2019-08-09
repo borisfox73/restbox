@@ -11,6 +11,8 @@ import io.restassured.RestAssured
 import io.restassured.builder.RequestSpecBuilder
 import io.restassured.builder.ResponseSpecBuilder
 import io.restassured.filter.log.LogDetail
+import io.restassured.filter.log.RequestLoggingFilter
+import io.restassured.filter.log.ResponseLoggingFilter
 import io.restassured.http.ContentType
 import io.restassured.specification.RequestSpecification
 import io.restassured.specification.ResponseSpecification
@@ -54,7 +56,14 @@ class IT20Authentication {
 	private static ResponseSpecification respSpecBase
 
 
-    private void invalidCredentials() {
+	private void emptyCredentials() {
+//        loginRequest.setUsername("unknownuser")
+//        loginRequest.setPassword("zzz")
+		loginRequest.username = ""
+		loginRequest.password = null
+	}
+
+	private void invalidCredentials() {
 //        loginRequest.setUsername("unknownuser")
 //        loginRequest.setPassword("zzz")
 	    loginRequest.username = "unknownuser"
@@ -73,8 +82,8 @@ class IT20Authentication {
     void initRestAssured() {
 	    if (reqSpecBase == null) {
 		    RestAssured.port = serverPort
-//		    RestAssured.filters(new ResponseLoggingFilter())
-//		    RestAssured.filters(new RequestLoggingFilter())
+		    RestAssured.filters(new ResponseLoggingFilter())
+		    RestAssured.filters(new RequestLoggingFilter())
 		    RestAssured.enableLoggingOfRequestAndResponseIfValidationFails()
 		    reqSpecBase = new RequestSpecBuilder()
 				    .setContentType(ContentType.JSON)
@@ -98,11 +107,30 @@ class IT20Authentication {
             .spec(respSpecBase)
             .statusCode(HttpStatus.SC_UNAUTHORIZED)
             .body("error.status", is(401),
-                  "error.reason", is("Access Denied: Not Authenticated"))
+                  "error.reason", is("Access Denied: Not Authenticated"),
+            "message", is("authentication error"))
     	// @formatter:on
     }
 
-    @Test
+	@Test
+	void 'login with empty credentials'() {
+		emptyCredentials()
+		// @formatter:off
+        given()
+            .spec(reqSpecBase)
+            .body(loginRequest)
+        .when()
+            .post(LOGIN_ENDPOINT)
+        .then()
+            .spec(respSpecBase)
+            .statusCode(HttpStatus.SC_BAD_REQUEST)
+            .body("error.status", is(400),
+                  "error.reason", is("method 'login' parameter 0 'loginRequest': Validation failure"),
+                    "message", is("request data conversion error"))
+    	// @formatter:on
+	}
+
+	@Test
     void 'login with invalid credentials'() {
         invalidCredentials()
         // @formatter:off
@@ -115,7 +143,8 @@ class IT20Authentication {
             .spec(respSpecBase)
             .statusCode(HttpStatus.SC_UNAUTHORIZED)
             .body("error.status", is(401),
-                  "error.reason", is("Invalid Credentials"))
+                  "error.reason", is("Invalid Credentials"),
+            "message", is("authentication error"))
     	// @formatter:on
     }
 

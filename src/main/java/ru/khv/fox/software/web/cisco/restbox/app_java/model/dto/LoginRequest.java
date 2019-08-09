@@ -9,29 +9,24 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import lombok.Value;
-import org.springframework.lang.NonNull;
-import org.springframework.util.Assert;
+
+import javax.validation.constraints.NotEmpty;
 
 @Value
 public class LoginRequest {
+	@NotEmpty
 	@JsonProperty
 	@JsonPropertyDescription("User login name")
-	@NonNull
 	private final String username;
+	@NotEmpty
 	@JsonProperty
 	@JsonPropertyDescription("User password")
-	@NonNull
 	private final String password;
 
 
-	// TODO can't find a way to tell Jackson to fail on null properties with creator method
-	// see https://github.com/FasterXML/jackson-databind/issues/2024
 	@JsonCreator
-	private LoginRequest(@JsonProperty(value = "username", required = true) @NonNull final String username,
-	                     @JsonProperty(value = "password", required = true) @NonNull final String password) {
-		Assert.notNull(username, "Username cannot be null");
-		Assert.notNull(password, "Password cannot be null");
-		this.username = username;
-		this.password = password;
+	private static LoginRequest creator(@JsonProperty(value = "username", required = true) final String username,
+	                                    @JsonProperty(value = "password", required = true) final String password) {
+		return new LoginRequest(username, password);
 	}
 }
