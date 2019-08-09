@@ -78,7 +78,7 @@ public enum BoxControlType {
 		return state == 1 ? ON : state == 0 ? OFF : NOOP;
 	}
 
-	// for deserialization
+	// for serialization
 	@NonNull
 	@JsonValue
 	private String toJson() {

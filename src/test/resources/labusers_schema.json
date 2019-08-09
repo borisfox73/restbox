@@ -1,8 +1,28 @@
 {
-  "message": [
-    {
-      "login": "test",
-      "password": "pass"
+  "definitions": {},
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "array",
+  "title": "Lab Users List Schema",
+  "items": {
+    "type": "object",
+    "title": "Lab Users Items Schema",
+    "required": [
+      "login",
+      "password"
+    ],
+    "properties": {
+      "login": {
+        "type": "string",
+        "title": "Lab User Login Schema",
+        "default": "",
+        "pattern": ".+"
+      },
+      "password": {
+        "type": "string",
+        "title": "Lab User Password Schema",
+        "default": "",
+        "pattern": ".+"
+      }
     }
-  ]
+  }
 }

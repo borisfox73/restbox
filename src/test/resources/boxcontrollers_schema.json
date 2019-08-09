@@ -1,0 +1,79 @@
+{
+  "definitions": {},
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "array",
+  "title": "Box Controller List Schema",
+  "items": {
+    "type": "object",
+    "title": "Box Controller Items Schema",
+    "required": [
+      "name",
+      "secret",
+      "ready",
+      "boxes"
+    ],
+    "properties": {
+      "name": {
+        "type": "string",
+        "title": "Box Controller Name Schema",
+        "default": "",
+        "pattern": ".+"
+      },
+      "secret": {
+        "type": "string",
+        "title": "Box Controller Secret Schema",
+        "default": "",
+        "pattern": ".+"
+      },
+      "ready": {
+        "type": "integer",
+        "title": "Box Controller Ready Schema",
+        "default": 0
+      },
+      "boxes": {
+        "type": "array",
+        "title": "Box Controller Boxes Schema",
+        "items": {
+          "type": "object",
+          "title": "The Items Schema",
+          "required": [
+            "type",
+            "id",
+            "descr",
+            "status"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "title": "Box Type Schema",
+              "default": "",
+              "pattern": ".+"
+            },
+            "id": {
+              "type": "integer",
+              "title": "Box Id Schema",
+              "default": 0
+            },
+            "descr": {
+              "type": "string",
+              "title": "Box Descr Schema",
+              "default": "",
+              "pattern": ".*"
+            },
+            "status": {
+              "type": "integer",
+              "title": "Box Status Schema",
+              "default": 0
+            },
+            "rfunc": {
+              "type": "string",
+              "title": "Box Rfunc Schema",
+              "default": "",
+              "pattern": ".+"
+            }
+          }
+        }
+      }
+    }
+  }
+}

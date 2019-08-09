@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) 2019 Boris Fox.
+ * All rights reserved.
+ */
+
 'use strict';
 
 var services;

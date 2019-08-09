@@ -18,7 +18,7 @@ import reactor.core.publisher.Mono;
 import ru.khv.fox.software.web.cisco.restbox.app_java.configuration.AppProperties;
 import ru.khv.fox.software.web.cisco.restbox.app_java.model.RouterFunction;
 import ru.khv.fox.software.web.cisco.restbox.app_java.model.box.BoxControlType;
-import ru.khv.fox.software.web.cisco.restbox.app_java.model.dto.CommonResponse;
+import ru.khv.fox.software.web.cisco.restbox.app_java.model.dto.ApiResponse;
 import ru.khv.fox.software.web.cisco.restbox.app_java.model.dto.RouterFunctionResponse;
 import ru.khv.fox.software.web.cisco.restbox.app_java.service.CiscoRestfulService;
 import ru.khv.fox.software.web.cisco.restbox.app_java.service.RestBoxService;
@@ -58,100 +58,100 @@ public class WebSpaController {
 
 	// - list labusers and their information
 	@GetMapping(path = "/list/labusers")
-	public Mono<CommonResponse> getLabUsers() {
-		return Mono.just(appProperties.getUsers()).map(CommonResponse::new);
+	public Mono<ApiResponse> getLabUsers() {
+		return Mono.just(appProperties.getUsers()).map(ApiResponse::new);
 	}
 
 	// list configured/active boxcontrollers, their modules and statuses
 	@GetMapping(path = "/list/boxcontrollers")
-	public Mono<CommonResponse> getBoxControllers() {
-		return Mono.just(restBoxService.getConf()).map(CommonResponse::new);
+	public Mono<ApiResponse> getBoxControllers() {
+		return Mono.just(restBoxService.getConf()).map(ApiResponse::new);
 	}
 
 	// client asks about lights status
 	@GetMapping(path = "/get/{boxName}/{boxControlType}/{boxControlId:\\d+}")
-	public Mono<CommonResponse> getBoxControllerLights(@PathVariable @NotEmpty final String boxName,
-	                                                   @PathVariable @NotNull final BoxControlType boxControlType,
-	                                                   @PathVariable final int boxControlId) {
+	public Mono<ApiResponse> getBoxControllerLights(@PathVariable @NotEmpty final String boxName,
+	                                                @PathVariable @NotNull final BoxControlType boxControlType,
+	                                                @PathVariable final int boxControlId) {
 		// Return polled box control state
-		return restBoxService.getStatus(boxName, boxControlType, boxControlId).map(CommonResponse::new);
+		return restBoxService.getStatus(boxName, boxControlType, boxControlId).map(ApiResponse::new);
 	}
 
 	// client asks about lights action (on/off)
 	@GetMapping(path = "/getaction/{boxName}/{boxControlType}/{boxControlId:\\d+}")
-	public Mono<CommonResponse> getBoxControllerAction(@PathVariable @NotEmpty final String boxName,
-	                                                   @PathVariable @NotNull final BoxControlType boxControlType,
-	                                                   @PathVariable final int boxControlId) {
+	public Mono<ApiResponse> getBoxControllerAction(@PathVariable @NotEmpty final String boxName,
+	                                                @PathVariable @NotNull final BoxControlType boxControlType,
+	                                                @PathVariable final int boxControlId) {
 		// Return polled box control action
-		return restBoxService.getAction(boxName, boxControlType, boxControlId).map(CommonResponse::new);
+		return restBoxService.getAction(boxName, boxControlType, boxControlId).map(ApiResponse::new);
 	}
 
 	// change status for box on boxcontroller
 	@PutMapping(path = "/change/{boxName}/{boxControlType}/{boxControlId:\\d+}/{status:\\d+}")
-	public Mono<CommonResponse> putBoxControllerLights(@PathVariable @NotEmpty final String boxName,
-	                                                   @PathVariable @NotNull final BoxControlType boxControlType,
-	                                                   @PathVariable final int boxControlId,
-	                                                   @PathVariable final int status) {
+	public Mono<ApiResponse> putBoxControllerLights(@PathVariable @NotEmpty final String boxName,
+	                                                @PathVariable @NotNull final BoxControlType boxControlType,
+	                                                @PathVariable final int boxControlId,
+	                                                @PathVariable final int status) {
 		// Does not directly influence router resource state
-		return restBoxService.putStatus(boxName, boxControlType, boxControlId, status).thenReturn(new CommonResponse("ok"));
+		return restBoxService.putStatus(boxName, boxControlType, boxControlId, status).thenReturn(new ApiResponse("ok"));
 	}
 
 	// - list available action functions
 	@GetMapping(path = "/list/afunctions")
-	public Mono<CommonResponse> getRouterAFunctions() {
+	public Mono<ApiResponse> getRouterAFunctions() {
 		return getRouterFunctions(RouterFunction::isAction);
 	}
 
 	// - list available read functions
 	@GetMapping(path = "/list/rfunctions")
-	public Mono<CommonResponse> getRouterRFunctions() {
+	public Mono<ApiResponse> getRouterRFunctions() {
 		return getRouterFunctions(RouterFunction::isRead);
 	}
 
-	private Mono<CommonResponse> getRouterFunctions(@NonNull final Predicate<RouterFunction> functionPredicate) {
+	private Mono<ApiResponse> getRouterFunctions(@NonNull final Predicate<RouterFunction> functionPredicate) {
 		return Flux.fromIterable(routerFunctions.values())
 		           .filter(functionPredicate)
 		           .map(RouterFunctionResponse::from)
 		           .collect(Collectors.toList())
-		           .map(CommonResponse::new);
+		           .map(ApiResponse::new);
 	}
 
 	// - change onfunc for box on boxcontroller
 	@PutMapping(path = "/onfunc/{boxName}/{boxControlType}/{boxControlId:\\d+}/{func}")
-	public Mono<CommonResponse> changeOnFuncOnBoxController(@PathVariable @NotBlank final String boxName,
-	                                                        @PathVariable @NotNull final BoxControlType boxControlType,
-	                                                        @PathVariable final int boxControlId,
-	                                                        @PathVariable @NotBlank final String func) {
+	public Mono<ApiResponse> changeOnFuncOnBoxController(@PathVariable @NotBlank final String boxName,
+	                                                     @PathVariable @NotNull final BoxControlType boxControlType,
+	                                                     @PathVariable final int boxControlId,
+	                                                     @PathVariable @NotBlank final String func) {
 		// Function must be a valid action function
 		return findRouterFunction(func, "Action", RouterFunction::isAction)
 				.flatMap(functionName -> restBoxService.putOnFunc(boxName, boxControlType, boxControlId, functionName))
-				.thenReturn(new CommonResponse("ok"));
+				.thenReturn(new ApiResponse("ok"));
 	}
 
 	// - change offfunc for box on boxcontroller
 	@PutMapping(path = "/offfunc/{boxName}/{boxControlType}/{boxControlId:\\d+}/{func}")
-	public Mono<CommonResponse> changeOffFuncOnBoxController(@PathVariable @NotBlank final String boxName,
-	                                                         @PathVariable @NotNull final BoxControlType boxControlType,
-	                                                         @PathVariable final int boxControlId,
-	                                                         @PathVariable @NotBlank final String func) {
+	public Mono<ApiResponse> changeOffFuncOnBoxController(@PathVariable @NotBlank final String boxName,
+	                                                      @PathVariable @NotNull final BoxControlType boxControlType,
+	                                                      @PathVariable final int boxControlId,
+	                                                      @PathVariable @NotBlank final String func) {
 		// Function must be a valid action function
 		return findRouterFunction(func, "Action", RouterFunction::isAction)
 				.flatMap(functionName -> restBoxService.putOffFunc(boxName, boxControlType, boxControlId, functionName))
-				.thenReturn(new CommonResponse("ok"));
+				.thenReturn(new ApiResponse("ok"));
 	}
 
 	// - change rfunc for box on boxcontroller
 	@PutMapping(path = "/rfunc/{boxName}/{boxControlType}/{boxControlId:\\d+}/{func}")
-	public Mono<CommonResponse> changeRFuncOnBoxController(@PathVariable @NotBlank final String boxName,
-	                                                       @PathVariable @NotNull final BoxControlType boxControlType,
-	                                                       @PathVariable final int boxControlId,
-	                                                       @PathVariable @NotBlank final String func) {
+	public Mono<ApiResponse> changeRFuncOnBoxController(@PathVariable @NotBlank final String boxName,
+	                                                    @PathVariable @NotNull final BoxControlType boxControlType,
+	                                                    @PathVariable final int boxControlId,
+	                                                    @PathVariable @NotBlank final String func) {
 		// Function must be a valid read function
 		log.debug("boxname = {}", boxName);
 		log.debug("rfunc = {}", func);
 		return findRouterFunction(func, "Read", RouterFunction::isRead)
 				.flatMap(functionName -> restBoxService.putRFunc(boxName, boxControlType, boxControlId, functionName))
-				.thenReturn(new CommonResponse("ok"));
+				.thenReturn(new ApiResponse("ok"));
 	}
 
 	private Mono<String> findRouterFunction(@NonNull final String func, @NonNull final String type, @NonNull final Predicate<RouterFunction> functionPredicate) {
@@ -166,27 +166,27 @@ public class WebSpaController {
 
 	// - call to afunc (for test)
 	@PutMapping(path = "/call/afunc/{func}")
-	public Mono<CommonResponse> callAFunc(@PathVariable @NotBlank final String func) {
+	public Mono<ApiResponse> callAFunc(@PathVariable @NotBlank final String func) {
 		// Function must be a valid action function
-		return findRouterFunction(func, "Action", RouterFunction::isAction).transform(callAFunction(ciscoService)).thenReturn(new CommonResponse("ok"));
+		return findRouterFunction(func, "Action", RouterFunction::isAction).transform(callAFunction(ciscoService)).thenReturn(new ApiResponse("ok"));
 	}
 
 	// - call to rfunc (for test)
 	@PutMapping(path = "/call/rfunc/{func}")
-	public Mono<CommonResponse> callRFunc(@PathVariable @NotBlank final String func) {
+	public Mono<ApiResponse> callRFunc(@PathVariable @NotBlank final String func) {
 		// Function must be a valid read function
-		return findRouterFunction(func, "Read", RouterFunction::isRead).transform(callRFunction(ciscoService)).thenReturn(new CommonResponse("ok"));
+		return findRouterFunction(func, "Read", RouterFunction::isRead).transform(callRFunction(ciscoService)).thenReturn(new ApiResponse("ok"));
 	}
 
 	// - list configured/active routers
 	@GetMapping(path = "/list/routers")
-	public Mono<CommonResponse> getRouters() {
-		return Mono.just(ciscoService.getRouters()).map(Map::values).map(CommonResponse::new);
+	public Mono<ApiResponse> getRouters() {
+		return Mono.just(ciscoService.getRouters()).map(Map::values).map(ApiResponse::new);
 	}
 
 	// - force csr re-auth
 	@PutMapping(path = "/csr/reauth")
-	public Mono<CommonResponse> csrReauth() {
-		return ciscoService.reAuthenticateAll().thenReturn(new CommonResponse("ok"));
+	public Mono<ApiResponse> csrReauth() {
+		return ciscoService.reAuthenticateAll().thenReturn(new ApiResponse("ok"));
 	}
 }

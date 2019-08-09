@@ -113,6 +113,7 @@ class WebSecurityConfiguration {
 				        .authorizeExchange()
 		                    .matchers(PathRequest.toStaticResources().atCommonLocations()).permitAll()
 		                    .pathMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+		                    .pathMatchers("/", "/favicon.ico", "/views/**").permitAll() // Website resources
 		                    .pathMatchers("/api/**").permitAll()            // Rest Boxes endpoints
 		                    .pathMatchers("/webapi/**").authenticated()     // Single page web app endpoints
 		                    .pathMatchers("/jsontest").hasAuthority("ROLE_ADMIN")  // TODO cleanup test

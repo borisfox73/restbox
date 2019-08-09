@@ -1,12 +1,58 @@
 {
-  "message": [
-    {
-      "name": "CSR1",
-      "host": "10.1.2.3",
-      "username": "test",
-      "password": "testpwd",
-      "type": "csrv",
-      "token": ""
+  "definitions": {},
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "array",
+  "title": "Routers List Schema",
+  "items": {
+    "type": "object",
+    "title": "Routers Items Schema",
+    "required": [
+      "name",
+      "host",
+      "username",
+      "password",
+      "type",
+      "token"
+    ],
+    "properties": {
+      "name": {
+        "type": "string",
+        "title": "Router Name Schema",
+        "default": "",
+        "pattern": ".+"
+      },
+      "host": {
+        "type": "string",
+        "title": "Router Host Schema",
+        "default": "",
+        "pattern": ".+"
+      },
+      "username": {
+        "type": "string",
+        "title": "Router Username Schema",
+        "default": "",
+        "pattern": ".+"
+      },
+      "password": {
+        "type": "string",
+        "title": "Router Password Schema",
+        "default": "",
+        "pattern": ".+"
+      },
+      "type": {
+        "type": "string",
+        "title": "Router Type Schema",
+        "default": "",
+        "pattern": ".+"
+      },
+      "token": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "title": "Router Token Schema",
+        "default": null
+      }
     }
-  ]
+  }
 }
