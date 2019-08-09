@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Boris Fox.
+ * Copyright (c) 2019 Boris Fox.
  * All rights reserved.
  */
 
@@ -15,6 +15,8 @@ import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import ru.khv.fox.software.web.cisco.restbox.app_java.security.JwtService;
+import ru.khv.fox.software.web.cisco.restbox.app_java.security.LoginReactiveAuthenticationManager;
 
 /**
  * Configuration for authentication-related beans for user-based authentication.
@@ -26,6 +28,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 public class UserAuthenticationConfiguration {
 
 	@NonNull private final AppProperties appProperties;
+	@NonNull
+	private final JwtService jwtService;
 
 
 	// TODO may be replace by something more specific
@@ -61,13 +65,22 @@ public class UserAuthenticationConfiguration {
 	}
 
 	/**
+	 * Transitive authentication manager operating on user details repository.
+	 *
+	 * @return Authentication manager instance
+	 */
+//	@Bean
+	private UserDetailsRepositoryReactiveAuthenticationManager userDetailsauthenticationManager() {
+		return new UserDetailsRepositoryReactiveAuthenticationManager(userDetailsService());
+	}
+
+	/**
 	 * Authentication manager bean to be used in Login controller.
-	 * Need to be a bean to prevent autoconfiguration.
 	 *
 	 * @return Authentication manager instance
 	 */
 	@Bean
-	UserDetailsRepositoryReactiveAuthenticationManager userDetailsauthenticationManager() {
-		return new UserDetailsRepositoryReactiveAuthenticationManager(userDetailsService());
+	LoginReactiveAuthenticationManager loginReactiveAuthenticationManager() {
+		return new LoginReactiveAuthenticationManager(userDetailsauthenticationManager(), jwtService);
 	}
 }
