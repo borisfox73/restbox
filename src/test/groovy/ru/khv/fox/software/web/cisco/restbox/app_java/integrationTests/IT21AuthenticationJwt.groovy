@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Boris Fox.
+ * Copyright (c) 2019 Boris Fox.
  * All rights reserved.
  */
 
@@ -7,9 +7,12 @@ package ru.khv.fox.software.web.cisco.restbox.app_java.integrationTests
 
 import com.fasterxml.jackson.annotation.JsonProperty
 import io.restassured.RestAssured
-import io.restassured.filter.log.RequestLoggingFilter
-import io.restassured.filter.log.ResponseLoggingFilter
+import io.restassured.builder.RequestSpecBuilder
+import io.restassured.builder.ResponseSpecBuilder
+import io.restassured.filter.log.LogDetail
 import io.restassured.http.ContentType
+import io.restassured.specification.RequestSpecification
+import io.restassured.specification.ResponseSpecification
 import org.apache.http.HttpStatus
 import org.junit.Before
 import org.junit.Test
@@ -57,23 +60,38 @@ class IT21AuthenticationJwt {
 	@LocalServerPort
     private int serverPort
 
-    @Before
+	private static RequestSpecification reqSpecBase
+	private static ResponseSpecification respSpecBase
+
+
+	@Before
     void initRestAssured() {
-        RestAssured.port = serverPort
-        RestAssured.filters(new ResponseLoggingFilter())
-        RestAssured.filters(new RequestLoggingFilter())
+		if (reqSpecBase == null) {
+			RestAssured.port = serverPort
+//		    RestAssured.filters(new ResponseLoggingFilter())
+//		    RestAssured.filters(new RequestLoggingFilter())
+			RestAssured.enableLoggingOfRequestAndResponseIfValidationFails()
+			reqSpecBase = new RequestSpecBuilder()
+					.setContentType(ContentType.JSON)
+					.setAccept(ContentType.JSON)
+					.log(LogDetail.ALL)
+					.build()
+			respSpecBase = new ResponseSpecBuilder()
+					.expectContentType(ContentType.JSON)
+					.build()
+		}
     }
 
     private static String acquireJwt(String username, String password) {
 	    LoginRequest loginRequest = new LoginRequest(username, password)
         // @formatter:off
         String jwt = given()
-            .contentType(ContentType.JSON)
-            .accept(ContentType.JSON)
+            .spec(reqSpecBase)
             .body(loginRequest)
         .when()
             .post(LOGIN_ENDPOINT)
         .then()
+            .spec(respSpecBase)
             .statusCode(HttpStatus.SC_CREATED)
             .body("token", is(notNullValue(String.class)))
                 .extract()
@@ -89,13 +107,13 @@ class IT21AuthenticationJwt {
         String jwt = acquireJwt(user, "testpass")
         // @formatter:off
         given()
-            .contentType(ContentType.JSON)
-            .accept(ContentType.JSON)
+            .spec(reqSpecBase)
             .auth().preemptive()
                 .oauth2(jwt)
             .when()
                 .get(USERINFO_ENDPOINT)
             .then()
+	            .spec(respSpecBase)
                 .statusCode(HttpStatus.SC_OK)
                 .body("username", equalTo(user),
                 "authorities.authority", contains("ROLE_USER") )
@@ -108,13 +126,13 @@ class IT21AuthenticationJwt {
         String jwt = acquireJwt(user, "pass2")
         // @formatter:off
         given()
-            .contentType(ContentType.JSON)
-            .accept(ContentType.JSON)
+            .spec(reqSpecBase)
             .auth().preemptive()
                 .oauth2(jwt)
             .when()
                 .get(USERINFO_ENDPOINT)
             .then()
+	            .spec(respSpecBase)
                 .statusCode(HttpStatus.SC_OK)
                 .body("username", equalTo(user),
                 "authorities.authority", containsInAnyOrder("ROLE_ADMIN", "ROLE_OTHER") )
@@ -127,13 +145,13 @@ class IT21AuthenticationJwt {
 		String jwt = acquireJwt(user, "testpass")
 		// @formatter:off
         given()
-            .contentType(ContentType.JSON)
-            .accept(ContentType.JSON)
+            .spec(reqSpecBase)
             .auth().preemptive()
                 .oauth2(jwt)
             .when()
                 .get(JSONTEST_ENDPOINT)
             .then()
+	            .spec(respSpecBase)
                 .statusCode(HttpStatus.SC_FORBIDDEN)
                 .body("message", is("access denied error"),
                 "error.path", is("/jsontest"),
@@ -149,13 +167,13 @@ class IT21AuthenticationJwt {
 		String jwt = acquireJwt(user, "pass2")
 		// @formatter:off
         given()
-            .contentType(ContentType.JSON)
-            .accept(ContentType.JSON)
+            .spec(reqSpecBase)
             .auth().preemptive()
                 .oauth2(jwt)
             .when()
                 .get(JSONTEST_ENDPOINT)
             .then()
+	            .spec(respSpecBase)
                 .statusCode(HttpStatus.SC_OK)
                 .body("authenticated", is(true),
 		        "name", equalTo(user),
@@ -168,13 +186,13 @@ class IT21AuthenticationJwt {
     void 'tampered jwt'() {
         // @formatter:off
         given()
-            .contentType(ContentType.JSON)
-            .accept(ContentType.JSON)
+            .spec(reqSpecBase)
             .auth().preemptive()
                 .oauth2(TAMPERED_JWT)
             .when()
                 .get(USERINFO_ENDPOINT)
             .then()
+	            .spec(respSpecBase)
                 .statusCode(HttpStatus.SC_UNAUTHORIZED)
                 .body("error.status", is(401),
                   "error.reason", is("JWT signature does not match locally computed signature. JWT validity cannot be asserted and should not be trusted."))
@@ -185,13 +203,13 @@ class IT21AuthenticationJwt {
     void 'expired jwt'() {
         // @formatter:off
         given()
-            .contentType(ContentType.JSON)
-            .accept(ContentType.JSON)
+            .spec(reqSpecBase)
             .auth().preemptive()
                 .oauth2(EXPIRED_JWT)
             .when()
                 .get(USERINFO_ENDPOINT)
             .then()
+	            .spec(respSpecBase)
                 .statusCode(HttpStatus.SC_UNAUTHORIZED)
                 .body("error.status", is(401),
                   "error.reason", startsWith("JWT expired at 2018-05-18T09:32:04Z."))

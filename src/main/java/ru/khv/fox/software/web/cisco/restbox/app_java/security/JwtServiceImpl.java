@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Boris Fox.
+ * Copyright (c) 2019 Boris Fox.
  * All rights reserved.
  */
 
@@ -60,8 +60,8 @@ public class JwtServiceImpl implements JwtService {
 		                     .setIssuedAt(Date.from(jwtIssuedAt))
 		                     .setNotBefore(Date.from(jwtIssuedAt))
 		                     .setExpiration(Date.from(jwtExpiration))
+		                     .claim(CLAIM_NAME_LOGIN, jwtSubject)
 		                     .claim(CLAIM_NAME_AUTHORITIES, user.getAuthorities().stream().map(GrantedAuthority::getAuthority).toArray());
-		// TODO add claim "login" with username for compatibility? check with the frontend whether it interpretes JWT.
 		// optional claims
 		jwtProperties.getIssuer().ifPresent(jwtBuilder::setIssuer);
 		jwtProperties.getAudience().ifPresent(jwtBuilder::setAudience);

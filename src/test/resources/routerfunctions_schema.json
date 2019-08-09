@@ -1,8 +1,28 @@
 {
-  "message": [
-    {
-      "name": "afunc1",
-      "descr": "Action Function 1"
+  "definitions": {},
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "array",
+  "title": "Router Functions List Schema",
+  "items": {
+    "type": "object",
+    "title": "Router Functions Items Schema",
+    "required": [
+      "name",
+      "descr"
+    ],
+    "properties": {
+      "name": {
+        "type": "string",
+        "title": "Router Function Name Schema",
+        "default": "",
+        "pattern": ".+"
+      },
+      "descr": {
+        "type": "string",
+        "title": "Router Function Description Schema",
+        "default": "",
+        "pattern": ".*"
+      }
     }
-  ]
+  }
 }

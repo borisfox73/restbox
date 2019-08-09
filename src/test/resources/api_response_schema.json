@@ -1,0 +1,17 @@
+{
+  "definitions": {},
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "object",
+  "title": "Generic API Response Schema",
+  "required": [
+    "message"
+  ],
+  "properties": {
+    "message": {
+      "type": "string",
+      "title": "API Response Payload",
+      "default": "",
+      "pattern": ".+"
+    }
+  }
+}

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Boris Fox.
+ * Copyright (c) 2019 Boris Fox.
  * All rights reserved.
  */
 
@@ -14,6 +14,8 @@ import reactor.core.publisher.Mono;
  * A service to process JSON Web Tokens.
  */
 public interface JwtService {
+	// Additional login claim same as subject. Used in frontend controller.
+	static final String CLAIM_NAME_LOGIN = "login";
 	// authorities collection is holded in this claim
 	static final String CLAIM_NAME_AUTHORITIES = "authorities";
 

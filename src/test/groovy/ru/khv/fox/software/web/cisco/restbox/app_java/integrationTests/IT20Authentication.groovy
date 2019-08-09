@@ -1,18 +1,19 @@
 /*
- * Copyright (c) 2018 Boris Fox.
+ * Copyright (c) 2019 Boris Fox.
  * All rights reserved.
  */
 
 package ru.khv.fox.software.web.cisco.restbox.app_java.integrationTests
 
 import com.fasterxml.jackson.annotation.JsonProperty
-import io.jsonwebtoken.Claims
-import io.jsonwebtoken.JwtParser
 import io.jsonwebtoken.Jwts
 import io.restassured.RestAssured
-import io.restassured.filter.log.RequestLoggingFilter
-import io.restassured.filter.log.ResponseLoggingFilter
+import io.restassured.builder.RequestSpecBuilder
+import io.restassured.builder.ResponseSpecBuilder
+import io.restassured.filter.log.LogDetail
 import io.restassured.http.ContentType
+import io.restassured.specification.RequestSpecification
+import io.restassured.specification.ResponseSpecification
 import org.apache.http.HttpStatus
 import org.hamcrest.Matcher
 import org.junit.Before
@@ -24,7 +25,6 @@ import org.springframework.boot.web.server.LocalServerPort
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.junit4.SpringRunner
 import ru.khv.fox.software.web.cisco.restbox.app_java.configuration.AppProperties
-import ru.khv.fox.software.web.cisco.restbox.app_java.configuration.AppProperties.JwtProperties
 
 import static io.restassured.RestAssured.given
 import static org.hamcrest.MatcherAssert.assertThat
@@ -50,6 +50,8 @@ class IT20Authentication {
     @Autowired
     private AppProperties appProperties
     private LoginRequest loginRequest = new LoginRequest()
+	private static RequestSpecification reqSpecBase
+	private static ResponseSpecification respSpecBase
 
 
     private void invalidCredentials() {
@@ -69,19 +71,31 @@ class IT20Authentication {
 
     @Before
     void initRestAssured() {
-        RestAssured.port = serverPort
-        RestAssured.filters(new ResponseLoggingFilter())
-        RestAssured.filters(new RequestLoggingFilter())
+	    if (reqSpecBase == null) {
+		    RestAssured.port = serverPort
+//		    RestAssured.filters(new ResponseLoggingFilter())
+//		    RestAssured.filters(new RequestLoggingFilter())
+		    RestAssured.enableLoggingOfRequestAndResponseIfValidationFails()
+		    reqSpecBase = new RequestSpecBuilder()
+				    .setContentType(ContentType.JSON)
+				    .setAccept(ContentType.JSON)
+				    .log(LogDetail.ALL)
+				    .build()
+		    respSpecBase = new ResponseSpecBuilder()
+				    .expectContentType(ContentType.JSON)
+				    .build()
+	    }
     }
 
     @Test
     void 'unauthenticated api call'() {
         // @formatter:off
         given()
-            .accept(ContentType.JSON)
+            .spec(reqSpecBase)
         .when()
             .get(USERINFO_ENDPOINT)
         .then()
+            .spec(respSpecBase)
             .statusCode(HttpStatus.SC_UNAUTHORIZED)
             .body("error.status", is(401),
                   "error.reason", is("Access Denied: Not Authenticated"))
@@ -93,12 +107,12 @@ class IT20Authentication {
         invalidCredentials()
         // @formatter:off
         given()
-            .contentType(ContentType.JSON)
-            .accept(ContentType.JSON)
+            .spec(reqSpecBase)
             .body(loginRequest)
         .when()
             .post(LOGIN_ENDPOINT)
         .then()
+            .spec(respSpecBase)
             .statusCode(HttpStatus.SC_UNAUTHORIZED)
             .body("error.status", is(401),
                   "error.reason", is("Invalid Credentials"))
@@ -110,30 +124,30 @@ class IT20Authentication {
         validCredentials()
         // @formatter:off
         String jwt = given()
-            .contentType(ContentType.JSON)
-            .accept(ContentType.JSON)
+            .spec(reqSpecBase)
             .body(loginRequest)
         .when()
             .post(LOGIN_ENDPOINT)
         .then()
+            .spec(respSpecBase)
             .statusCode(HttpStatus.SC_CREATED)
             .body("token", is(notNullValue(String.class)))
             .extract().path("token")
     	// @formatter:on
         println "jwt = $jwt"
         // verify jwt
-        JwtProperties jwtProperties = appProperties.getJwt()
-        JwtParser jwtParser = Jwts.parser()
+	    def jwtProperties = appProperties.getJwt()
+	    def jwtParser = Jwts.parser()
                 .setSigningKey(jwtProperties.getSecret().getBytes())
 //                .setAllowedClockSkewSeconds(5L)
         jwtProperties.getAudience().ifPresent({ a -> jwtParser.requireAudience(a) })
-        Claims jwtBody = jwtParser.parseClaimsJws(jwt).getBody()
+	    def jwtBody = jwtParser.parseClaimsJws(jwt).getBody()
         println "jwt claims: $jwtBody"
-        UUID jwtId = UUID.fromString(jwtBody.getId())
+	    def jwtId = UUID.fromString(jwtBody.getId())
         assertThat(jwtId, is(notNullValue(UUID.class)))
         assertThat(jwtBody.getSubject(), is("testuser"))
-//	    assertThat(jwtBody.getIssuer(), is("http://localhost:$serverPort/".toString()))
 	    assertThat(jwtBody.getIssuer(), is("http://localhost".toString()))
+	    assertThat(jwtBody.get("login", String.class), is(equalTo(jwtBody.getSubject())))
         Collection<String> authorities = jwtBody.get("authorities", Collection.class)
 	    assertThat(authorities, contains("ROLE_USER") as Matcher<? super Collection>)
     }

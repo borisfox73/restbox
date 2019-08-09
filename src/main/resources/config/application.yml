@@ -1,5 +1,6 @@
 app.config:
   indicator-poll-interval: PT20S
+  #  indicator-poll-interval: PT1H
   web-client:
     trace-web-client-requests: false
     ssl-ignore-validation: true

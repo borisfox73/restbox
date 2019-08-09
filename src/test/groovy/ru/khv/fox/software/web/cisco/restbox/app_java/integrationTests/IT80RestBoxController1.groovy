@@ -5,11 +5,13 @@
 
 package ru.khv.fox.software.web.cisco.restbox.app_java.integrationTests
 
-
 import io.restassured.RestAssured
-import io.restassured.filter.log.RequestLoggingFilter
-import io.restassured.filter.log.ResponseLoggingFilter
+import io.restassured.builder.RequestSpecBuilder
+import io.restassured.builder.ResponseSpecBuilder
+import io.restassured.filter.log.LogDetail
 import io.restassured.http.ContentType
+import io.restassured.specification.RequestSpecification
+import io.restassured.specification.ResponseSpecification
 import org.apache.http.HttpStatus
 import org.junit.Before
 import org.junit.Test
@@ -34,36 +36,41 @@ import static org.hamcrest.Matchers.is
 @ActiveProfiles("test")
 class IT80RestBoxController1 {
 
-//	@ContextConfiguration
-//	public class SpringTestConfig {	}
-
-	private static final String GETSTATUS_ENDPOINT = "/api/get/{boxName}/{secret}/{boxControlType}/{boxControlId}"
-	private static final String PUTSTATUS_ENDPOINT = "/api/put/{boxName}/{secret}/{boxControlType}/{boxControlId}/{status}"
+	private static final String BOXAPI_ENDPOINT_BASE = "/api"
+	private static final String GETSTATUS_ENDPOINT = "/get/{boxName}/{secret}/{boxControlType}/{boxControlId}"
+	private static final String PUTSTATUS_ENDPOINT = "/put/{boxName}/{secret}/{boxControlType}/{boxControlId}/{status}"
 
 	@LocalServerPort
 	private int serverPort
 
+	private static RequestSpecification reqSpecBase
+	private static ResponseSpecification respSpecBase
+
 
 	@Before
-	void initRestAssured() {
-		RestAssured.port = serverPort
-		RestAssured.filters(new ResponseLoggingFilter())
-		RestAssured.filters(new RequestLoggingFilter())
+	void init() {
+		initRestAssured(serverPort)
+	}
+
+	static void initRestAssured(final int serverPort) {
+		if (reqSpecBase == null) {
+			RestAssured.port = serverPort
+//		    RestAssured.filters(new ResponseLoggingFilter())
+//		    RestAssured.filters(new RequestLoggingFilter())
+			RestAssured.enableLoggingOfRequestAndResponseIfValidationFails()
+			reqSpecBase = new RequestSpecBuilder()
+					.setContentType(ContentType.JSON)
+					.setAccept(ContentType.JSON)
+					.setBasePath(BOXAPI_ENDPOINT_BASE)
+					.log(LogDetail.ALL)
+					.build()
+			respSpecBase = new ResponseSpecBuilder()
+					.expectContentType(ContentType.JSON)
+					.build()
+		}
 	}
 
 	// TODO mock cisco api service to test actions
-
-/*
-	@Test
-	void 'get status b1 button 0'() {
-		getStatus('b1', 'cisco123', 'button', 0, 0)
-	}
-
-	@Test
-	void 'get status b2 led 0'() {
-		getStatus('b2', 'cisco456', 'led', 0, 0)
-	}
-*/
 
     @Test
     void 'put status b1 switch 0 = 0'() {
@@ -155,102 +162,89 @@ class IT80RestBoxController1 {
 
 	@Test
 	void 'box not found'() {
-		def endpoint = GETSTATUS_ENDPOINT.replace('{boxName}', 'nonexistentbox').replace('{secret}', 'cisco123').replace('{boxControlType}', 'led').replace('{boxControlId}', "1")
-		print "GET endpoint = $endpoint"
-		// @formatter:off
-        given()
-            .contentType(ContentType.JSON)
-            .accept(ContentType.JSON)
-            .when()
-                .get(endpoint)
-            .then()
-                .assertThat()
-                    .statusCode(HttpStatus.SC_NOT_FOUND)
-                    .body("message", is("Box 'nonexistentbox' not found"))
-    	// @formatter:on
+		def pathParams = Map.of('boxName', 'nonexistentbox',
+				'secret', 'cisco123',
+				'boxControlType', 'led',
+				'boxControlId', '1')
+		callGetEndpoint(GETSTATUS_ENDPOINT, pathParams, Collections.emptyMap(), "Box 'nonexistentbox' not found", HttpStatus.SC_NOT_FOUND)
 	}
 
 	@Test
 	void 'control not found (get)'() {
-		def endpoint = GETSTATUS_ENDPOINT.replace('{boxName}', 'b1').replace('{secret}', 'cisco123').replace('{boxControlType}', 'led').replace('{boxControlId}', "5")
-		print "GET endpoint = $endpoint"
-		// @formatter:off
-        given()
-            .contentType(ContentType.JSON)
-            .accept(ContentType.JSON)
-            .when()
-                .get(endpoint)
-            .then()
-                .assertThat()
-                    .statusCode(HttpStatus.SC_NOT_FOUND)
-                    .body("message", is("Control with type 'LED' and id 5 not found"))
-    	// @formatter:on
+		def pathParams = Map.of('boxName', 'b1',
+				'secret', 'cisco123',
+				'boxControlType', 'led',
+				'boxControlId', '5')
+		callGetEndpoint(GETSTATUS_ENDPOINT, pathParams, Collections.emptyMap(), 'Control with type \'LED\' and id 5 not found', HttpStatus.SC_NOT_FOUND)
 	}
 
 	@Test
 	void 'control not found (put)'() {
-		def endpoint = PUTSTATUS_ENDPOINT.replace('{boxName}', 'b1').replace('{secret}', 'cisco123').replace('{boxControlType}', 'led').replace('{boxControlId}', "5").replace('{status}', "1")
-		print "PUT endpoint = $endpoint"
-		// @formatter:off
-        given()
-            .contentType(ContentType.JSON)
-            .accept(ContentType.JSON)
-            .when()
-                .put(endpoint)
-            .then()
-                .assertThat()
-                    .statusCode(HttpStatus.SC_NOT_FOUND)
-                    .body("message", is("Control with type 'LED' and id 5 not found"))
-    	// @formatter:on
+		def pathParams = Map.of('boxName', 'b1',
+				'secret', 'cisco123',
+				'boxControlType', 'led',
+				'boxControlId', '5',
+				'status', '1')
+		callPutEndpoint(PUTSTATUS_ENDPOINT, pathParams, 'Control with type \'LED\' and id 5 not found', HttpStatus.SC_NOT_FOUND)
 	}
 
 	@Test
 	void 'authentication error'() {
-		def endpoint = GETSTATUS_ENDPOINT.replace('{boxName}', 'b1').replace('{secret}', 'wrong').replace('{boxControlType}', 'led').replace('{boxControlId}', "5")
-		print "GET endpoint = $endpoint"
-		// @formatter:off
-        given()
-            .contentType(ContentType.JSON)
-            .accept(ContentType.JSON)
-            .when()
-                .get(endpoint)
-            .then()
-                .assertThat()
-                    .statusCode(HttpStatus.SC_UNAUTHORIZED)
-                    .body("message", is("auth_error"))
-    	// @formatter:on
+		def pathParams = Map.of('boxName', 'b1',
+				'secret', 'wrong',
+				'boxControlType', 'led',
+				'boxControlId', '5')
+		callGetEndpoint(GETSTATUS_ENDPOINT, pathParams, Collections.emptyMap(), 'auth_error', HttpStatus.SC_UNAUTHORIZED)
 	}
 
 
-    private static void getStatus(final String boxName, final String secret, final String boxControlType, final int boxControlId, final int expected, final boolean inline = false) {
-        def endpoint = GETSTATUS_ENDPOINT.replace('{boxName}', boxName).replace('{secret}', secret).replace('{boxControlType}', boxControlType).replace('{boxControlId}', boxControlId.toString()) + (inline ? "?inline=true" : "")
-        println "GET endpoint = $endpoint"
+	static void getStatus(final String boxName, final String secret, final String boxControlType, final int boxControlId, final int expected, final boolean inline = false) {
+		def pathParams = Map.of('boxName', boxName,
+				'secret', secret,
+				'boxControlType', boxControlType,
+				'boxControlId', boxControlId.toString())
+		def queryParams = Map.of('inline', inline)
+		callGetEndpoint(GETSTATUS_ENDPOINT, pathParams, queryParams, expected)
+	}
+
+	static void putStatus(final String boxName, final String secret, final String boxControlType, final int boxControlId, final int status) {
+		def pathParams = Map.of('boxName', boxName,
+				'secret', secret,
+				'boxControlType', boxControlType,
+				'boxControlId', boxControlId,
+				'status', status)
+		callPutEndpoint(PUTSTATUS_ENDPOINT, pathParams)
+	}
+
+	static void callGetEndpoint(final String endpoint, final Map<String, Object> pathParams = Collections.emptyMap(), final Map<String, Object> queryParams = Collections.emptyMap(), final Object expected = 'ok', final int expectedStatus = HttpStatus.SC_OK) {
+		println "GET endpoint = $endpoint"
 		// @formatter:off
         given()
-            .contentType(ContentType.JSON)
-            .accept(ContentType.JSON)
+            .spec(reqSpecBase)
+            .pathParams(pathParams)
+            .queryParams(queryParams)
             .when()
                 .get(endpoint)
             .then()
                 .assertThat()
-                    .statusCode(HttpStatus.SC_OK)
+                    .spec(respSpecBase)
+                    .statusCode(expectedStatus)
                     .body("message", is(equalTo(expected)))
     	// @formatter:on
 	}
 
-	private static void putStatus(final String boxName, final String secret, final String boxControlType, final int boxControlId, final int status) {
-		def endpoint = PUTSTATUS_ENDPOINT.replace('{boxName}', boxName).replace('{secret}', secret).replace('{boxControlType}', boxControlType).replace('{boxControlId}', boxControlId.toString()).replace('{status}', status.toString())
-        println "PUT endpoint = $endpoint"
+	static void callPutEndpoint(final String endpoint, final Map<String, Object> pathParams = Collections.emptyMap(), final Object expected = 'ok', final int expectedStatus = HttpStatus.SC_OK) {
+		println "GET endpoint = $endpoint"
 		// @formatter:off
         given()
-            .contentType(ContentType.JSON)
-            .accept(ContentType.JSON)
+            .spec(reqSpecBase)
             .when()
-                .put(endpoint)
+                .put(endpoint, pathParams)
             .then()
                 .assertThat()
-                    .statusCode(HttpStatus.SC_OK)
-                    .body("message", is('ok'))
+                    .spec(respSpecBase)
+                    .statusCode(expectedStatus)
+                    .body("message", is(equalTo(expected)))
     	// @formatter:on
 	}
 }

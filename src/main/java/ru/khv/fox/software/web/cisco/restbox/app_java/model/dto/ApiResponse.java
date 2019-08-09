@@ -7,27 +7,19 @@ package ru.khv.fox.software.web.cisco.restbox.app_java.model.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
-import lombok.Getter;
-import lombok.ToString;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import lombok.Value;
 import org.springframework.lang.NonNull;
+import ru.khv.fox.software.web.cisco.restbox.app_java.util.ApiResponseSerializer;
 
-// Common API response with single message field.
-@Getter
-@ToString
-public class CommonResponse {
+/**
+ * Common API response with single message field.
+ */
+@Value
+public class ApiResponse {
 	@JsonProperty
 	@JsonPropertyDescription("Response message")
+	@JsonSerialize(using = ApiResponseSerializer.class)
 	@NonNull
-//	private final String message;
 	private final Object message;
-
-	public CommonResponse(@NonNull final Object payload) {
-		this.message = payload;
-	}
-
-/*
-	public static CommonResponse with(@NonNull final String message) {
-		return new CommonResponse(message);
-	}
-*/
 }

@@ -18,7 +18,7 @@ import ru.khv.fox.software.web.cisco.restbox.app_java.model.box.BoxControl;
 import ru.khv.fox.software.web.cisco.restbox.app_java.model.box.BoxControlIndicator;
 import ru.khv.fox.software.web.cisco.restbox.app_java.model.box.BoxControlSensor;
 import ru.khv.fox.software.web.cisco.restbox.app_java.model.box.BoxControlType;
-import ru.khv.fox.software.web.cisco.restbox.app_java.model.dto.CommonResponse;
+import ru.khv.fox.software.web.cisco.restbox.app_java.model.dto.ApiResponse;
 import ru.khv.fox.software.web.cisco.restbox.app_java.service.CiscoRestfulService;
 import ru.khv.fox.software.web.cisco.restbox.app_java.service.CiscoServiceException;
 import ru.khv.fox.software.web.cisco.restbox.app_java.service.ExecFunctionResultPair;
@@ -85,12 +85,12 @@ def put_box(boxname,secret,t,i,value):
 
 	// box inquires about lights state
 	@GetMapping(path = "/get/{boxName}/{secret}/{boxControlType}/{boxControlId:\\d+}")
-	public Mono<CommonResponse> getBoxControlStatus(@PathVariable @NotBlank final String boxName,
-	                                                @PathVariable @NotEmpty final String secret,
-	                                                @PathVariable @NotNull final BoxControlType boxControlType,
-	                                                @PathVariable final int boxControlId,
-	                                                @RequestParam(name = "ready", defaultValue = "true") final boolean ready,
-	                                                @RequestParam(name = "inline", defaultValue = "false") final boolean inline) {
+	public Mono<ApiResponse> getBoxControlStatus(@PathVariable @NotBlank final String boxName,
+	                                             @PathVariable @NotEmpty final String secret,
+	                                             @PathVariable @NotNull final BoxControlType boxControlType,
+	                                             @PathVariable final int boxControlId,
+	                                             @RequestParam(name = "ready", defaultValue = "true") final boolean ready,
+	                                             @RequestParam(name = "inline", defaultValue = "false") final boolean inline) {
 		// Chain to arrange inline polling
 /*
 		final Function<Mono<BoxControl>, Mono<BoxControl>> inlineChain =
@@ -137,16 +137,16 @@ def put_box(boxname,secret,t,i,value):
 		return restBoxService.getBoxControl(boxName, secret, boxControlType, boxControlId)
 		                     .transform(inline ? inlineChain : c -> c)
 		                     .then(restBoxService.getStatus(boxName, boxControlType, boxControlId, ready)
-		                                         .map(CommonResponse::new));
+		                                         .map(ApiResponse::new));
 	}
 
 	// box reports sensor state change
 	@PutMapping(path = "/put/{boxName}/{secret}/{boxControlType}/{boxControlId:\\d+}/{status:\\d+}")
-	public Mono<CommonResponse> putBoxControlStatus(@PathVariable @NotBlank final String boxName,
-	                                                @PathVariable @NotEmpty final String secret,
-	                                                @PathVariable @NotNull final BoxControlType boxControlType,
-	                                                @PathVariable final int boxControlId,
-	                                                @PathVariable final int status) {
+	public Mono<ApiResponse> putBoxControlStatus(@PathVariable @NotBlank final String boxName,
+	                                             @PathVariable @NotEmpty final String secret,
+	                                             @PathVariable @NotNull final BoxControlType boxControlType,
+	                                             @PathVariable final int boxControlId,
+	                                             @PathVariable final int status) {
 		return restBoxService.putStatus(boxName, secret, boxControlType, boxControlId, true, status)
 		                     .ofType(BoxControlSensor.class)
 		                     .doOnNext(c -> log.debug("sensor Action {}", c.getAction()))
@@ -161,7 +161,7 @@ def put_box(boxname,secret,t,i,value):
 //                             .onErrorMap(CiscoServiceException.class, e -> new RestApiException(e.getErrorMessage(), HttpStatus.BAD_GATEWAY, e, e.getReason()))
 //                             .doOnError(ResponseStatusException.class, e -> log.error("{}: {}", e.getLocalizedMessage(), e.getReason()))
 //                             .doOnError(e -> log.error("Error: {}", e.getLocalizedMessage()))
-                             .thenReturn(new CommonResponse("ok"));
+                             .thenReturn(new ApiResponse("ok"));
 /*
 		return restBoxService.getBoxControl(boxName, secret, boxControlType, boxControlId)
 		                     .ofType(BoxControlSensor.class)

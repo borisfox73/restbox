@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) 2019 Boris Fox.
+ * All rights reserved.
+ */
+
 'use strict';
 var restBox = angular.module('restBox', [
   'ngRoute',
@@ -62,7 +67,7 @@ restBox.config(['$routeProvider','$locationProvider',function ($routeProvider,$l
 })
 .run(function($rootScope, $location, AuthenticationService) {
   $rootScope.$on('$routeChangeStart', function(event, nextRoute) {
-    if(nextRoute.access.requiredLogin && !AuthenticationService.isLogged && !$window.sessionStorage.token) {
+	  if (typeof nextRoute.access != 'undefined' && nextRoute.access.requiredLogin && !AuthenticationService.isLogged && !$window.sessionStorage.token) {
       $location.path('/');
     }
   });

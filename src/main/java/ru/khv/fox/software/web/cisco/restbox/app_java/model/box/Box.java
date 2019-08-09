@@ -5,6 +5,7 @@
 
 package ru.khv.fox.software.web.cisco.restbox.app_java.model.box;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import lombok.*;
@@ -38,6 +39,7 @@ public class Box {
 	@JsonPropertyDescription("Box secret")
 	@NonNull
 	private final String secret;
+	@JsonIgnore
 	@NonNull
 	private final Map<SimpleEntry<BoxControlType, Integer>, BoxControl> controlsMap;  // to lookup by type and id pair
 	// state
