@@ -11,7 +11,6 @@ import io.jsonwebtoken.lang.Assert;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
 import lombok.Value;
-import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
 
 /**
@@ -32,19 +31,17 @@ import org.springframework.lang.Nullable;
 public class AclInterfaceDTO extends DTOBase {
 	@JsonPropertyDescription("Access List name")
 	@Nullable
-	private String aclId;
+	String aclId;
 	@JsonPropertyDescription("Interface name")
-	@NonNull
-	private String ifId;
+	String ifId;
 	@JsonPropertyDescription("ACL Traffic direction (inside or outside")
-	@NonNull
-	private String direction;
+	String direction;
 
 
 	@JsonCreator
-	AclInterfaceDTO(@JsonProperty(value = "kind", required = true) @NonNull final String kind,
-	                @JsonProperty(value = "if-id", required = true) @NonNull final String ifId,
-	                @JsonProperty(value = "direction", required = true) @NonNull final String direction) {
+	AclInterfaceDTO(@JsonProperty(value = "kind", required = true) final String kind,
+	                @JsonProperty(value = "if-id", required = true) final String ifId,
+	                @JsonProperty(value = "direction", required = true) final String direction) {
 		super(kind);
 		this.aclId = null;
 		this.ifId = ifId;
@@ -60,7 +57,7 @@ public class AclInterfaceDTO extends DTOBase {
 	 *
 	 * @return DTO instance
 	 */
-	public static AclInterfaceDTO create(@NonNull final String ifId, @NonNull final String direction) {
+	public static AclInterfaceDTO create(final String ifId, final String direction) {
 		Assert.isTrue("inside".equals(direction) || "outside".equals(direction), "Unsupported 'direction' value \"" + direction + "\"");
 		// kind field value is of no matter because it's not serialized
 		return new AclInterfaceDTO("object#acl-interface", ifId, direction);

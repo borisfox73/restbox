@@ -22,20 +22,19 @@ class IT80RestBoxController3 {
 
     @LocalServerPort
     private int serverPort
-
-    private static boolean initdone
+	private static boolean initDone
 
 
     @Before
     void initRestAssured() {
-        if (!initdone) {
+	    if (!initDone) {
             IT80RestBoxController1.initRestAssured(serverPort)
             // Set interface state for b1 led 0 rfunction
             IT80RestBoxController1.putStatus('b1', 'cisco123', 'switch', 1, 1)
             // Set acl state for b2 led 1
             IT80RestBoxController1.putStatus('b2', 'cisco456', 'button', 0, 0)
             Thread.sleep(10 * 1000L) // let interface status settle
-            initdone = true
+		    initDone = true
         }
     }
 
@@ -56,7 +55,7 @@ class IT80RestBoxController3 {
         println "Router state has been reset"
     }
 
-    // TODO mock cisco api service to test actions
+	// TODO mock Cisco API service to test actions without the live router
 
     @Test
     void 'get status b1 led 0'() {

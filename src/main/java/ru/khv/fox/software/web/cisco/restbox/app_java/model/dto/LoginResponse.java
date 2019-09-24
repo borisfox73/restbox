@@ -10,7 +10,6 @@ import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Value;
-import org.springframework.lang.NonNull;
 import org.springframework.security.core.Authentication;
 
 @Value
@@ -18,12 +17,11 @@ import org.springframework.security.core.Authentication;
 public class LoginResponse {
 	@JsonProperty
 	@JsonPropertyDescription("JWT authorization token")
-	@NonNull
-	private final String token;
+	String token;
 
 
-	// Token string is in the principal field
-	public static LoginResponse from(@NonNull final Authentication authentication) {
+	// Token string is in the principal name field
+	public static LoginResponse from(final Authentication authentication) {
 		return new LoginResponse(authentication.getName());
 	}
 }

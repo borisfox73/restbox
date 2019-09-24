@@ -9,7 +9,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
-import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -30,7 +29,6 @@ import javax.validation.Valid;
 @RestController
 public class AuthenticationController {
 
-	@NonNull
 	private final LoginReactiveAuthenticationManager authenticationManager;
 
 
@@ -48,8 +46,8 @@ public class AuthenticationController {
 	 */
 	@PostMapping(path = "/login", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
 	@ResponseStatus(HttpStatus.CREATED)
-	public Mono<LoginResponse> login(@RequestBody @Valid @NonNull final Mono<LoginRequest> loginRequest) {
-		return loginRequest.doOnNext(x -> log.trace("x1 = {}", x)).map(login -> new UsernamePasswordAuthenticationToken(login.getUsername(), login.getPassword())).doOnNext(x -> log.trace("x2 = {}", x))
+	public Mono<LoginResponse> login(@RequestBody @Valid final Mono<LoginRequest> loginRequest) {
+		return loginRequest.map(login -> new UsernamePasswordAuthenticationToken(login.getUsername(), login.getPassword()))
 		                   .flatMap(authenticationManager::authenticate)
 		                   .map(LoginResponse::from);
 	}

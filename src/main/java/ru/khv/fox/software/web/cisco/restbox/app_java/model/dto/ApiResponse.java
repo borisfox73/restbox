@@ -9,7 +9,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import lombok.Value;
-import org.springframework.lang.NonNull;
 import ru.khv.fox.software.web.cisco.restbox.app_java.util.ApiResponseSerializer;
 
 /**
@@ -20,6 +19,5 @@ public class ApiResponse {
 	@JsonProperty
 	@JsonPropertyDescription("Response message")
 	@JsonSerialize(using = ApiResponseSerializer.class)
-	@NonNull
-	private final Object message;
+	Object message;
 }

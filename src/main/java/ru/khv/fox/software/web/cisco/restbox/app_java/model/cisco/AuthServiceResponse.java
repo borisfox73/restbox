@@ -5,14 +5,10 @@
 
 package ru.khv.fox.software.web.cisco.restbox.app_java.model.cisco;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonFormat;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.*;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
 import lombok.Value;
-import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
 
 import java.net.URI;
@@ -29,36 +25,24 @@ import java.time.LocalDateTime;
  * }
  * </pre>
  */
-// TODO which validation annotation is applicable ?
 @Value
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
-//@Valid
-//@Validated
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class AuthServiceResponse extends DTOBase {
-	//	@JsonProperty
-//	@JsonPropertyDescription("authentication token expiry time")
-//	@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "EEE MMM d hh:mm:ss yyyy", locale = "C")
-//	@NotNull
-	@NonNull
-	private LocalDateTime expiryTime;
-	//	@JsonProperty
-//	@JsonPropertyDescription("authentication token string encoded in base64")
-//	@NotEmpty
-	@NonNull
-	private String tokenId;
-	//	@JsonProperty
-//	@JsonPropertyDescription("authentication token object instance in service")
+	@JsonPropertyDescription("authentication token expiry time")
+	LocalDateTime expiryTime;
+	@JsonPropertyDescription("authentication token string encoded in base64")
+	String tokenId;
+	@JsonPropertyDescription("authentication token object instance in service")
 	@Nullable
-//	private final URL link;
-	private URI link;
+	URI link;
 
 
 	@JsonCreator
-	AuthServiceResponse(@JsonProperty(value = "kind", required = true) @NonNull final String kind,
-	                    @JsonProperty(value = "expiry-time", required = true) @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "EEE MMM ppd HH:mm:ss yyyy", locale = "C") @NonNull final LocalDateTime expiryTime,
-	                    @JsonProperty(value = "token-id", required = true) @NonNull final String tokenId,
+	AuthServiceResponse(@JsonProperty(value = "kind", required = true) final String kind,
+	                    @JsonProperty(value = "expiry-time", required = true) @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "EEE MMM ppd HH:mm:ss yyyy", locale = "C") final LocalDateTime expiryTime,
+	                    @JsonProperty(value = "token-id", required = true) final String tokenId,
 	                    @JsonProperty(value = "link") @Nullable final URI link) {
 		super(kind);
 		this.expiryTime = expiryTime;

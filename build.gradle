@@ -7,7 +7,7 @@ plugins {
   id "idea"
   id "java"
   id "groovy"
-  id "org.springframework.boot" version "2.1.6.RELEASE"
+  id "org.springframework.boot" version "2.1.7.RELEASE"
   id "nebula.optional-base" version "5.0.3"
 }
 
@@ -17,12 +17,13 @@ description = 'Cisco RESTBox Middleware in Java'
 
 group = 'ru.khv.fox.software.web.cisco.restbox'
 version = '0.0.1-SNAPSHOT'
-sourceCompatibility = 12
 
 
 defaultTasks 'build'
 
+compileJava.sourceCompatibility = 12
 // compileJava.options.encoding = 'UTF-8'
+
 javadoc {
     options.encoding = 'UTF-8'
     options.charSet = 'UTF-8'
@@ -76,7 +77,7 @@ dependencies {
 	testCompile('io.projectreactor:reactor-test')
 	testCompile('io.rest-assured:rest-assured:3.+')
 	testCompile group: 'io.rest-assured', name: 'json-schema-validator', version: '3.+'
-	testCompile group: 'org.hamcrest', name: 'hamcrest', version: '2.1'
+	testCompile group: 'org.hamcrest', name: 'hamcrest', version: '2.+'
 	testCompile group: 'org.hamcrest', name: 'hamcrest-junit', version: '2.+'
 	testCompile group: 'com.spotify', name: 'hamcrest-pojo', version: '1.+'
 	testCompile group: 'com.spotify', name: 'hamcrest-optional', version: '1.+'

@@ -1,13 +1,14 @@
 /*
- * Copyright (c) 2018 Boris Fox.
+ * Copyright (c) 2019 Boris Fox.
  * All rights reserved.
  */
 
 package ru.khv.fox.software.web.cisco.restbox.app_java.security;
 
+import lombok.AccessLevel;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import org.springframework.lang.NonNull;
+import lombok.experimental.FieldDefaults;
 import org.springframework.lang.Nullable;
 import org.springframework.security.authentication.AbstractAuthenticationToken;
 import org.springframework.security.core.GrantedAuthority;
@@ -21,10 +22,12 @@ import java.util.Collection;
  */
 @Getter
 @EqualsAndHashCode(callSuper = false)
+@FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
 public class JwtAuthenticationToken extends AbstractAuthenticationToken {
 
-	@Nullable private final Object id;
-	@NonNull private final Object principal;
+	@Nullable
+	Object id;
+	Object principal;
 
 
 	/**
@@ -33,7 +36,7 @@ public class JwtAuthenticationToken extends AbstractAuthenticationToken {
 	 *
 	 * @param jwtEncoded String representation of the encoded JWT
 	 */
-	JwtAuthenticationToken(@NonNull final String jwtEncoded) {
+	JwtAuthenticationToken(final String jwtEncoded) {
 		super(null);
 
 		Assert.notNull(jwtEncoded, "Cannot pass null JWT to constructor");
@@ -49,7 +52,7 @@ public class JwtAuthenticationToken extends AbstractAuthenticationToken {
 	 * @param principal   Principal (usually a {@link org.springframework.security.core.userdetails.UserDetails} instance based on subject claim)
 	 * @param authorities Granted authorities extracted from the JWT authorities claim
 	 */
-	JwtAuthenticationToken(@Nullable final Object id, @NonNull final Object principal,
+	JwtAuthenticationToken(@Nullable final Object id, final Object principal,
 	                       @Nullable final Collection<? extends GrantedAuthority> authorities) {
 		super(authorities);
 

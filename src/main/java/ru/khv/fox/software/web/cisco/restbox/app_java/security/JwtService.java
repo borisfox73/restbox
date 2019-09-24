@@ -5,7 +5,6 @@
 
 package ru.khv.fox.software.web.cisco.restbox.app_java.security;
 
-import org.springframework.lang.NonNull;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import reactor.core.publisher.Mono;
@@ -14,11 +13,6 @@ import reactor.core.publisher.Mono;
  * A service to process JSON Web Tokens.
  */
 public interface JwtService {
-	// Additional login claim same as subject. Used in frontend controller.
-	static final String CLAIM_NAME_LOGIN = "login";
-	// authorities collection is holded in this claim
-	static final String CLAIM_NAME_AUTHORITIES = "authorities";
-
 
 	/**
 	 * Create, encode and sign JWT based on specified user details.
@@ -27,8 +21,7 @@ public interface JwtService {
 	 *
 	 * @return Raw JWT Authentication token with JWT string in principal
 	 */
-	@NonNull
-	Mono<Authentication> createJwt(@NonNull UserDetails user);
+	Mono<Authentication> createJwt(UserDetails user);
 
 	/**
 	 * Decode, verify and parse specified JWT.
@@ -37,6 +30,5 @@ public interface JwtService {
 	 *
 	 * @return JWT Authentication token with principal extracted from the JWT
 	 */
-	@NonNull
-	Mono<Authentication> parseJwt(@NonNull String jwtToken);
+	Mono<Authentication> parseJwt(String jwtToken);
 }

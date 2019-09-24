@@ -7,7 +7,6 @@ package ru.khv.fox.software.web.cisco.restbox.app_java.model.box;
 
 import com.fasterxml.jackson.annotation.JsonValue;
 import lombok.RequiredArgsConstructor;
-import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
 
 import static ru.khv.fox.software.web.cisco.restbox.app_java.model.box.BoxControlAction.*;
@@ -19,14 +18,12 @@ public enum BoxControlType {
 	SWITCH(SENSOR),
 	BUTTON(SENSOR),
 	USONIC(SENSOR) {
-		@NonNull
 		@Override
 		public BoxControlAction getAction(final int state) {
-			return state > 5 && state < 50 ? OFF : state > 50 && state < 100 ? ON : NOOP;
+			return state > 5 && state < 50 ? ON : state > 50 && state < 100 ? OFF : NOOP;
 		}
 	},
 	LED(INDICATOR) {
-		@NonNull
 		@Override
 		public BoxControlAction getAction(final int state) {
 			throw new UnsupportedOperationException("Method is not implemented");
@@ -35,24 +32,21 @@ public enum BoxControlType {
 
 	enum BoxControlKind {
 		SENSOR {
-			@NonNull
 			@Override
-			BoxControlSensor instantiate(@NonNull final BoxControlType type, final int id, @Nullable final String description,
+			BoxControlSensor instantiate(final BoxControlType type, final int id, @Nullable final String description,
 			                             @Nullable final String rFunc, @Nullable final String onFunc, @Nullable final String offFunc) {
 				return new BoxControlSensor(type, id, description, onFunc, offFunc);
 			}
 		},
 		INDICATOR {
-			@NonNull
 			@Override
-			BoxControlIndicator instantiate(@NonNull final BoxControlType type, final int id, @Nullable final String description,
+			BoxControlIndicator instantiate(final BoxControlType type, final int id, @Nullable final String description,
 			                                @Nullable final String rFunc, @Nullable final String onFunc, @Nullable final String offFunc) {
 				return new BoxControlIndicator(type, id, description, rFunc);
 			}
 		};
 
-		@NonNull
-		abstract BoxControl instantiate(@NonNull final BoxControlType type, final int id, @Nullable final String description,
+		abstract BoxControl instantiate(final BoxControlType type, final int id, @Nullable final String description,
 		                                @Nullable final String rFunc, @Nullable final String onFunc, @Nullable final String offFunc);
 	}
 
@@ -66,20 +60,17 @@ public enum BoxControlType {
 		return kind == INDICATOR;
 	}
 
-	@NonNull
 	BoxControl getInstance(final int id, @Nullable final String description,
 	                       @Nullable final String rFunc,
 	                       @Nullable final String onFunc, @Nullable final String offFunc) {
 		return kind.instantiate(this, id, description, rFunc, onFunc, offFunc);
 	}
 
-	@NonNull
 	public BoxControlAction getAction(final int state) {
 		return state == 1 ? ON : state == 0 ? OFF : NOOP;
 	}
 
 	// for serialization
-	@NonNull
 	@JsonValue
 	private String toJson() {
 		return this.name().toLowerCase();

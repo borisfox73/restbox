@@ -20,20 +20,14 @@ import ru.khv.fox.software.web.cisco.restbox.app_java.model.cisco.RestApiDTO;
 
 import java.util.Collection;
 import java.util.Map;
-import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @RequiredArgsConstructor
 @Configuration
 class EntityConfiguration {
 	@NonNull private final AppProperties appProperties;
 
-
-	// Session- and request-scoped beans cannot be used with Spring WebFlux
-	// https://stackoverflow.com/questions/46540983/session-and-request-scopes-with-spring-webflux
-	// Try to stay with application-wide state.
-	//@Scope(value="session", proxyMode = ScopedProxyMode.TARGET_CLASS)
-	//@SessionScope
 	@Bean
 	Collection<Box> boxes() {
 		// Use configuration properties to instantiate dynamic box objects holding runtime state
@@ -236,9 +230,8 @@ class EntityConfiguration {
 						.resourceNotFoundFunction(errorDto -> 0)
 						.build();
 		// pack into map
-		return Set.of(f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12, f13, rf1, rf2, rf3, rf4, rf5)
-		          .stream()
-		          .collect(Collectors.toUnmodifiableMap(RouterFunction::getName, f -> f));
+		return Stream.of(f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12, f13, rf1, rf2, rf3, rf4, rf5)
+		             .collect(Collectors.toUnmodifiableMap(RouterFunction::getName, f -> f));
 	}
 
 	// boolean to integer conversion to calculate box indicator state to be set

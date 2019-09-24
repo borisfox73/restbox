@@ -1,0 +1,35 @@
+# For a quick start check out our HTTP Requests collection (Tools|HTTP Client|Open HTTP Requests Collection).
+#
+# Following HTTP Request Live Templates are available:
+# * 'gtrp' and 'gtr' create a GET request with or without query parameters;
+# * 'ptr' and 'ptrp' create a POST request with a simple or parameter-like body;
+# * 'mptr' and 'fptr' create a POST request to submit a form with a text or file field (multipart/form-data);
+POST http://localhost:8880/login
+Accept: application/json
+Content-Type: application/json
+
+{
+  "username": "user1",
+  "password": "user123"
+}
+
+<> 2018-05-24T100103.201.json
+<> 2018-05-23T081521.201.json
+<> 2018-05-23T081511.400.json
+<> 2018-05-23T081504.201.json
+<> 2018-05-23T015413.401.json
+<> 2018-05-23T015342.401.json
+<> 2018-05-23T015320.401.json
+<> 2018-05-23T015255.401.json
+<> 2018-05-23T015223.201.json
+<> 2018-05-23T015038.201.json
+<> 2018-05-23T015026.401.json
+<> 2018-05-23T015013.201.json
+<> 2018-05-23T015006.401.json
+<> 2018-05-23T014958.401.json
+<> 2018-05-23T014949.401.json
+<> 2018-05-23T014941.401.json
+<> 2018-05-23T014847.400.json
+<> 2018-05-23T014840.201.json
+
+###

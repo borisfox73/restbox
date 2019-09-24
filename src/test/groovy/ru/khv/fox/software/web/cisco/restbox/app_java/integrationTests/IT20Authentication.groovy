@@ -57,22 +57,16 @@ class IT20Authentication {
 
 
 	private void emptyCredentials() {
-//        loginRequest.setUsername("unknownuser")
-//        loginRequest.setPassword("zzz")
 		loginRequest.username = ""
 		loginRequest.password = null
 	}
 
 	private void invalidCredentials() {
-//        loginRequest.setUsername("unknownuser")
-//        loginRequest.setPassword("zzz")
 	    loginRequest.username = "unknownuser"
 	    loginRequest.password = "zzz"
     }
 
     private void validCredentials() {
-//	    loginRequest.setUsername("testuser")
-//	    loginRequest.setPassword("testpass")
 	    loginRequest.username = "testuser"
 	    loginRequest.password = "testpass"
     }
@@ -153,22 +147,22 @@ class IT20Authentication {
         validCredentials()
         // @formatter:off
         String jwt = given()
-            .spec(reqSpecBase)
-            .body(loginRequest)
-        .when()
-            .post(LOGIN_ENDPOINT)
-        .then()
-            .spec(respSpecBase)
-            .statusCode(HttpStatus.SC_CREATED)
-            .body("token", is(notNullValue(String.class)))
-            .extract().path("token")
+                        .spec(reqSpecBase)
+                        .body(loginRequest)
+                    .when()
+                        .post(LOGIN_ENDPOINT)
+                    .then()
+                        .spec(respSpecBase)
+                        .statusCode(HttpStatus.SC_CREATED)
+                        .body("token", is(notNullValue(String.class)))
+                            .extract().path("token")
     	// @formatter:on
         println "jwt = $jwt"
         // verify jwt
 	    def jwtProperties = appProperties.getJwt()
 	    def jwtParser = Jwts.parser()
-                .setSigningKey(jwtProperties.getSecret().getBytes())
-//                .setAllowedClockSkewSeconds(5L)
+			    .setSigningKey(jwtProperties.getSecret().getBytes())
+//                          .setAllowedClockSkewSeconds(5L)
         jwtProperties.getAudience().ifPresent({ a -> jwtParser.requireAudience(a) })
 	    def jwtBody = jwtParser.parseClaimsJws(jwt).getBody()
         println "jwt claims: $jwtBody"

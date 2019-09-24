@@ -8,7 +8,11 @@ package ru.khv.fox.software.web.cisco.restbox.app_java.configuration;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
+import lombok.AccessLevel;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
+import lombok.experimental.FieldDefaults;
 import org.apache.logging.log4j.util.Strings;
 import org.hibernate.validator.constraints.time.DurationMin;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -34,6 +38,7 @@ import java.util.*;
  * Configurable application properties.
  */
 @Data
+@FieldDefaults(level = AccessLevel.PRIVATE)
 @Validated
 @Component
 @ConfigurationProperties(prefix = "app.config")
@@ -43,38 +48,41 @@ public class AppProperties {
 	 */
 	@NotNull
 	@NestedConfigurationProperty
-	private WebClientProperties webClient = new WebClientProperties();
+	WebClientProperties webClient = new WebClientProperties();
 	/**
 	 * JSON Web Ticket parameters
 	 */
 	@NotNull
 	@NestedConfigurationProperty
-	private JwtProperties jwt;
+	JwtProperties jwt;
 	/**
 	 * Routers
 	 */
-	// @Getter(AccessLevel.PACKAGE) // TODO to be accessible in tests
+	// @Getter(AccessLevel.PACKAGE) // getter is need to be accessible in tests
 	@NotEmpty
-	private Map<String, RouterProperties> routers = new HashMap<>();
+	Map<String, RouterProperties> routers = new HashMap<>();
 	/**
 	 * Users
 	 */
 	@NotEmpty
-	private Set<UserProperties> users = new HashSet<>();
+	Set<UserProperties> users = new HashSet<>();
 
 	/**
 	 * Boxes (intermediate configuration objects)
 	 */
 //	@Getter(AccessLevel.PACKAGE)    // access level restriction causes nested properties type missing from configuration metadata
 	@NotEmpty
-	private Set<BoxProperties> boxcontrol = new HashSet<>();
+	Set<BoxProperties> boxcontrol = new HashSet<>();
 
 	/**
 	 * Period of polling resources tied to box indicators.
 	 */
 	@NotNull
 	@DurationMin(seconds = 5)
-	private Duration indicatorPollInterval = Duration.ofSeconds(30);
+	Duration indicatorPollInterval = Duration.ofSeconds(30);
+
+	@NotEmpty
+	String ciscoRestApiUriTemplate = "https://{hostname}:55443/api/v1/";
 
 
 	// Poller scheduling delay in milliseconds
@@ -88,38 +96,42 @@ public class AppProperties {
 	 */
 	@SuppressWarnings("WeakerAccess")
 	@Data
+	@FieldDefaults(level = AccessLevel.PRIVATE)
 	public static class WebClientProperties {
 		/**
 		 * Trace WebClient requests.
 		 */
-		private boolean traceWebClientRequests;
+		boolean traceWebClientRequests;
 		/**
 		 * Ignore SSL certificate issuer and host name validation for REST API client.
 		 */
-		private boolean sslIgnoreValidation;
+		boolean sslIgnoreValidation;
 	}
 
 	/*
 	 * Router properties.
 	 */
 	@Data
+	@FieldDefaults(level = AccessLevel.PRIVATE)
 	public static class RouterProperties {
 		@NotEmpty
-		private String name;
+		String name;
 		@NotEmpty
-		private String host;
+		String host;
 		@NotEmpty
-		private String username;
+		String username;
 		@NotEmpty
-		private String password;
+		String password;
 		@NotNull
-		private RouterType type;
+		RouterType type;
 	}
 
 	/*
 	 * User properties.
 	 */
 	@Data
+	@EqualsAndHashCode(of = "username")
+	@FieldDefaults(level = AccessLevel.PRIVATE)
 	@JsonAutoDetect(
 			fieldVisibility = JsonAutoDetect.Visibility.NONE,
 			setterVisibility = JsonAutoDetect.Visibility.NONE,
@@ -131,13 +143,13 @@ public class AppProperties {
 		@JsonProperty("login")
 		@JsonPropertyDescription("Login")
 		@NotBlank
-		private String username;
+		String username;
 		@JsonProperty
 		@JsonPropertyDescription("Password")
 		@NotBlank
-		private String password;
+		String password;
 		@NotBlank
-		private String roles;   // comma-delimited list
+		String roles;   // comma-delimited list
 
 		/**
 		 * Convert comma-delimited roles string to array.
@@ -150,36 +162,25 @@ public class AppProperties {
 			             .filter(Strings::isNotEmpty)
 			             .toArray(String[]::new);
 		}
-
-		// Uniqueness on username
-		@Override
-		public boolean equals(final Object o) {
-			if (this == o) return true;
-			if (o == null || getClass() != o.getClass()) return false;
-			final UserProperties that = (UserProperties) o;
-			return Objects.equals(username, that.username);
-		}
-
-		@Override
-		public int hashCode() {
-			return Objects.hash(username);
-		}
 	}
 
 	/*
 	 * JSON Web Token parameters.
 	 */
 	@Data
+	@ToString(doNotUseGetters = true)
+	@EqualsAndHashCode(doNotUseGetters = true)
+	@FieldDefaults(level = AccessLevel.PRIVATE)
 	public static class JwtProperties {
 		@Nullable
-		private String issuer;
+		String issuer;
 		@Nullable
-		private String audience;
+		String audience;
 		@NotBlank
-		private String secret;
+		String secret;
 		@NotNull
 		@DurationMin(minutes = 1)
-		private Duration timeToLive = Duration.of(1L, ChronoUnit.HOURS);
+		Duration timeToLive = Duration.of(1L, ChronoUnit.HOURS);
 
 		@NonNull
 		public Optional<String> getIssuer() {
@@ -196,53 +197,40 @@ public class AppProperties {
 	 * Box controls, sensors and indicators.
 	 */
 	@Data
+	@FieldDefaults(level = AccessLevel.PRIVATE)
 	@ValidBoxControl
 	public static class BoxControlProperties {
 		@NotNull
-		private BoxControlType type;
+		BoxControlType type;
 		@PositiveOrZero
-		private int id;
+		int id;
 		@Nullable
-		private String descr;
+		String descr;
 		// runtime state fields are allowed in configuration but ignored
-		//@PositiveOrZero
-		private int status;
+		int status;
 		// TODO validate by router functions set
 		//@Nullable
-		private String onFunc;
+		String onFunc;
 		//@Nullable
-		private String offFunc;
+		String offFunc;
 		//@Nullable
-		private String rFunc;
+		String rFunc;
 	}
 
 	/*
 	 * Box descriptor.
 	 */
 	@Data
+	@EqualsAndHashCode(of = "name")
+	@FieldDefaults(level = AccessLevel.PRIVATE)
 	public static class BoxProperties {
 		@NotBlank
-		private String name;
+		String name;
 		@NotBlank
-		private String secret;
+		String secret;
 		// runtime state fields are allowed in configuration but ignored
-		//@PositiveOrZero
-		private int ready;
+		int ready;
 		@NotEmpty
-		private List<BoxControlProperties> boxes = new ArrayList<>();
-
-		// Uniqueness on box name
-		@Override
-		public boolean equals(final Object o) {
-			if (this == o) return true;
-			if (o == null || getClass() != o.getClass()) return false;
-			final BoxProperties that = (BoxProperties) o;
-			return Objects.equals(name, that.name);
-		}
-
-		@Override
-		public int hashCode() {
-			return Objects.hash(name);
-		}
+		List<BoxControlProperties> boxes = new ArrayList<>();
 	}
 }
