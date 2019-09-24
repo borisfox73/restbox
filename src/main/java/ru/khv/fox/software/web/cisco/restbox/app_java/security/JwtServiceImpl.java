@@ -10,7 +10,7 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
-import org.springframework.lang.NonNull;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationServiceException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
@@ -34,20 +34,24 @@ import java.util.stream.Collectors;
 @Slf4j
 @Service
 public class JwtServiceImpl implements JwtService {
+
+	// Additional login claim same as subject. Used in frontend controller.
+	private static final String CLAIM_NAME_LOGIN = "login";
+	// authorities collection is holded in this claim
+	private static final String CLAIM_NAME_AUTHORITIES = "authorities";
 	private static final long ALLOWED_CLOCK_SKEW_SECONDS = 30;
 
-	@NonNull private final AppProperties.JwtProperties jwtProperties;
+	private final AppProperties.JwtProperties jwtProperties;
 
 
-	JwtServiceImpl(@NonNull final AppProperties appProperties) {
-		this.jwtProperties = appProperties.getJwt();
+	JwtServiceImpl(@Value("#{appProperties.jwt}") final AppProperties.JwtProperties jwtProperties) {
+		this.jwtProperties = jwtProperties;
 	}
 
 	// There is not so much of reactivity in this service
 
 	@Override
-	@NonNull
-	public Mono<Authentication> createJwt(@NonNull final UserDetails user/*, @NonNull final ServerWebExchange exchange*/) {
+	public Mono<Authentication> createJwt(final UserDetails user) {
 		log.trace("make JWT with username '{}' and authorities {}", user.getUsername(), user.getAuthorities());
 		val jwtId = UUID.randomUUID().toString();
 		val jwtSubject = user.getUsername();
@@ -70,8 +74,7 @@ public class JwtServiceImpl implements JwtService {
 	}
 
 	@Override
-	@NonNull
-	public Mono<Authentication> parseJwt(@NonNull final String jwtToken) {
+	public Mono<Authentication> parseJwt(final String jwtToken) {
 		log.trace("parse JWT {}", jwtToken);
 		try {
 			// I doubt whether the parser instance is thread-safe.

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Boris Fox.
+ * Copyright (c) 2019 Boris Fox.
  * All rights reserved.
  */
 
@@ -9,7 +9,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.web.reactive.error.ErrorWebExceptionHandler;
 import org.springframework.http.HttpStatus;
-import org.springframework.lang.NonNull;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.server.ServerAuthenticationEntryPoint;
 import org.springframework.web.server.ServerWebExchange;
@@ -26,14 +25,13 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class RestApiAuthenticationEntryPoint implements ServerAuthenticationEntryPoint {
 
-	@NonNull private final ErrorWebExceptionHandler exceptionHandler;
+	private final ErrorWebExceptionHandler exceptionHandler;
 
 
 	// Use configured exception handler to convert and publish the response.
 	// See HttpStatusServerAccessDeniedHandler#handle for an example of "manual" response construction and publishing.
-	@NonNull
 	@Override
-	public Mono<Void> commence(@NonNull final ServerWebExchange exchange, @NonNull final AuthenticationException authenticationException) {
+	public Mono<Void> commence(final ServerWebExchange exchange, final AuthenticationException authenticationException) {
 		return Mono.defer(() -> {
 			log.trace("custom auth entry point exception message: {}, cause message: {}", authenticationException.getLocalizedMessage(), Optional.ofNullable(authenticationException.getCause()).map(Throwable::getLocalizedMessage).orElse("<none>"));
 			return exceptionHandler.handle(exchange, new RestApiException("authentication error", HttpStatus.UNAUTHORIZED, authenticationException));

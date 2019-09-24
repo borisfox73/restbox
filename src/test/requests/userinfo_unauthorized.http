@@ -1,0 +1,11 @@
+GET http://localhost:8880/userinfo
+Accept: application/json
+Cache-Control: no-cache
+
+<> 2018-10-09T110441.401.json
+<> 2018-10-08T091441.403.json
+<> 2018-10-08T091005.403.json
+<> 2018-10-08T090250.403.json
+<> 2018-10-08T085802.401.json
+
+###

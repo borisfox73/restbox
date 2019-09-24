@@ -240,12 +240,12 @@ class IT90WebSpaController {
 
 	@Test
 	void 'status b1 usonic 0 (20)'() {
-		testStatus('b1', 'usonic', 0, 20, "OFF")
+		testStatus('b1', 'usonic', 0, 20, "ON")
 	}
 
 	@Test
 	void 'status b1 usonic 0 (80)'() {
-		testStatus('b1', 'usonic', 0, 80, "ON")
+		testStatus('b1', 'usonic', 0, 80, "OFF")
 	}
 
 	@Test
@@ -265,12 +265,12 @@ class IT90WebSpaController {
 
 	@Test
 	void 'status b2 usonic 0 (10)'() {
-		testStatus('b2', 'usonic', 0, 10, "OFF")
+		testStatus('b2', 'usonic', 0, 10, "ON")
 	}
 
 	@Test
 	void 'status b2 usonic 0 (70)'() {
-		testStatus('b2', 'usonic', 0, 70, "ON")
+		testStatus('b2', 'usonic', 0, 70, "OFF")
 	}
 
 	@Test

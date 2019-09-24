@@ -5,6 +5,8 @@
 
 package ru.khv.fox.software.web.cisco.restbox.app_java.configuration;
 
+import lombok.AccessLevel;
+import lombok.experimental.FieldDefaults;
 import lombok.val;
 import org.springframework.boot.autoconfigure.security.reactive.PathRequest;
 import org.springframework.boot.web.reactive.error.ErrorWebExceptionHandler;
@@ -28,12 +30,16 @@ import java.util.Collections;
 @Configuration
 @EnableWebFluxSecurity
 @EnableReactiveMethodSecurity
+@FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
 class WebSecurityConfiguration {
 	private static final String LOGIN_ENDPOINT = "/login";
 
-	@NonNull private final JwtService jwtService;
-	@NonNull private final RestApiAuthenticationEntryPoint authenticationEntryPoint;
-	@NonNull private final RestApiAccessDeniedHandler accessDeniedHandler;
+	@NonNull
+	JwtService jwtService;
+	@NonNull
+	RestApiAuthenticationEntryPoint authenticationEntryPoint;
+	@NonNull
+	RestApiAccessDeniedHandler accessDeniedHandler;
 
 
 	// Autowiring beans
@@ -69,13 +75,11 @@ class WebSecurityConfiguration {
 		// @formatter:off
 		return http.csrf().disable()
 		           .logout().disable()
-//		           .headers().disable()     // TODO need? adds http response headers for caching and protection control
 		           .authenticationManager(null) // discard autoconfigured from a bean in ServerHttpSecurityConfiguration
 		           .addFilterAt(jwtAuthenticationWebFilter(), SecurityWebFiltersOrder.AUTHENTICATION)
 	               .exceptionHandling()     // для всех фильтров, в том числе authorization
 	                    .authenticationEntryPoint(authenticationEntryPoint)
 		                .accessDeniedHandler(accessDeniedHandler)
-// TODO cannot use reactive method security because above exception handlers did not get invoked.
 	               .and()
 				        .authorizeExchange()
 		                    .matchers(PathRequest.toStaticResources().atCommonLocations()).permitAll()
@@ -84,7 +88,7 @@ class WebSecurityConfiguration {
 		                    .pathMatchers(LOGIN_ENDPOINT).permitAll()            // API Login endpoint
 		                    .pathMatchers("/api/**").permitAll()            // Rest Boxes endpoints
 		                    .pathMatchers("/webapi/**").authenticated()     // Single page web app endpoints
-		                    .pathMatchers("/jsontest").hasAuthority("ROLE_ADMIN")  // TODO cleanup test
+		                    .pathMatchers("/jsontest").hasAuthority("ROLE_ADMIN")  // Test endpoint
 		                .anyExchange()  // any other paths
 		                    .authenticated()
 		           .and()

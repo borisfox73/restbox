@@ -6,10 +6,10 @@
 package ru.khv.fox.software.web.cisco.restbox.app_java.model.cisco;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.databind.PropertyNamingStrategy;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
 import lombok.*;
-import org.springframework.lang.NonNull;
 
 /**
  * Common fields of Cisco RESTful API response body.
@@ -25,7 +25,7 @@ import org.springframework.lang.NonNull;
 @JsonNaming(PropertyNamingStrategy.KebabCaseStrategy.class)
 abstract class DTOBase implements RestApiDTO {
 	// Exclude field from serialization as kind is not applicable to mutating requests
+	@JsonPropertyDescription("Object type")
 	@Getter(onMethod_ = {@JsonIgnore})
-	@NonNull
 	private final String kind;
 }

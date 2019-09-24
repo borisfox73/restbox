@@ -9,8 +9,9 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import lombok.*;
+import lombok.experimental.FieldDefaults;
+import lombok.experimental.NonFinal;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
 import ru.khv.fox.software.web.cisco.restbox.app_java.configuration.AppProperties;
 
@@ -29,26 +30,25 @@ import java.util.stream.Collectors;
 @ToString
 @EqualsAndHashCode(of = "name")
 @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
+@FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
 public class Box {
 	// parameters
 	@JsonProperty
 	@JsonPropertyDescription("Box name")
-	@NonNull
-	private final String name;
+	String name;
 	@JsonProperty
 	@JsonPropertyDescription("Box secret")
-	@NonNull
-	private final String secret;
-	@JsonIgnore
-	@NonNull
-	private final Map<SimpleEntry<BoxControlType, Integer>, BoxControl> controlsMap;  // to lookup by type and id pair
+	String secret;
 	// state
 	@JsonProperty
 	@JsonPropertyDescription("Box state")
-	private int ready;
+	@NonFinal
+	int ready;
+	@JsonIgnore
+	Map<SimpleEntry<BoxControlType, Integer>, BoxControl> controlsMap;  // to lookup by type and id pair
 
 
-	public static Box getInstance(@NonNull final AppProperties.BoxProperties boxProperties) {
+	public static Box getInstance(final AppProperties.BoxProperties boxProperties) {
 		val boxControlsMap = boxProperties.getBoxes()
 		                                  .stream()
 		                                  .map(bc -> bc.getType().getInstance(bc.getId(), bc.getDescr(), bc.getRFunc(), bc.getOnFunc(), bc.getOffFunc()))
@@ -56,7 +56,7 @@ public class Box {
 		return new Box(boxProperties.getName(), boxProperties.getSecret(), boxControlsMap);
 	}
 
-	public Optional<BoxControl> getControlByTypeAndId(@NonNull final BoxControlType boxControlType, final int boxControlId) {
+	public Optional<BoxControl> getControlByTypeAndId(final BoxControlType boxControlType, final int boxControlId) {
 		return Optional.ofNullable(controlsMap.get(new SimpleEntry<>(boxControlType, boxControlId)));
 	}
 
@@ -70,7 +70,6 @@ public class Box {
 
 	@JsonProperty("boxes")
 	@JsonPropertyDescription("Box controls")
-	@NonNull
 	public Collection<BoxControl> getBoxControls() {
 		return controlsMap.values();
 	}

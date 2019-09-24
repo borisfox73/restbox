@@ -17,11 +17,11 @@ public class LoginRequest {
 	@NotEmpty
 	@JsonProperty
 	@JsonPropertyDescription("User login name")
-	private final String username;
+	String username;
 	@NotEmpty
 	@JsonProperty
 	@JsonPropertyDescription("User password")
-	private final String password;
+	String password;
 
 
 	@JsonCreator

@@ -92,6 +92,10 @@ controllers.controller('VoidCtrl',['$scope',
       'TEST4'
     ];
     $scope.logout = function() {
+	    if (angular.isDefined($scope.timer)) {
+		    $interval.cancel($scope.timer);
+		    $scope.timer = undefined;
+	    }
         $scope.error = '';
         AuthenticationService.isLogged = false;
         delete $window.sessionStorage.token;
@@ -188,7 +192,7 @@ controllers.controller('VoidCtrl',['$scope',
     };
     $scope.reloadBox = function() {
         $scope.getBoxctrl();
-    }
+    };
     $scope.call_afunc = function(name) {
         $http.put(getapiroot($location) + '/webapi/call/afunc/'+name)
         .then(function onSuccess(response) {
@@ -233,20 +237,27 @@ controllers.controller('VoidCtrl',['$scope',
             error_detected = false;
         });
     };
-    var number_of_failed_timeouts = 0;
-    var timer = $interval(function(){
-        $scope.reloadBox();
-        //$scope.getStatuses();
-        //scanLEDs();
-        if(error_detected) {
-          number_of_failed_timeouts = number_of_failed_timeouts + 1;
-        } else {
-          number_of_failed_timeouts = 0;
-        }
-        error_detected = true;
-        if(number_of_failed_timeouts > 2) { $scope.noserver = true; }
-        if(number_of_failed_timeouts == 0) { $scope.noserver = false; }
-    },4000);
+//    var number_of_failed_timeouts = 0;
+//    var timer = $interval(function(){
+	if (angular.isUndefined($scope.timer)) {
+		$scope.timer = $interval(function () {
+			$scope.reloadBox();
+			//$scope.getStatuses();
+			//scanLEDs();
+			if (error_detected) {
+				number_of_failed_timeouts = number_of_failed_timeouts + 1;
+			} else {
+				number_of_failed_timeouts = 0;
+			}
+			error_detected = true;
+			if (number_of_failed_timeouts > 2) {
+				$scope.noserver = true;
+			}
+			if (number_of_failed_timeouts === 0) {
+				$scope.noserver = false;
+			}
+		}, 4000);
+	}
   }
 ])
 .controller('EditCtrl',['$scope', '$http', '$location', '$window', 'AuthenticationService', '$interpolate', '$sce', '$compile', '$interval', function($scope, $http, $location, $window, AuthenticationService, $interpolate, $sce, $compile, $interval) {

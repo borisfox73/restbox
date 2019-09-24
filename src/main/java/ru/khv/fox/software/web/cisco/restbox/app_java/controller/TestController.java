@@ -6,43 +6,25 @@
 package ru.khv.fox.software.web.cisco.restbox.app_java.controller;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.annotation.Profile;
 import org.springframework.http.MediaType;
-import org.springframework.lang.NonNull;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Mono;
 
 import java.security.Principal;
 
-// TODO test endpoints.
 @Slf4j
 @RestController
+@Profile("test")
 public class TestController {
 
-	@GetMapping("css/hello")
-	public Mono<String> cssHello() {
-		return Mono.just("Hello I'm secret data");
-	}
-
-	@PostMapping("post")
-	public Mono<String> testPost() {
-		return Mono.just("Hello it is post request");
-	}
-
-	@GetMapping("customHeader")
-	public Mono<String> customHeader(@RequestHeader("x-custom-header") Mono<String> customHeader) {
-		return customHeader;
-	}
-
 	@GetMapping("/greet")
-	public Mono<String> greet(@NonNull final Mono<Principal> principal) {
-		return principal
-				.map(Principal::getName)
-				.map(name -> String.format("Hello, %s", name));
+	public Mono<String> greet(final Mono<Principal> principal) {
+		return principal.map(Principal::getName)
+		                .map(name -> String.format("Hello, %s", name));
 	}
 
 	// User information retrieval endpoint
@@ -53,17 +35,14 @@ public class TestController {
 	// which throws exception that can be intercepted using ControllerAdvice in ErrorHandler class.
 	// At least in Spring 5.0.8 / Spring Boot 2.0.5.
 //	@PreAuthorize("isAuthenticated()")
-	public Mono<UserDetails> userinfo(@NonNull @AuthenticationPrincipal final Mono<UserDetails> user) {
+	public Mono<UserDetails> userinfo(@AuthenticationPrincipal final Mono<UserDetails> user) {
 		log.debug("user info: {}", user);
-		// TODO may be explicit DTO would be more suitable. If this endpoint is not used by the frontend, just remove.
-		// return as is for now
 		return user;
 	}
 
 	@GetMapping(path = "jsontest", produces = MediaType.APPLICATION_JSON_VALUE)
-// TODO method security does not work in 2.0.5 - exception handlers didn't get invoked
 //	@PreAuthorize("isFullyAuthenticated() and hasRole('ADMIN')")
-	public Mono<Principal> jsonTest(@NonNull final Mono<Principal> principal) {
+	public Mono<Principal> jsonTest(final Mono<Principal> principal) {
 		log.debug("principal: {}", principal);
 		return principal;
 	}

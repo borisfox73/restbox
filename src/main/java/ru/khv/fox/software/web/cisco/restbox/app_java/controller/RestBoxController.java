@@ -5,11 +5,12 @@
 
 package ru.khv.fox.software.web.cisco.restbox.app_java.controller;
 
+import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
-import org.springframework.lang.NonNull;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
@@ -37,51 +38,16 @@ import java.util.function.Function;
  */
 @Slf4j
 @RequiredArgsConstructor
+@FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
 @Validated
 @RestController
 @RequestMapping(path = "/api", produces = MediaType.APPLICATION_JSON_VALUE)
-//public class RestBoxController<Q extends RestApiDTO, T extends RestApiDTO, V> {
-//public class RestBoxController<Q extends RestApiDTO, T extends RestApiDTO> {
 public class RestBoxController {
-	@NonNull
-//	private final CiscoRestfulService<Q, T, V> ciscoService;
-//	private final CiscoRestfulService<Q, T, Integer> ciscoService;
-	private final CiscoRestfulService ciscoService;
-	@NonNull
-	private final RestBoxService restBoxService;
+	CiscoRestfulService ciscoService;
+	RestBoxService restBoxService;
 
 
-	// TODO cleanup
-	/*
-# ==== API for Arduino boxes, no jwt ===
-@app.route('/api/get/<boxname>/<secret>/<t>/<i>', methods = ['GET'])
-def get_box(boxname,secret,t,i):
-  if box.checkAccess(boxname,secret):
-    stat = box.getStatus(boxname,t,i,True)
-    return jsonify( { 'message': stat } ), 200
-  else:
-    return jsonify( { 'message': 'auth_error'} ), 401
-
-@app.route('/api/put/<boxname>/<secret>/<t>/<i>/<value>', methods = ['PUT'])
-def put_box(boxname,secret,t,i,value):
-  if box.checkAccess(boxname,secret):
-    box.putStatus(boxname,t,i,value,True)
-    # call action function
-    valint = int(value)
-    if t != 'usonic':
-        if valint == 1:
-            cisco.call_afunc(box.get_onfunc(boxname,t,i))
-        if valint == 0:
-            cisco.call_afunc(box.get_offfunc(boxname,t,i))
-    else:
-        if valint > 50 and valint < 100:
-            cisco.call_afunc(box.get_onfunc(boxname,t,i))
-        if valint < 50 and valint > 5:
-            cisco.call_afunc(box.get_offfunc(boxname,t,i))
-    return jsonify( { 'message': 'ok' } ), 200
-  else:
-    return jsonify( { 'message': 'auth_error'} ), 401
-	 */
+	// ==== API for Arduino boxes, no jwt ===
 
 	// box inquires about lights state
 	@GetMapping(path = "/get/{boxName}/{secret}/{boxControlType}/{boxControlId:\\d+}")
@@ -92,40 +58,11 @@ def put_box(boxname,secret,t,i,value):
 	                                             @RequestParam(name = "ready", defaultValue = "true") final boolean ready,
 	                                             @RequestParam(name = "inline", defaultValue = "false") final boolean inline) {
 		// Chain to arrange inline polling
-/*
-		final Function<Mono<BoxControl>, Mono<BoxControl>> inlineChain =
-				bc -> bc.ofType(BoxControlIndicator.class)
-				        .map(BoxControl::getRouterFunc)
-				        .transform(Utilities.getIfPresent())
-//				        .filter(Optional::isPresent)
-//				        .map(Optional::get)
-                        .doOnNext(rFunction -> log.trace("exec rFunction {}", rFunction))
-                        .flatMap(ciscoService::execFunction)
-//	                    .flatMap(ciscoService::getFunction)
-//	                    .filter(RouterFunction::isRead)
-//	                    .as(ciscoService::execFunction)
-                        .doOnNext(resultPair -> log.trace("exec result pair {}", resultPair))
-                        .map(ExecFunctionResultPair::getBoxValue)
-                        .transform(Utilities.getIfPresent())
-                        .cast(Integer.class)
-                        .flatMap(boxStatus -> restBoxService.putStatus(boxName, boxControlType, boxControlId, boxStatus))
-                        .doOnNext(boxControl -> log.trace("box control after {}", boxControl))
-                        .onErrorMap(ClassCastException.class, e -> new RestApiException(e.getLocalizedMessage(), HttpStatus.INTERNAL_SERVER_ERROR, e, "Cisco REST API Service result type is unsupported"))
-                        .onErrorMap(CiscoServiceException.class, e -> new RestApiException(e.getErrorMessage(), HttpStatus.BAD_GATEWAY, e, e.getReason()))
-                        .doOnError(ResponseStatusException.class, e -> log.error("{}: {}", e.getLocalizedMessage(), e.getReason()))
-                        .doOnError(e -> log.error("Error: {}", e.getLocalizedMessage()));
-*/
 		final Function<Mono<BoxControl>, Mono<BoxControl>> inlineChain =
 				bc -> bc.ofType(BoxControlIndicator.class)
 				        .map(BoxControl::getRouterFunc)
 				        .transform(Utilities.getIfPresent())
 				        .transform(callRFunction(ciscoService))
-//				        .doOnNext(rFunction -> log.trace("exec rFunction {}", rFunction))
-//				        .flatMap(ciscoService::execFunction)
-//				        .doOnNext(resultPair -> log.trace("exec result pair {}", resultPair))
-//				        .onErrorMap(CiscoServiceException.class, e -> new RestApiException(e.getErrorMessage(), HttpStatus.BAD_GATEWAY, e, e.getReason()))
-//				        .doOnError(ResponseStatusException.class, e -> log.error("{}: {}", e.getLocalizedMessage(), e.getReason()))
-//				        .doOnError(e -> log.error("Error: {}", e.getLocalizedMessage()))
                         .map(ExecFunctionResultPair::getBoxValue)
                         .transform(Utilities.getIfPresent())
                         .cast(Integer.class)
@@ -153,50 +90,10 @@ def put_box(boxname,secret,t,i,value):
 		                     .map(BoxControl::getRouterFunc)
 		                     .transform(Utilities.getIfPresent())
 		                     .transform(callAFunction(ciscoService))
-//		                     .flatMap(ciscoService::execFunction)
-////		                     .flatMap(ciscoService::getFunction)
-////		                     .filter(RouterFunction::isAction)
-////		                     .as(ciscoService::execFunction)
-//                             .doOnNext(resultPair -> log.trace("exec result pair {}", resultPair))
-//                             .onErrorMap(CiscoServiceException.class, e -> new RestApiException(e.getErrorMessage(), HttpStatus.BAD_GATEWAY, e, e.getReason()))
-//                             .doOnError(ResponseStatusException.class, e -> log.error("{}: {}", e.getLocalizedMessage(), e.getReason()))
-//                             .doOnError(e -> log.error("Error: {}", e.getLocalizedMessage()))
                              .thenReturn(new ApiResponse("ok"));
-/*
-		return restBoxService.getBoxControl(boxName, secret, boxControlType, boxControlId)
-		                     .ofType(BoxControlSensor.class)
-		                     .doOnNext(c -> log.debug("sensor Action {}", c.getAction()))
-		                     .map(BoxControl::getRouterFunc)
-		                     .transform(Utilities.getIfPresent())
-		                     .doOnNext(aFunction -> log.trace("exec aFunction {}", aFunction))
-		                     .flatMap(ciscoService::execFunction)
-//		                     .flatMap(ciscoService::getFunction)
-//		                     .filter(RouterFunction::isAction)
-//		                     .as(ciscoService::execFunction)
-		                     .doOnNext(resultPair -> log.trace("exec result pair {}", resultPair))
-		                     .onErrorMap(CiscoServiceException.class, e -> new RestApiException(e.getErrorMessage(), HttpStatus.BAD_GATEWAY, e, e.getReason()))
-		                     .doOnError(ResponseStatusException.class, e -> log.error("{}: {}", e.getLocalizedMessage(), e.getReason()))
-		                     .doOnError(e -> log.error("Error: {}", e.getLocalizedMessage()))
-// TODO move UP before action function execute
-		                     .then(restBoxService.putStatus(boxName, boxControlType, boxControlId, true, status))
-		                     .thenReturn(new CommonResponse("ok"));
-*/
-		// rfunc - read functions (получение информации из маршрутизатора).
-		// afunc - action functions (выполнение действия в маршрутизаторе).
-		// Могут быть разные:
-		//  anone - действий нет
-		//  afunc1 .. afunc12 - какое-то действие в каком-то маршрутизаторе.
-		// Определены в EntityConfiguration в маршрутизаторах.
-		// Каждая реализуется каким-то конкретным.
-		// Кокретные afunc могут быть указаны в Box.BoxControl onfunc/offfunc (по умолчанию во всех box указаны anone).
-		// BoxControlSensor поддерживают afunc (свойства onFunc/offFunc).
-		// BoxControlIndicator поддерживают rfunc (свойства rFunc).
-		// Там они указываются как строки.
-		// Нужно получать название функции из onFunc/offFunc и вызывать метод службы
-		// Mono<ExecFunctionResultPair<? extends RestApiDTO, V>> execFunction(@NonNull final String func);
 	}
 
-	static Function<Mono<String>, Mono<ExecFunctionResultPair<?, ?, ?>>> callAFunction(@NonNull final CiscoRestfulService ciscoService) {
+	static Function<Mono<String>, Mono<ExecFunctionResultPair<?, ?, ?>>> callAFunction(final CiscoRestfulService ciscoService) {
 		return funcNameMono -> funcNameMono.doOnNext(aFunction -> log.trace("exec aFunction {}", aFunction))
 		                                   .flatMap(ciscoService::execFunction)
 		                                   .doOnNext(resultPair -> log.trace("exec result pair {}", resultPair))
@@ -206,7 +103,7 @@ def put_box(boxname,secret,t,i,value):
 
 	}
 
-	static Function<Mono<String>, Mono<ExecFunctionResultPair<?, ?, ?>>> callRFunction(@NonNull final CiscoRestfulService ciscoService) {
+	static Function<Mono<String>, Mono<ExecFunctionResultPair<?, ?, ?>>> callRFunction(final CiscoRestfulService ciscoService) {
 		return funcNameMono -> funcNameMono.doOnNext(rFunction -> log.trace("exec rFunction {}", rFunction))
 		                                   .flatMap(ciscoService::execFunction)
 		                                   .doOnNext(resultPair -> log.trace("exec result pair {}", resultPair))

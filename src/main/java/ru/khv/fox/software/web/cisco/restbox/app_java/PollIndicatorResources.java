@@ -5,11 +5,12 @@
 
 package ru.khv.fox.software.web.cisco.restbox.app_java;
 
+import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.springframework.context.annotation.Profile;
-import org.springframework.lang.NonNull;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
@@ -33,26 +34,23 @@ import java.util.Collection;
  */
 @Slf4j
 @RequiredArgsConstructor
+@FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
 @Component
 @Profile("!test")
-//public class PollIndicatorResources<Q extends RestApiDTO, T extends RestApiDTO> {
 public class PollIndicatorResources {
-	@NonNull
-//	private final CiscoRestfulService<Q, T, Integer> ciscoService;
-	private final CiscoRestfulService ciscoService;
-	@NonNull
-	private final RestBoxService boxService;
-	@NonNull
-	private final Collection<Box> boxes;
+	CiscoRestfulService ciscoService;
+	RestBoxService boxService;
+	Collection<Box> boxes;
 
 
 	// Helper class to format poll results for logging purposes
+	@FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
 	private static final class PollResult {
-		private final StringBuilder sb = new StringBuilder("Poll result of ");
-		private final String result;
-		private final boolean error;
+		StringBuilder sb = new StringBuilder("Poll result of ");
+		String result;
+		boolean error;
 
-		private PollResult(@NonNull final Box box, @NonNull final BoxControl boxControl) {
+		private PollResult(final Box box, final BoxControl boxControl) {
 			this.result = header(box, boxControl).append("SUCCESS (status = ")
 			                                     .append(boxControl.getStatus())
 			                                     .append(")")
@@ -60,12 +58,12 @@ public class PollIndicatorResources {
 			this.error = false;
 		}
 
-		private PollResult(@NonNull final BoxControl boxControl, @NonNull final Box box) {
+		private PollResult(final BoxControl boxControl, final Box box) {
 			this.result = header(box, boxControl).append("NO-OP").toString();
 			this.error = false;
 		}
 
-		private PollResult(@NonNull final Box box, @NonNull final BoxControl boxControl, @NonNull final Throwable e) {
+		private PollResult(final Box box, final BoxControl boxControl, final Throwable e) {
 			header(box, boxControl).append("ERROR (");
 			if (e instanceof CiscoServiceException) {
 				val ex = (CiscoServiceException) e;
@@ -78,23 +76,19 @@ public class PollIndicatorResources {
 			this.error = true;
 		}
 
-		@NonNull
-		private static PollResult of(@NonNull final Box box, @NonNull final BoxControl boxControl) {
+		private static PollResult of(final Box box, final BoxControl boxControl) {
 			return new PollResult(box, boxControl);
 		}
 
-		@NonNull
-		private static Mono<PollResult> ofError(@NonNull final Box box, @NonNull final BoxControl boxControl, @NonNull final Throwable e) {
+		private static Mono<PollResult> ofError(final Box box, final BoxControl boxControl, final Throwable e) {
 			return Mono.just(new PollResult(box, boxControl, e));
 		}
 
-		@NonNull
-		private static Mono<PollResult> ofEmpty(@NonNull final Box box, @NonNull final BoxControl boxControl) {
+		private static Mono<PollResult> ofEmpty(final Box box, final BoxControl boxControl) {
 			return Mono.just(new PollResult(boxControl, box));
 		}
 
-		@NonNull
-		private StringBuilder header(@NonNull final Box box, @NonNull final BoxControl boxControl) {
+		private StringBuilder header(final Box box, final BoxControl boxControl) {
 			return sb.append("Box ")
 			         .append(box.getName())
 			         .append(" ")
@@ -119,7 +113,7 @@ public class PollIndicatorResources {
 		pollFlux().subscribe(PollResult::log);
 	}
 
-	// public for tests
+	// This and next methods are made public for tests.
 	public ParallelFlux<PollResult> pollFlux() {
 		return Flux.fromIterable(boxes)
 		           .parallel()
@@ -137,10 +131,9 @@ public class PollIndicatorResources {
 		                   );
 	}
 
-	// see RestBoxController#getBoxControlStatus
-	// public for tests
-	@NonNull
-	public Mono<BoxControl> pollBoxControl(@NonNull final Box box, @NonNull final BoxControl boxControl) {
+	// Resembles RestBoxController#getBoxControlStatus.
+	// This code could be mutualized with one in the controller, but differences make it not worth the effort.
+	public Mono<BoxControl> pollBoxControl(final Box box, final BoxControl boxControl) {
 		return Mono.just(boxControl)
 		           .map(BoxControl::getRouterFunc)
 		           .transform(Utilities.getIfPresent())
@@ -154,4 +147,3 @@ public class PollIndicatorResources {
 		           .doOnNext(boxControl1 -> log.trace("box control after {}", boxControl1));
 	}
 }
-// TODO refactor to self-controller polling (/api/get/...) with inline=true request parameter

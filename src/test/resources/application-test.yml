@@ -1,5 +1,6 @@
 app.config:
   indicator-poll-interval: PT1M
+  cisco-rest-api-uri-template: https://{hostname}:55443/api/v1/
   web-client:
     trace-web-client-requests: true
     ssl-ignore-validation: true
@@ -95,6 +96,7 @@ app.config:
 #   rfunc1  CSR-WAN Gi3 state is down
 #   rfunc2  CSR-WAN Gi3 state is up
 #   rfunc3  CSR-AWS Gi1 state is up
+#   rfunc4  CSR-AWS Gi1 acl STOPPING enabled
 # ACTION:
 #   anone   Dummy non-executable action function
 #   afunc1  CSR-WAN Gi3 state set to down

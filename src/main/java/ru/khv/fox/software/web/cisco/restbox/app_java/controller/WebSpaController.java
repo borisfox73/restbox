@@ -6,11 +6,12 @@
 package ru.khv.fox.software.web.cisco.restbox.app_java.controller;
 
 
+import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
-import org.springframework.lang.NonNull;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
@@ -40,16 +41,15 @@ import static ru.khv.fox.software.web.cisco.restbox.app_java.controller.RestBoxC
  */
 @Slf4j
 @RequiredArgsConstructor
+@FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
 @Validated
 @RestController
 @RequestMapping(path = "/webapi", produces = MediaType.APPLICATION_JSON_VALUE)
 public class WebSpaController {
-	private final AppProperties appProperties;
-	private final RestBoxService restBoxService;
-	@NonNull
-	private final Map<String, RouterFunction> routerFunctions;
-	@NonNull
-	private final CiscoRestfulService ciscoService;
+	AppProperties appProperties;
+	RestBoxService restBoxService;
+	Map<String, RouterFunction> routerFunctions;
+	CiscoRestfulService ciscoService;
 
 
 	// ==== API for one-page web application, with jwt ====
@@ -108,7 +108,7 @@ public class WebSpaController {
 		return getRouterFunctions(RouterFunction::isRead);
 	}
 
-	private Mono<ApiResponse> getRouterFunctions(@NonNull final Predicate<RouterFunction> functionPredicate) {
+	private Mono<ApiResponse> getRouterFunctions(final Predicate<RouterFunction> functionPredicate) {
 		return Flux.fromIterable(routerFunctions.values())
 		           .filter(functionPredicate)
 		           .map(RouterFunctionResponse::from)
@@ -154,7 +154,7 @@ public class WebSpaController {
 				.thenReturn(new ApiResponse("ok"));
 	}
 
-	private Mono<String> findRouterFunction(@NonNull final String func, @NonNull final String type, @NonNull final Predicate<RouterFunction> functionPredicate) {
+	private Mono<String> findRouterFunction(final String func, final String type, final Predicate<RouterFunction> functionPredicate) {
 		return Flux.fromIterable(routerFunctions.values())
 		           .filter(fn -> fn.getName().equalsIgnoreCase(func))
 		           .switchIfEmpty(Mono.defer(() -> Mono.error(new RestApiException("Function '" + func + "' is not found", HttpStatus.NOT_FOUND))))

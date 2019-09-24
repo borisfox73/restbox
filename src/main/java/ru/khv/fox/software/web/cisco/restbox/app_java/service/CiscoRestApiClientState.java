@@ -8,12 +8,12 @@ package ru.khv.fox.software.web.cisco.restbox.app_java.service;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.ToString;
+import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
-import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
 import org.springframework.web.reactive.function.client.ClientRequest;
 import org.springframework.web.reactive.function.client.ExchangeFilterFunction;
@@ -34,33 +34,26 @@ import java.util.concurrent.atomic.AtomicReference;
 @Slf4j
 @ToString
 @Getter(AccessLevel.PACKAGE)
+@FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
 final class CiscoRestApiClientState {
-	private static final String BASE_URI_TEMPLATE = "https://{hostname}:55443/api/v1/";  // TODO make configurable?
 	private static final String TOKEN_SERVICES_ENDPOINT = "auth/token-services";
 	private static final String AUTH_TOKEN_HEADER = "X-Auth-Token";
-	@NonNull
-	private final Router router;
-	@NonNull
-	private final Semaphore semaphore = new Semaphore(1);
-	@NonNull
-	private final WebClient webClient;      // payload services access
-	@NonNull
-	private final WebClient authWebClient;  // authentication service access
-	@NonNull
-	private final AtomicReference<AuthServiceResponse> authServiceResponse = new AtomicReference<>();
+	Router router;
+	Semaphore semaphore = new Semaphore(1);
+	WebClient webClient;      // payload services access
+	WebClient authWebClient;  // authentication service access
+	AtomicReference<AuthServiceResponse> authServiceResponse = new AtomicReference<>();
 
 
-	CiscoRestApiClientState(@NonNull final Router router,
-	                        @NonNull final WebClient.Builder webClientBuilder) {
+	CiscoRestApiClientState(final Router router, final WebClient.Builder webClientBuilder, final String baseUriTemplate) {
 		this.router = router;
 		// Set common properties. Keep provided builder intact.
 		val baseBuilder = webClientBuilder.clone()
-		                                  .baseUrl(BASE_URI_TEMPLATE.replace("{hostname}", router.getHost()))
+		                                  .baseUrl(baseUriTemplate.replace("{hostname}", router.getHost()))
 		                                  .defaultHeader(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE);
 		this.authWebClient = baseBuilder.clone()
 		                                .filter(ExchangeFilterFunctions.basicAuthentication(router.getUsername(), router.getPassword()))
 		                                .build();
-		// TODO is content-type required on all requests?
 		this.webClient = baseBuilder.clone()
 		                            .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
 		                            .filter(tokenAuthenticationFilter())
@@ -68,14 +61,12 @@ final class CiscoRestApiClientState {
 	}
 
 	// Has side effect as backsetting of the authentication token to router object
-	@NonNull
 	Router getRouter() {
 		Optional.ofNullable(getAuthServiceResponse()).map(AuthServiceResponse::getTokenId).ifPresent(router::setToken);
 		return router;
 	}
 
 	// Adds token authentication header
-	@NonNull
 	private ExchangeFilterFunction tokenAuthenticationFilter() {
 		return (clientRequest, next) -> {
 			log.debug("Token filter request: {} {}", clientRequest.method(), clientRequest.url());
@@ -94,7 +85,6 @@ final class CiscoRestApiClientState {
 	}
 
 	// Use authentication service web client to request a new token
-	@NonNull
 	private Mono<String> obtainAuthenticationToken() {
 		// Token request chain is synchronized per router.
 		val lockSupplier = Mono.subscriberContext()
@@ -130,7 +120,6 @@ final class CiscoRestApiClientState {
 	}
 
 	// Check authentication token server-side state
-	@NonNull
 	Mono<AuthServiceResponse> checkAuthenticationToken() {
 		return getAuthenticationTokenUri()
 				.switchIfEmpty(Mono.defer(() -> Mono.error(new CiscoServiceException("No authentication token information available"))))
@@ -145,7 +134,6 @@ final class CiscoRestApiClientState {
 
 	// Destroy authentication token in router auth service.
 	// Authentication errors are ignored as token may had already expired.
-	@NonNull
 	Mono<Void> destroyAuthenticationToken() {
 		return getAuthenticationTokenUri()
 				.flatMap(tokenUri -> getWebClient().delete()
@@ -159,14 +147,12 @@ final class CiscoRestApiClientState {
 
 
 	// Re-authenticate client (destroy current authentication token, if any, and try to acquire new)
-	@NonNull
 	Mono<Void> reAuthentication() {
 		return destroyAuthenticationToken().then(obtainAuthenticationToken()).then();
 	}
 
 	// Get authentication token
-	@NonNull
-	private Mono<String> getAuthenticationToken(@NonNull final Mono<AuthServiceResponse> authServiceResponse) {
+	private Mono<String> getAuthenticationToken(final Mono<AuthServiceResponse> authServiceResponse) {
 		return authServiceResponse.filter(resp -> resp.getExpiryTime().isAfter(LocalDateTime.now()))
 		                          .map(AuthServiceResponse::getTokenId);
 	}
@@ -186,33 +172,32 @@ final class CiscoRestApiClientState {
 		setAuthServiceResponse(null);
 	}
 
-	private Mono<AuthServiceResponse> cacheAuthServiceResponse(@NonNull final AuthServiceResponse authServiceResponse) {
+	private Mono<AuthServiceResponse> cacheAuthServiceResponse(final AuthServiceResponse authServiceResponse) {
 		return Mono.fromRunnable(() -> setAuthServiceResponse(authServiceResponse))
 		           .thenReturn(authServiceResponse);
 	}
 
-	private Mono<String> processAuthServiceResponse(@NonNull final AuthServiceResponse authServiceResponse) {
+	private Mono<String> processAuthServiceResponse(final AuthServiceResponse authServiceResponse) {
 		return getAuthenticationToken(cacheAuthServiceResponse(authServiceResponse))
 				.switchIfEmpty(Mono.defer(() -> Mono.error(new CiscoServiceException("Authorization service didn't provide token"))));
 	}
 
-	@NonNull
+
 	private Mono<Void> clearAuthentication() {
 		return Mono.fromRunnable(this::clearAuthServiceResponse);
 	}
 
-	@NonNull
+
 	private Mono<AuthServiceResponse> retrieveAuthServiceResponse() {
 		return Mono.fromCallable(this::getAuthServiceResponse);
 	}
 
-	@NonNull
+
 	private Mono<String> getAuthenticationToken() {
 		return getAuthenticationToken(retrieveAuthServiceResponse());
 	}
 
 	// Return token URI with opaque id
-	@NonNull
 	private Mono<URI> getAuthenticationTokenUri() {
 		return retrieveAuthServiceResponse().map(AuthServiceResponse::getLink)
 		                                    .flatMap(Mono::justOrEmpty);

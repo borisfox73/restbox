@@ -1,12 +1,13 @@
 /*
- * Copyright (c) 2018 Boris Fox.
+ * Copyright (c) 2019 Boris Fox.
  * All rights reserved.
  */
 
 package ru.khv.fox.software.web.cisco.restbox.app_java.security;
 
+import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
-import org.springframework.lang.NonNull;
+import lombok.experimental.FieldDefaults;
 import org.springframework.security.authentication.AccountStatusUserDetailsChecker;
 import org.springframework.security.authentication.ReactiveAuthenticationManager;
 import org.springframework.security.core.Authentication;
@@ -19,16 +20,16 @@ import reactor.core.publisher.Mono;
  * check account status, and create JWT holding user identity and authorities.
  */
 @RequiredArgsConstructor
+@FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
 public class LoginReactiveAuthenticationManager implements ReactiveAuthenticationManager {
 
-	@NonNull private static final AccountStatusUserDetailsChecker accountChecker = new AccountStatusUserDetailsChecker();
-	@NonNull private final ReactiveAuthenticationManager userDetailsAuthenticationManager;
-	@NonNull private final JwtService jwtService;
+	private static final AccountStatusUserDetailsChecker accountChecker = new AccountStatusUserDetailsChecker();
+	ReactiveAuthenticationManager userDetailsAuthenticationManager;
+	JwtService jwtService;
 
 
-	@NonNull
 	@Override
-	public Mono<Authentication> authenticate(@NonNull final Authentication authentication) {
+	public Mono<Authentication> authenticate(final Authentication authentication) {
 		return this.userDetailsAuthenticationManager.authenticate(authentication)
 		                                            .map(Authentication::getPrincipal)
 		                                            .cast(UserDetails.class)

@@ -12,7 +12,6 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 import lombok.experimental.FieldDefaults;
-import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
 
 import java.util.Optional;
@@ -29,13 +28,12 @@ public class BoxControlIndicator extends BoxControl {
 	volatile String rFunc;     // matched with the RouterFunction#name
 
 
-	BoxControlIndicator(@NonNull final BoxControlType type, final int id, @Nullable final String descr,
+	BoxControlIndicator(final BoxControlType type, final int id, @Nullable final String descr,
 	                    @Nullable final String rFunc) {
 		super(type, id, descr);
 		this.rFunc = rFunc;
 	}
 
-	@NonNull
 	@Override
 	public Optional<String> getRouterFunc() {
 		return Optional.ofNullable(rFunc);

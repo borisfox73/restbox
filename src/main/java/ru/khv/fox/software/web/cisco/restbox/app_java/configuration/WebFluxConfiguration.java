@@ -14,8 +14,8 @@ import org.springframework.web.reactive.config.WebFluxConfigurer;
 /**
  * Overall WebFlux configuration.
  */
-@EnableScheduling
 @Configuration
+@EnableScheduling
 class WebFluxConfiguration implements WebFluxConfigurer {
 
 	// Add useful converters, especially StringToEnumIgnoringCaseConverterFactory

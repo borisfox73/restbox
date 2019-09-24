@@ -9,6 +9,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.junit4.SpringRunner
 import ru.khv.fox.software.web.cisco.restbox.app_java.configuration.AppProperties
 import ru.khv.fox.software.web.cisco.restbox.app_java.model.RouterType
@@ -23,6 +24,7 @@ import static org.junit.Assert.assertThat
 
 @RunWith(SpringRunner.class)
 @SpringBootTest
+@ActiveProfiles("test")
 class IT10Properties {
     @Autowired
     private AppProperties properties
@@ -48,11 +50,13 @@ class IT10Properties {
         println "loaded properties = " + properties
 
         assertThat(properties, is(pojo(AppProperties.class)
+		        .withProperty("indicatorPollInterval", is(equalTo(Duration.ofMinutes(1))))
+		        .withProperty("ciscoRestApiUriTemplate", is(equalTo("https://{hostname}:55443/api/v1/")))
                 .withProperty("jwt", is(pojo(AppProperties.JwtProperties.class)
-                .withProperty("issuer", is(optionalWithValue(equalTo("http://localhost"))))
-                .withProperty("audience", is(optionalWithValue(equalTo("restbox_java"))))
-                .withProperty("secret", is("qweasdzxc123"))
-		                .withProperty("timeToLive", is(equalTo(Duration.ofHours(5))))))))
+		                .withProperty("issuer", is(optionalWithValue(equalTo("http://localhost"))))
+		                .withProperty("audience", is(optionalWithValue(equalTo("restbox_java"))))
+		                .withProperty("secret", is("testsecret"))
+		                .withProperty("timeToLive", is(equalTo(Duration.ofMinutes(5))))))))
 
         assertThat(properties, hasProperty("routers", hasEntry(equalTo("testcsr1"), pojo(AppProperties.RouterProperties.class)
                 .withProperty("name", is("CSR-WAN"))
@@ -69,8 +73,8 @@ class IT10Properties {
 			    .withProperty("type", is(RouterType.ASR)))))
 
 	    assertThat(properties, hasProperty("users", hasItem(pojo(AppProperties.UserProperties.class)
-                .withProperty("username", is("user1"))
-                .withProperty("password", is("user123"))
+			    .withProperty("username", is("testuser"))
+			    .withProperty("password", is("testpass"))
                 .withProperty("roles", arrayContaining("USER")))))
     }
 }

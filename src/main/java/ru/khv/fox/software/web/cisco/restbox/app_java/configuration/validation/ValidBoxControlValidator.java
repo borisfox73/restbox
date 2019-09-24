@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Boris Fox.
+ * Copyright (c) 2019 Boris Fox.
  * All rights reserved.
  */
 
@@ -26,7 +26,6 @@ public class ValidBoxControlValidator implements ConstraintValidator<ValidBoxCon
 			return true;
 
 		val type = boxControlProperties.getType();
-		//noinspection ConstantConditions - leave nullability validation of type to field level annotation
 		if (type == null)
 			return true;
 

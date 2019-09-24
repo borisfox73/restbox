@@ -44,8 +44,8 @@ class WebClientConfiguration {
 			                         .option(ChannelOption.TCP_NODELAY, true)
 			                         .option(ChannelOption.SO_KEEPALIVE, true)
 			                         .doOnConnected(connection ->
-					                                        connection.addHandlerLast(new ReadTimeoutHandler(30))       // to send the request
-					                                                  .addHandlerLast(new WriteTimeoutHandler(10)));    // to wait for the response
+					                                        connection.addHandlerLast(new ReadTimeoutHandler(30))       // to wait for the response
+					                                                  .addHandlerLast(new WriteTimeoutHandler(10)));    // to send the request
 			var httpClient = HttpClient.from(tcpClient);
 			if (webClientProperties.isSslIgnoreValidation()) {
 				try {

@@ -29,9 +29,12 @@ import static org.hamcrest.Matchers.*
 @RunWith(SpringRunner.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @TestPropertySource(properties = [
-//        "app.config.users[0].username=testuser",
-//        "app.config.users[0].password=testpass",
-//        "app.config.users[0].roles=USER,ADMIN",
+		"app.config.users[0].username=testuser",
+		"app.config.users[0].password=testpass",
+		"app.config.users[0].roles=USER",
+		"app.config.users[1].username=test2",
+		"app.config.users[1].password=pass2",
+		"app.config.users[1].roles=OTHER,ADMIN",
         "app.config.jwt.time-to-live=PT1M"
 ])
 @ActiveProfiles("test")
@@ -68,8 +71,6 @@ class IT21AuthenticationJwt {
     void initRestAssured() {
 		if (reqSpecBase == null) {
 			RestAssured.port = serverPort
-//		    RestAssured.filters(new ResponseLoggingFilter())
-//		    RestAssured.filters(new RequestLoggingFilter())
 			RestAssured.enableLoggingOfRequestAndResponseIfValidationFails()
 			reqSpecBase = new RequestSpecBuilder()
 					.setContentType(ContentType.JSON)

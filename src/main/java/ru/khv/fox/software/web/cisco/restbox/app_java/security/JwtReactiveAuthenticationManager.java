@@ -1,12 +1,11 @@
 /*
- * Copyright (c) 2018 Boris Fox.
+ * Copyright (c) 2019 Boris Fox.
  * All rights reserved.
  */
 
 package ru.khv.fox.software.web.cisco.restbox.app_java.security;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
 import org.springframework.security.authentication.ReactiveAuthenticationManager;
 import org.springframework.security.core.Authentication;
@@ -20,12 +19,11 @@ import reactor.core.scheduler.Schedulers;
 @RequiredArgsConstructor
 public class JwtReactiveAuthenticationManager implements ReactiveAuthenticationManager {
 
-	@NonNull private final JwtService jwtService;
+	private final JwtService jwtService;
 
 
-	@NonNull
 	@Override
-	public Mono<Authentication> authenticate(@NonNull final Authentication authentication) {
+	public Mono<Authentication> authenticate(final Authentication authentication) {
 		return Mono.just(authentication)
 		           .publishOn(Schedulers.parallel())
 		           .map(Authentication::getName)

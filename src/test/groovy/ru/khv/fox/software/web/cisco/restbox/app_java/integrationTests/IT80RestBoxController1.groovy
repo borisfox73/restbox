@@ -27,12 +27,6 @@ import static org.hamcrest.Matchers.is
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-//@TestPropertySource(properties = [
-//        "app.config.users[0].username=testuser",
-//        "app.config.users[0].password=testpass",
-//        "app.config.users[0].roles=USER,ADMIN",
-//        "app.config.jwt.time-to-live=PT1M"
-//])
 @ActiveProfiles("test")
 class IT80RestBoxController1 {
 
@@ -55,8 +49,6 @@ class IT80RestBoxController1 {
 	static void initRestAssured(final int serverPort) {
 		if (reqSpecBase == null) {
 			RestAssured.port = serverPort
-//		    RestAssured.filters(new ResponseLoggingFilter())
-//		    RestAssured.filters(new RequestLoggingFilter())
 			RestAssured.enableLoggingOfRequestAndResponseIfValidationFails()
 			reqSpecBase = new RequestSpecBuilder()
 					.setContentType(ContentType.JSON)
@@ -70,7 +62,7 @@ class IT80RestBoxController1 {
 		}
 	}
 
-	// TODO mock cisco api service to test actions
+	// TODO mock Cisco API service to test actions without the live router
 
     @Test
     void 'put status b1 switch 0 = 0'() {

@@ -9,9 +9,9 @@ import lombok.ToString;
 import org.springframework.lang.Nullable;
 
 @ToString
-public
-class CiscoServiceException extends RuntimeException {
+public class CiscoServiceException extends RuntimeException {
 
+	@Nullable
 	private final String reason;
 
 

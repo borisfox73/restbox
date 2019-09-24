@@ -8,18 +8,21 @@ package ru.khv.fox.software.web.cisco.restbox.app_java.model.cisco;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
 import lombok.Value;
-import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
 
 /**
- * Cisco RESTful API Hostname service response.
+ * Cisco RESTful API user service response.
  * <pre>
  * {
- *     "kind" : "object#host-name",
- *     "host-name": "{string}"
+ *     "kind" : "object#local-user",
+ *     "username": "{string}"
+ *     "password": "{string}"
+ *     "privilege": {number}
+ *     "pw-type": {number}
  * }
  * </pre>
  */
@@ -28,19 +31,22 @@ import org.springframework.lang.Nullable;
 @EqualsAndHashCode(callSuper = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class UserServiceResponse extends DTOBase {
-	@NonNull
-	private String username;
+	@JsonPropertyDescription("Name of the user")
+	String username;
 	@Nullable
-	private String password;
+	@JsonPropertyDescription("Password")
+	String password;
 	@Nullable
-	private Integer privilegeLevel;
+	@JsonPropertyDescription("Privilege level 0-15")
+	Integer privilegeLevel;
 	@Nullable
-	private Integer passwordType;
+	@JsonPropertyDescription("IOS password type (0 or 7)")
+	Integer passwordType;
 
 
 	@JsonCreator
-	UserServiceResponse(@JsonProperty(value = "kind", required = true) @NonNull final String kind,
-	                    @JsonProperty(value = "username", required = true) @NonNull final String username,
+	UserServiceResponse(@JsonProperty(value = "kind", required = true) final String kind,
+	                    @JsonProperty(value = "username", required = true) final String username,
 	                    @JsonProperty(value = "password") @Nullable final String password,
 	                    @JsonProperty(value = "privilege") @Nullable final Integer privilegeLevel,
 	                    @JsonProperty(value = "pw-type") @Nullable final Integer passwordType) {

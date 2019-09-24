@@ -5,7 +5,9 @@
 
 package ru.khv.fox.software.web.cisco.restbox.app_java.configuration;
 
+import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.lang.NonNull;
@@ -25,15 +27,13 @@ import ru.khv.fox.software.web.cisco.restbox.app_java.security.LoginReactiveAuth
  */
 @RequiredArgsConstructor
 @Configuration
-public class UserAuthenticationConfiguration {
+@FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
+class UserAuthenticationConfiguration {
 
-	@NonNull private final AppProperties appProperties;
 	@NonNull
-	private final JwtService jwtService;
-
-
-	// TODO may be replace by something more specific
-	@NonNull private static final PasswordEncoder passwordEncoder = PasswordEncoderFactories.createDelegatingPasswordEncoder();
+	AppProperties appProperties;
+	@NonNull
+	JwtService jwtService;
 
 
 	/**
@@ -48,7 +48,7 @@ public class UserAuthenticationConfiguration {
 		                                                      .map(u -> User.withUsername(u.getUsername())
 		                                                                    .password(u.getPassword())
 		                                                                    .roles(u.getRoles())
-		                                                                    .passwordEncoder(passwordEncoder::encode)
+		                                                                    .passwordEncoder(passwordEncoder()::encode)
 		                                                                    .build())
 		                                                      .toArray(UserDetails[]::new));
 	}
@@ -61,7 +61,7 @@ public class UserAuthenticationConfiguration {
 	 */
 	@Bean
 	static PasswordEncoder passwordEncoder() {
-		return passwordEncoder;
+		return PasswordEncoderFactories.createDelegatingPasswordEncoder();
 	}
 
 	/**
@@ -69,8 +69,7 @@ public class UserAuthenticationConfiguration {
 	 *
 	 * @return Authentication manager instance
 	 */
-//	@Bean
-	private UserDetailsRepositoryReactiveAuthenticationManager userDetailsauthenticationManager() {
+	private UserDetailsRepositoryReactiveAuthenticationManager userDetailsAuthenticationManager() {
 		return new UserDetailsRepositoryReactiveAuthenticationManager(userDetailsService());
 	}
 
@@ -81,6 +80,6 @@ public class UserAuthenticationConfiguration {
 	 */
 	@Bean
 	LoginReactiveAuthenticationManager loginReactiveAuthenticationManager() {
-		return new LoginReactiveAuthenticationManager(userDetailsauthenticationManager(), jwtService);
+		return new LoginReactiveAuthenticationManager(userDetailsAuthenticationManager(), jwtService);
 	}
 }
