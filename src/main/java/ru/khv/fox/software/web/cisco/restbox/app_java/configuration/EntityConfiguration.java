@@ -7,10 +7,10 @@ package ru.khv.fox.software.web.cisco.restbox.app_java.configuration;
 
 import lombok.RequiredArgsConstructor;
 import lombok.val;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
-import org.springframework.lang.NonNull;
 import ru.khv.fox.software.web.cisco.restbox.app_java.model.Router;
 import ru.khv.fox.software.web.cisco.restbox.app_java.model.RouterFunction;
 import ru.khv.fox.software.web.cisco.restbox.app_java.model.box.Box;
@@ -26,31 +26,31 @@ import java.util.stream.Stream;
 @RequiredArgsConstructor
 @Configuration
 class EntityConfiguration {
-	@NonNull private final AppProperties appProperties;
+
+	// Can't inject appProperties bean in this one as it would make circular dependency between AppProperties,
+	// ValidBoxControlValidator, and EntityConfiguration itself. So use static methods with Value injection.
 
 	@Bean
-	Collection<Box> boxes() {
+	static Collection<Box> boxes(@Value("#{appProperties.boxcontrol}") final Collection<AppProperties.BoxProperties> boxControls) {
 		// Use configuration properties to instantiate dynamic box objects holding runtime state
-		return appProperties.getBoxcontrol()
-		                    .stream()
-		                    .map(Box::getInstance)
-		                    .collect(Collectors.toUnmodifiableList());
+		return boxControls.stream()
+		                  .map(Box::getInstance)
+		                  .collect(Collectors.toUnmodifiableList());
 	}
 
 	@Bean
-	Collection<Router> routers() {
+	static Collection<Router> routers(@Value("#{appProperties.routers}") final Map<String, AppProperties.RouterProperties> routers) {
 		// Use configuration properties to instantiate dynamic router objects holding runtime state
-		return appProperties.getRouters()
-		                    .entrySet()
-		                    .stream()
-		                    .map(entry -> Router.getInstance(entry.getKey(), entry.getValue()))
-		                    .collect(Collectors.toUnmodifiableSet());
+		return routers.entrySet()
+		              .stream()
+		              .map(entry -> Router.getInstance(entry.getKey(), entry.getValue()))
+		              .collect(Collectors.toUnmodifiableSet());
 	}
 
 	@Bean
-	Map<String, RouterFunction> routerFunctions() {
+	static Map<String, RouterFunction> routerFunctions(final Collection<Router> routers) {
 		// map with router descriptors keyed by name
-		val routerMap = routers().stream().collect(Collectors.toUnmodifiableMap(Router::getName, r -> r));
+		val routerMap = routers.stream().collect(Collectors.toUnmodifiableMap(Router::getName, r -> r));
 
 		// TODO make configurable from YAML configuration properties file. Create static constructor from conf.props object
 		// ACTION functions
@@ -232,6 +232,12 @@ class EntityConfiguration {
 		// pack into map
 		return Stream.of(f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12, f13, rf1, rf2, rf3, rf4, rf5)
 		             .collect(Collectors.toUnmodifiableMap(RouterFunction::getName, f -> f));
+	}
+
+	// for use in BoxControl Validator
+	@Bean
+	static String[] routerFunctionNames(final Map<String, RouterFunction> routerFunctions) {
+		return routerFunctions.keySet().toArray(String[]::new);
 	}
 
 	// boolean to integer conversion to calculate box indicator state to be set

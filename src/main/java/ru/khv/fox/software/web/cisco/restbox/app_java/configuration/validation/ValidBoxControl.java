@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Boris Fox.
+ * Copyright (c) 2019 Boris Fox.
  * All rights reserved.
  */
 
@@ -22,6 +22,8 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Documented
 public @interface ValidBoxControl {
 	String message() default "BoxControlProperties configuration is invalid";
+
+	String routerfunctionnames_bean() default "routerFunctionNames";
 
 	Class<?>[] groups() default {};
 

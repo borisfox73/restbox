@@ -22,7 +22,6 @@ version = '0.0.1-SNAPSHOT'
 defaultTasks 'build'
 
 compileJava.sourceCompatibility = 12
-// compileJava.options.encoding = 'UTF-8'
 
 javadoc {
     options.encoding = 'UTF-8'
@@ -37,8 +36,6 @@ configurations {
     compile.exclude module: 'HikariCP'
 //	compile.exclude module: "spring-boot-starter-reactor-netty"	// default embedded web server with starter-webflux
 }
-
-//compileJava.dependsOn(processResources)
 
 dependencies {
 //	compile('org.springframework.boot:spring-boot-starter-tomcat')		// OK. default with starter-web
@@ -75,12 +72,11 @@ dependencies {
 	testCompile('org.springframework.boot:spring-boot-starter-test')
 	testCompile('org.springframework.security:spring-security-test')
 	testCompile('io.projectreactor:reactor-test')
-	testCompile('io.rest-assured:rest-assured:3.+')
+	testCompile group: 'io.rest-assured', name: 'rest-assured', version: '3.+'
 	testCompile group: 'io.rest-assured', name: 'json-schema-validator', version: '3.+'
 	testCompile group: 'org.hamcrest', name: 'hamcrest', version: '2.+'
 	testCompile group: 'org.hamcrest', name: 'hamcrest-junit', version: '2.+'
 	testCompile group: 'com.spotify', name: 'hamcrest-pojo', version: '1.+'
 	testCompile group: 'com.spotify', name: 'hamcrest-optional', version: '1.+'
 	testCompile group: 'com.jayway.jsonpath', name: 'json-path-assert', version: '2.+'
-
 }

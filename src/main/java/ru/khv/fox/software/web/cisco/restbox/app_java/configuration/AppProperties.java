@@ -206,15 +206,14 @@ public class AppProperties {
 		int id;
 		@Nullable
 		String descr;
+		@Nullable
+		String onFunc;
+		@Nullable
+		String offFunc;
+		@Nullable
+		String rFunc;
 		// runtime state fields are allowed in configuration but ignored
 		int status;
-		// TODO validate by router functions set
-		//@Nullable
-		String onFunc;
-		//@Nullable
-		String offFunc;
-		//@Nullable
-		String rFunc;
 	}
 
 	/*
