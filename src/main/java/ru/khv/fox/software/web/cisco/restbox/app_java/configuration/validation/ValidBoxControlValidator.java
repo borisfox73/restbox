@@ -5,40 +5,30 @@
 
 package ru.khv.fox.software.web.cisco.restbox.app_java.configuration.validation;
 
-import lombok.AccessLevel;
-import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.hibernate.validator.constraintvalidation.HibernateConstraintValidatorContext;
-import org.springframework.beans.BeansException;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.ApplicationContextAware;
 import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
+import ru.khv.fox.software.web.cisco.restbox.app_java.model.RouterFunction;
 
 import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;
+import java.util.Map;
 import java.util.Set;
 
 import static ru.khv.fox.software.web.cisco.restbox.app_java.configuration.AppProperties.BoxControlProperties;
 
 @Slf4j
-@FieldDefaults(level = AccessLevel.PRIVATE)
-public class ValidBoxControlValidator implements ConstraintValidator<ValidBoxControl, BoxControlProperties>, ApplicationContextAware {
+public class ValidBoxControlValidator implements ConstraintValidator<ValidBoxControl, BoxControlProperties> {
 
-	ApplicationContext ctx;
-	Set<String> routerFunctionNames;
+	private final Set<String> routerFunctionNames;
 
 
-	@Override
-	public void setApplicationContext(@NonNull final ApplicationContext applicationContext) throws BeansException {
-		this.ctx = applicationContext;
-	}
-
-	@Override
-	public void initialize(final ValidBoxControl constraintAnnotation) {
-		routerFunctionNames = Set.of(ctx.getBean(constraintAnnotation.routerfunctionnames_bean(), String[].class));
-		log.trace("Available router function names: {}", routerFunctionNames);
+	// Autowiring constructor
+	private ValidBoxControlValidator(final Map<String, RouterFunction> routerFunctions) {
+		this.routerFunctionNames = routerFunctions.keySet();
+		log.trace("Available router function names: {}", this.routerFunctionNames);
 	}
 
 	@Override

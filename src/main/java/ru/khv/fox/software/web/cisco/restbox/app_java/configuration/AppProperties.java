@@ -16,7 +16,6 @@ import lombok.experimental.FieldDefaults;
 import org.apache.logging.log4j.util.Strings;
 import org.hibernate.validator.constraints.time.DurationMin;
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.boot.context.properties.NestedConfigurationProperty;
 import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Component;
@@ -47,18 +46,15 @@ public class AppProperties {
 	 * WebClient customization properties.
 	 */
 	@NotNull
-	@NestedConfigurationProperty
 	WebClientProperties webClient = new WebClientProperties();
 	/**
 	 * JSON Web Ticket parameters
 	 */
 	@NotNull
-	@NestedConfigurationProperty
 	JwtProperties jwt;
 	/**
 	 * Routers
 	 */
-	// @Getter(AccessLevel.PACKAGE) // getter is need to be accessible in tests
 	@NotEmpty
 	Map<String, RouterProperties> routers = new HashMap<>();
 	/**
@@ -70,7 +66,6 @@ public class AppProperties {
 	/**
 	 * Boxes (intermediate configuration objects)
 	 */
-//	@Getter(AccessLevel.PACKAGE)    // access level restriction causes nested properties type missing from configuration metadata
 	@NotEmpty
 	Set<BoxProperties> boxcontrol = new HashSet<>();
 
