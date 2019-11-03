@@ -27,7 +27,7 @@ import java.util.stream.Stream;
 @Configuration
 class EntityConfiguration {
 
-	// Can't inject appProperties bean in this one as it would make circular dependency between AppProperties,
+	// Can't inject appProperties bean to this one as it would make circular dependencies between AppProperties,
 	// ValidBoxControlValidator, and EntityConfiguration itself. So use static methods with Value injection.
 
 	@Bean
@@ -232,12 +232,6 @@ class EntityConfiguration {
 		// pack into map
 		return Stream.of(f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12, f13, rf1, rf2, rf3, rf4, rf5)
 		             .collect(Collectors.toUnmodifiableMap(RouterFunction::getName, f -> f));
-	}
-
-	// for use in BoxControl Validator
-	@Bean
-	static String[] routerFunctionNames(final Map<String, RouterFunction> routerFunctions) {
-		return routerFunctions.keySet().toArray(String[]::new);
 	}
 
 	// boolean to integer conversion to calculate box indicator state to be set

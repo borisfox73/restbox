@@ -23,8 +23,6 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 public @interface ValidBoxControl {
 	String message() default "BoxControlProperties configuration is invalid";
 
-	String routerfunctionnames_bean() default "routerFunctionNames";
-
 	Class<?>[] groups() default {};
 
 	Class<? extends Payload>[] payload() default {};
