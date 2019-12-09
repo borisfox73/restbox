@@ -15,6 +15,8 @@ import org.springframework.test.context.junit4.SpringRunner
 import reactor.test.StepVerifier
 import ru.khv.fox.software.web.cisco.restbox.app_java.service.CiscoRestfulService
 
+import java.util.concurrent.TimeUnit
+
 import static com.spotify.hamcrest.optional.OptionalMatchers.optionalWithValue
 import static org.hamcrest.MatcherAssert.assertThat
 import static org.hamcrest.Matchers.*
@@ -35,7 +37,7 @@ class IT51CiscoRestfulApiService3 {
 			// Set interface state for rfunc1/rfunc2
 			System.out.println("exec afunc2")
 			testFuncVoid("afunc2")
-			Thread.sleep(10 * 1000L) // let interface status settle
+			TimeUnit.SECONDS.sleep(10) // let interface status settle
 			initDone = true
 		}
 	}

@@ -34,11 +34,11 @@ public class CiscoRestfulServiceImpl<Q extends RestApiDTO, T extends RestApiDTO,
 	private static final String USER_SERVICES_ENDPOINT = USERS_SERVICES_ENDPOINT + "/{user-name}";
 
 	Map<String, CiscoRestApiClientState> routerStates;
-	Map<String, RouterFunction<Q, T, V>> routerFunctions;
+	Map<String, RouterFunction<? extends RestApiDTO, ? extends RestApiDTO, ?>> routerFunctions;
 
 
 	CiscoRestfulServiceImpl(final Collection<Router> routerCollection,
-	                        @SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection") final Map<String, RouterFunction<Q, T, V>> routerFunctions,
+	                        final Map<String, RouterFunction<? extends RestApiDTO, ? extends RestApiDTO, ?>> routerFunctions,
 	                        final WebClient.Builder webClientBuilder,
 	                        @Value("#{appProperties.ciscoRestApiUriTemplate}") final String baseUriTemplate) {
 		this.routerFunctions = routerFunctions;
@@ -119,20 +119,24 @@ public class CiscoRestfulServiceImpl<Q extends RestApiDTO, T extends RestApiDTO,
 				.flatMapMany(Flux::fromIterable);
 	}
 
+	@SuppressWarnings("unchecked")
+	private Mono<RouterFunction<Q, T, V>> getRouterFunction(final String func) {
+		return Mono.justOrEmpty((RouterFunction<Q, T, V>) routerFunctions.get(func));
+	}
 
 	public Mono<ExecFunctionResultPair<? extends RestApiDTO, ? extends RestApiErrorDTO, ?>> execFunction(final String func) {
 		Assert.notNull(func, "Function name must not be null");
-		return Mono.justOrEmpty(routerFunctions.get(func))
-		           .switchIfEmpty(Mono.defer(() -> Mono.error(new CiscoServiceException("Function \"" + func + "\" is undefined"))))
-		           .filter(RouterFunction::isExecutable)
-		           .flatMap(routerFunction -> {
-			           // already has checked by isExecutable but reassert here to keep inspection happy
-			           val device = routerFunction.getDevice();
-			           assert device != null;
-			           val clientStateMono = getClientState(device.getId());
-			           val responseClazz = routerFunction.getResponseClazz();
-			           val mapFunc = routerFunction.getMapFunction();
-			           val errorFunc = routerFunction.getResourceNotFoundFunction();
+		return getRouterFunction(func)
+				.switchIfEmpty(Mono.defer(() -> Mono.error(new CiscoServiceException("Function \"" + func + "\" is undefined"))))
+				.filter(RouterFunction::isExecutable)
+				.flatMap(routerFunction -> {
+					// already has checked by isExecutable but reassert here to keep inspection happy
+					val device = routerFunction.getDevice();
+					assert device != null;
+					val clientStateMono = getClientState(device.getId());
+					val responseClazz = routerFunction.getResponseClazz();
+					val mapFunc = routerFunction.getMapFunction();
+					val errorFunc = routerFunction.getResourceNotFoundFunction();
 			           Mono<ExecFunctionResultPair<? extends RestApiDTO, ? extends RestApiErrorDTO, V>> r;
 			           if (responseClazz != null && mapFunc != null)
 				           r = clientStateMono.flatMap(clientState -> prepareResponseSpec(clientState, routerFunction).bodyToMono(responseClazz))
@@ -147,8 +151,7 @@ public class CiscoRestfulServiceImpl<Q extends RestApiDTO, T extends RestApiDTO,
 
 
 	// deduplicate code in execFunction
-	private static WebClient.ResponseSpec prepareResponseSpec(final CiscoRestApiClientState clientState,
-	                                                          final RouterFunction func) {
+	private static <Q extends RestApiDTO, T extends RestApiDTO, V> WebClient.ResponseSpec prepareResponseSpec(final CiscoRestApiClientState clientState, final RouterFunction<Q, T, V> func) {
 		val requestMethod = func.getRequestMethod();
 		val uriPath = func.getUriPath();
 		val requestObject = func.getRequestObject();
@@ -157,7 +160,7 @@ public class CiscoRestfulServiceImpl<Q extends RestApiDTO, T extends RestApiDTO,
 		val rbs = clientState.getWebClient()
 		                     .method(requestMethod)
 		                     .uri(uriPath);
-		var r = (requestObject != null ? rbs.syncBody(requestObject) : rbs).retrieve();
+		var r = (requestObject != null ? rbs.bodyValue(requestObject) : rbs).retrieve();
 		if (func.getResourceNotFoundFunction() != null)
 			r = r.onStatus(status -> status == HttpStatus.NOT_FOUND, clientResponse -> clientResponse.bodyToMono(RestApiErrorResponse.class).flatMap(errorBody -> Mono.error(new CiscoRestApiHandledException(clientResponse.statusCode(), errorBody))));
 		return r.onStatus(HttpStatus::isError, clientResponse -> clientResponse.bodyToMono(RestApiErrorResponse.class).flatMap(errorBody -> Mono.error(new CiscoRestApiException(clientResponse.statusCode(), errorBody))));

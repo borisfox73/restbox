@@ -8,7 +8,7 @@ package ru.khv.fox.software.web.cisco.restbox.app_java.service;
 import lombok.ToString;
 import org.springframework.lang.Nullable;
 
-@ToString
+@ToString(callSuper = true)
 public class CiscoServiceException extends RuntimeException {
 
 	@Nullable

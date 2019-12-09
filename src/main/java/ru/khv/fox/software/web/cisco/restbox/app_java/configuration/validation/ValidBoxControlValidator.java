@@ -26,7 +26,7 @@ public class ValidBoxControlValidator implements ConstraintValidator<ValidBoxCon
 
 
 	// Autowiring constructor
-	private ValidBoxControlValidator(final Map<String, RouterFunction> routerFunctions) {
+	private ValidBoxControlValidator(final Map<String, RouterFunction<?, ?, ?>> routerFunctions) {
 		this.routerFunctionNames = routerFunctions.keySet();
 		log.trace("Available router function names: {}", this.routerFunctionNames);
 	}
