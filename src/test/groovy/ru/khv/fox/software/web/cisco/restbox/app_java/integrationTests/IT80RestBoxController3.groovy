@@ -5,7 +5,6 @@
 
 package ru.khv.fox.software.web.cisco.restbox.app_java.integrationTests
 
-
 import org.junit.AfterClass
 import org.junit.Before
 import org.junit.Test
@@ -15,6 +14,8 @@ import org.springframework.boot.web.server.LocalServerPort
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.junit4.SpringRunner
 
+import java.util.concurrent.TimeUnit
+
 @RunWith(SpringRunner.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
@@ -22,7 +23,7 @@ class IT80RestBoxController3 {
 
     @LocalServerPort
     private int serverPort
-	private static boolean initDone
+    private static boolean initDone
 
 
     @Before
@@ -33,13 +34,13 @@ class IT80RestBoxController3 {
             IT80RestBoxController1.putStatus('b1', 'cisco123', 'switch', 1, 1)
             // Set acl state for b2 led 1
             IT80RestBoxController1.putStatus('b2', 'cisco456', 'button', 0, 0)
-            Thread.sleep(10 * 1000L) // let interface status settle
-		    initDone = true
+            TimeUnit.SECONDS.sleep(10) // let interface status settle
+            initDone = true
         }
     }
 
     @AfterClass
-    static void reserRouterState() {
+    static void resetRouterState() {
         // afunc2
         IT80RestBoxController1.putStatus('b1', 'cisco123', 'switch', 1, 0)
         // afunc4

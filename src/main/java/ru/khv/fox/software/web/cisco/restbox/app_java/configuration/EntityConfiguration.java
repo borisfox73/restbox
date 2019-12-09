@@ -48,7 +48,7 @@ class EntityConfiguration {
 	}
 
 	@Bean
-	static Map<String, RouterFunction> routerFunctions(final Collection<Router> routers) {
+	static Map<String, RouterFunction<? extends RestApiDTO, ? extends RestApiDTO, ?>> routerFunctions(final Collection<Router> routers) {
 		// map with router descriptors keyed by name
 		val routerMap = routers.stream().collect(Collectors.toUnmodifiableMap(Router::getName, r -> r));
 
@@ -231,7 +231,7 @@ class EntityConfiguration {
 						.build();
 		// pack into map
 		return Stream.of(f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12, f13, rf1, rf2, rf3, rf4, rf5)
-		             .collect(Collectors.toUnmodifiableMap(RouterFunction::getName, f -> f));
+		             .collect(Collectors.<RouterFunction<? extends RestApiDTO, ? extends RestApiDTO, ?>, String, RouterFunction<? extends RestApiDTO, ? extends RestApiDTO, ?>>toUnmodifiableMap(RouterFunction::getName, f -> f));
 	}
 
 	// boolean to integer conversion to calculate box indicator state to be set

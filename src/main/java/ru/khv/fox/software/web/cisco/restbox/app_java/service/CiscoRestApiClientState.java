@@ -114,7 +114,7 @@ final class CiscoRestApiClientState {
 				                                                                                                 .flatMap(this::processAuthServiceResponse)))
 				                                               .doOnNext(r -> lock.unlock()),
 				               complete -> lockDisposer,
-				               error -> lockDisposer,
+				               (error, throwable) -> lockDisposer,
 				               cancel -> lockDisposer)
 				    .subscriberContext(ctx -> ctx.put(Lock.class, new Lock())));
 	}

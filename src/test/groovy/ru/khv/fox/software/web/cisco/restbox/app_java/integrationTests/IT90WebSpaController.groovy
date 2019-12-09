@@ -20,6 +20,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.web.server.LocalServerPort
+import org.springframework.test.annotation.DirtiesContext
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.junit4.SpringRunner
 
@@ -38,6 +39,7 @@ import static org.hamcrest.Matchers.*
 //        "app.config.jwt.time-to-live=PT1M"
 //])
 @ActiveProfiles("test")
+@DirtiesContext
 class IT90WebSpaController {
 	private static final String LOGIN_ENDPOINT = "/login"
 	private static final String WEBAPI_ENDPOINT_BASE = "/webapi"

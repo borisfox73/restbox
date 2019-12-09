@@ -48,7 +48,7 @@ import static ru.khv.fox.software.web.cisco.restbox.app_java.controller.RestBoxC
 public class WebSpaController {
 	AppProperties appProperties;
 	RestBoxService restBoxService;
-	Map<String, RouterFunction> routerFunctions;
+	Map<String, RouterFunction<?, ?, ?>> routerFunctions;
 	CiscoRestfulService ciscoService;
 
 
@@ -108,7 +108,7 @@ public class WebSpaController {
 		return getRouterFunctions(RouterFunction::isRead);
 	}
 
-	private Mono<ApiResponse> getRouterFunctions(final Predicate<RouterFunction> functionPredicate) {
+	private Mono<ApiResponse> getRouterFunctions(final Predicate<RouterFunction<?, ?, ?>> functionPredicate) {
 		return Flux.fromIterable(routerFunctions.values())
 		           .filter(functionPredicate)
 		           .map(RouterFunctionResponse::from)
@@ -154,7 +154,7 @@ public class WebSpaController {
 				.thenReturn(new ApiResponse("ok"));
 	}
 
-	private Mono<String> findRouterFunction(final String func, final String type, final Predicate<RouterFunction> functionPredicate) {
+	private Mono<String> findRouterFunction(final String func, final String type, final Predicate<RouterFunction<?, ?, ?>> functionPredicate) {
 		return Flux.fromIterable(routerFunctions.values())
 		           .filter(fn -> fn.getName().equalsIgnoreCase(func))
 		           .switchIfEmpty(Mono.defer(() -> Mono.error(new RestApiException("Function '" + func + "' is not found", HttpStatus.NOT_FOUND))))

@@ -27,7 +27,7 @@ public class RouterFunctionResponse {
 	String descr;
 
 
-	public static RouterFunctionResponse from(final RouterFunction routerFunction) {
+	public static RouterFunctionResponse from(final RouterFunction<?, ?, ?> routerFunction) {
 		return new RouterFunctionResponse(routerFunction.getName(), routerFunction.getDescr());
 	}
 }
