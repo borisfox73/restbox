@@ -3,6 +3,7 @@
 /out/
 /log/
 !gradle/wrapper/gradle-wrapper.jar
+boxcontrols.txt
 
 ### STS ###
 .apt_generated
