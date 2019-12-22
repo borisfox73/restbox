@@ -172,6 +172,7 @@ At arduino/restbox-arduino-v1-b1b2, you need to set passphrase and box controlle
 They should match with server configuration.
 
 ## RESTbox server controller
+### Node.js
 Node.js, you can host it on heroku.com, also you can pack application into Docker container. Before run - edit app_node/config.js. It supports Cisco CSR1000v devices.
 * Install Node.js.
 * Clone this project from github.
@@ -180,6 +181,76 @@ Node.js, you can host it on heroku.com, also you can pack application into Docke
 * Run `nodemon` to start project locally
 * Point browser to `http://127.0.0.1:3001`
 * Enter login/password from app_node/config.js
+
+### Java
+##### Build
+* Install JDK 13 or later (13.0.1 was used at the time of writing)
+* Clone this project from github
+* Modify YAML configuration files in `app_java/src/main/resources/config` and `app_java/src/test/resources` directories
+according to yours test environment. 
+* Change working directory to `app_java`.
+* Run `gradlew build` in this directory
+(integrations tests may fail if test routers are unreachable or not configured according to the test configuration)
+* Run application locally:  
+Using Gradle task:  
+`gradlew bootRun`  
+Using standalone JRE:  
+`java -jar build\libs\app_java-0.1.0.jar`
+* Point browser to `http://127.0.0.1:3001`
+* Enter login/password from `app_java/src/main/resources/config/application.yml` (sample administrator account is `admin/password`).
+* You can use externalized configuration options to completely or partially replace configuration packed in JAR archive:  
+Replace entire configuration packed in jar with one in the specified directory:  
+`gradlew bootRun --args='--spring.config.location=/path/to/complete/config/'`  
+Merge configuration in the specified directory with default one packed in jar, overriding matching properties:  
+`gradlew bootRun --args='--spring.config.additional-location=/path/to/additional/config/'`  
+For standalone launch:  
+`java -jar build\libs\app_java-0.1.0.jar --spring.config.location=/path/to/complete/config/`  
+`java -jar build\libs\app_java-0.1.0.jar --spring.config.additional-location=/path/to/additional/config/`
+
+##### Deploy to Heroku
+* Check settings in `app_java/src/main/resources/config/application.yml` and ensure configured routers are accessible from the external cloud and user passwords are secure enough.  
+  If you want separate configuration for application hosted at Heroku, create `app_java/src/main/resources/config/application-heroku.yml` file and override required properties with ones specified in it.
+* Create a free Heroku account
+* Download and install Heroku CLI tool for your platform
+* Login to your Heroku account using E-mail and Password:  
+`heroku login`
+* Create Heroku application:  
+`heroku apps:create rvolkov-restbox --no-remote`
+* Build:  
+`gradlew build`
+* Deploy:  
+`gradlew deployHeroku`
+* Open application in your browser:  
+`heroku open --app rvolkov-restbox`  
+or point browser to `https://rvolkov-restbox.herokuapp.com/`
+* View application logs:  
+`heroku logs --app rvolkov-restbox`  
+To monitor logs continuously, use:  
+`heroku logs --app rvolkov-restbox --tail`  
+(can be launched in separate console right after application creation)
+* Shutdown application:  
+`heroku ps:scale web=0 --app rvolkov-restbox`
+* Resume application again:  
+`heroku ps:scale web=1 --app rvolkov-restbox`
+* Destroy application in case it no longer needed:  
+`heroku apps:destroy rvolkov-restbox --confirm rvolkov-restbox`
+
+##### Deploy to Heroku as Docker container
+* First six steps (up to the build step inclusive) are the same as in the previous chapter.
+* Download and install Docker (Desktop or Toolbox) for your platform
+* Login to Heroku Docker registry:  
+`heroku container:login`
+* Containerize and deploy Docker image to Heroku:  
+`gradlew jib`
+* Release container and start application:  
+`heroku container:release web --app rvolkov-restbox`
+* Other steps are the same as in previous chapter.
+* You can also build Docker image as local tarball archive:  
+`gradlew jibBuildTar --image rvolkov/restbox`  
+And run it locally using Docker CLI:  
+`docker load -i build/jib-image.tar`  
+`docker run -p 80:3001 -d rvolkov/restbox`
+
 
 ## Cisco CSR1000v
 ```

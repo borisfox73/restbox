@@ -4,19 +4,22 @@
  */
 
 plugins {
-  id "idea"
-  id "java"
-  id "groovy"
-  id "org.springframework.boot" version "2.2.2.RELEASE"
-  id "nebula.optional-base" version "5.0.3"
+    id 'idea'
+    id 'java'
+    id 'groovy'
+    id 'org.springframework.boot' version '2.2.2.RELEASE'
+    id 'com.heroku.sdk.heroku-gradle' version '1.0.4'
+    id 'com.google.cloud.tools.jib' version '1.8.0'
 }
 
-apply plugin: "io.spring.dependency-management"
+apply plugin: 'io.spring.dependency-management'
 
 description = 'Cisco RESTBox Middleware in Java'
 
 group = 'ru.khv.fox.software.web.cisco.restbox'
-version = '0.0.1-SNAPSHOT'
+version = '0.1.0'
+
+def applicationName = 'rvolkov-restbox'
 
 
 defaultTasks 'build'
@@ -25,7 +28,7 @@ compileJava.sourceCompatibility = 13
 
 gradle.projectsEvaluated {
 	tasks.withType(JavaCompile) {
-		options.compilerArgs << "-Xlint:unchecked" << "-Xlint:deprecation"
+		options.compilerArgs << '-Xlint:unchecked' << '-Xlint:deprecation'
 	}
 }
 
@@ -88,4 +91,27 @@ dependencies {
 	testImplementation group: 'com.spotify', name: 'hamcrest-pojo', version: '1.+'
 	testImplementation group: 'com.spotify', name: 'hamcrest-optional', version: '1.+'
 	testImplementation group: 'com.jayway.jsonpath', name: 'json-path-assert', version: '2.+'
+}
+
+heroku {
+	def artifact = "libs/${bootJar.getArchiveFileName().get()}"
+	appName = applicationName
+	jdkVersion = 13
+	includes = [ "${project.buildDir}/$artifact" ]
+	includeRootDir = project.buildDir
+	includeBuildDir = false
+	processTypes(web: "java -jar $artifact --spring.profiles.active=heroku" as String)
+}
+
+jib {
+//	from.image = 'openjdk:13'                               // 264M
+//	from.image = 'openjdk:13-alpine'                        // 214M
+	from.image = 'adoptopenjdk/openjdk13:ubi-minimal-jre'   // 109M
+	to.image = "registry.heroku.com/$applicationName/web"
+	container {
+		args = [ '--spring.profiles.active=heroku' ]
+		jvmFlags = [ '-XX:+UseContainerSupport', '-XX:+AlwaysActAsServerClassMachine', '-XX:+PerfDisableSharedMem', '-Xmx300m', '-Xss512k', '-XX:MetaspaceSize=100m', '-XX:CICompilerCount=2' ]
+		ports = [ '3001' ]
+		creationTime = 'USE_CURRENT_TIMESTAMP'
+	}
 }

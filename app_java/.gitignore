@@ -33,8 +33,10 @@ data.sqlite
 /build/
 /out/
 /log/
+/external-config/
 !gradle/wrapper/gradle-wrapper.jar
 boxcontrols.txt
+heroku-logs.txt
 
 ### STS ###
 .apt_generated

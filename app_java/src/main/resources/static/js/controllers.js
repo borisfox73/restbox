@@ -7,9 +7,10 @@
 var controllers;
 controllers = angular.module('restBox.controllers', []);
 function getapiroot($location) {
-  var lhost = $location.host();
+  var lproto = $location.protocol();
+    var lhost = $location.host();
   var lport = $location.port();
-  return 'http://'+lhost+':'+lport;
+    return lproto + '://' + lhost + ':' + lport;
 }
 function urlBase64Decode(str) {
   var output = str.replace('-', '+').replace('_', '/');
